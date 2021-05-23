@@ -1,5 +1,4 @@
-#[cfg(not(debug_assertions))]
-use lambda_runtime::handler_fn;
+use crate::config::Config;
 use lambda_runtime::Error;
 
 mod config;
@@ -18,37 +17,44 @@ async fn main() -> Result<(), Error> {
     let tsub = tsub.without_time();
     tsub.init();
 
-    // call the proxy - development
-    #[cfg(debug_assertions)]
-    return proxy::run().await;
+    // prepare cached config to save on the init time
+    // it may backfire if the S3 connector token expire while it is being cached
+    // let's hope that the function gets recycled before that happens
+    // if the token expire we'll get an error in the log and loose the report because there is no retry
+    let config_owned = Config::new();
+    let config_shared = &config_owned;
 
-    // call the actual handler of the request - production
+    // call the proxy - development only
+    #[cfg(debug_assertions)]
+    return proxy::run(config_shared).await;
+
+    // call the actual handler of the request - production only
     #[cfg(not(debug_assertions))]
-    return lambda_runtime::run(handler_fn(handler::my_handler)).await;
+    return lambda_runtime::run(lambda_runtime::handler_fn(
+        move |event: serde_json::Value, ctx: lambda_runtime::Context| async move {
+            handler::my_handler(event, ctx, config_shared).await
+        },
+    ))
+    .await;
 }
 
 /// This module is only used for local debugging via SQS and will
 /// not be deployed to Lambda if compiled with `--release`.
 #[cfg(debug_assertions)]
 mod proxy {
-    use lambda_runtime::Context;
+    use crate::config::Config;
+    use lambda_runtime::{Context, Error};
     use rusoto_core::region::Region;
-    use rusoto_sqs::{
-        DeleteMessageRequest, ReceiveMessageRequest, SendMessageRequest, Sqs, SqsClient,
-    };
+    use rusoto_sqs::{DeleteMessageRequest, ReceiveMessageRequest, SendMessageRequest, Sqs, SqsClient};
     use serde::Deserialize;
     use serde_json::Value;
     use tracing::info;
 
-    pub(crate) type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
-
     // these are specific to a particular account - modify as needed for development
     // they should probably be taken out into a separate file
     const AWS_REGION: Region = Region::UsEast1;
-    const REQUEST_QUEUE_URL: &str =
-        "https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_REQ";
-    const RESPONSE_QUEUE_URL: &str =
-        "https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_RESP";
+    const REQUEST_QUEUE_URL: &str = "https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_REQ";
+    const RESPONSE_QUEUE_URL: &str = "https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_RESP";
 
     #[derive(Deserialize, Debug)]
     struct RequestPayload {
@@ -56,13 +62,13 @@ mod proxy {
         pub ctx: Context,
     }
 
-    pub(crate) async fn run() -> Result<(), Error> {
+    pub(crate) async fn run(config: &Config) -> Result<(), Error> {
         loop {
             // get event and context details from the queue
             let (payload, receipt_handle) = get_input().await?;
             info!("New msg");
             // invoke the handler
-            let response = crate::handler::my_handler(payload.event, payload.ctx).await?;
+            let response = crate::handler::my_handler(payload.event, payload.ctx, config).await?;
 
             // send back the response and delete the message from the queue
             send_output(response, receipt_handle).await?;
@@ -105,8 +111,7 @@ mod proxy {
 
             // convert JSON encoded body into event + ctx structures as defined by Lambda Runtime
             let body = msgs[0].body.as_ref().expect("Failed to get message body");
-            let payload: RequestPayload =
-                serde_json::from_str(body).expect("Failed to deserialize msg body");
+            let payload: RequestPayload = serde_json::from_str(body).expect("Failed to deserialize msg body");
 
             return Ok((payload, receipt_handle));
         }

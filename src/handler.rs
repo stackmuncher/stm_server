@@ -43,7 +43,7 @@ struct ApiGatewayRequest {
 /// A generic error message sent to the user when the request cannot be processed for a reason the user can't do much about.
 const ERROR_500_MSG: &str = "stackmuncher.com failed to process the report. If the error persists, can you log an issue at https://github.com/stackmuncher/stm_inbox/issues?";
 
-pub(crate) async fn my_handler(event: Value, ctx: Context) -> Result<Value, Error> {
+pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> Result<Value, Error> {
     // these 2 lines are for debugging only to see the raw APIGW request
     debug!("Event: {}", event);
     debug!("Context: {:?}", ctx);
@@ -141,7 +141,6 @@ pub(crate) async fn my_handler(event: Value, ctx: Context) -> Result<Value, Erro
         }
     };
 
-    let config = Config::new();
     s3::upload_to_s3(&config, body, pub_key_bs58).await;
 
     // render the prepared data as HTML
