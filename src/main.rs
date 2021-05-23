@@ -1,11 +1,10 @@
 #[cfg(not(debug_assertions))]
 use lambda_runtime::handler_fn;
+use lambda_runtime::Error;
 
 mod config;
 mod handler;
 mod s3;
-
-pub(crate) type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 /// Boilerplate Lambda runtime code with conditional debug proxy
 #[tokio::main]
@@ -44,10 +43,12 @@ mod proxy {
     pub(crate) type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
     // these are specific to a particular account - modify as needed for development
-    // they should probably be taken out into a separate file 
-    const AWS_REGION: Region = Region::UsEast1; 
-    const REQUEST_QUEUE_URL: &str = "https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_REQ";
-    const RESPONSE_QUEUE_URL: &str = "	https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_RESP";
+    // they should probably be taken out into a separate file
+    const AWS_REGION: Region = Region::UsEast1;
+    const REQUEST_QUEUE_URL: &str =
+        "https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_REQ";
+    const RESPONSE_QUEUE_URL: &str =
+        "https://sqs.us-east-1.amazonaws.com/028534811986/STM_INBOX_LAMBDA_PROXY_RESP";
 
     #[derive(Deserialize, Debug)]
     struct RequestPayload {

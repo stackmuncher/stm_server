@@ -1,7 +1,7 @@
+use crate::config::Config;
 use crate::s3;
-use crate::{config::Config, Error};
 use base64::decode;
-use lambda_runtime::Context;
+use lambda_runtime::{Context, Error};
 use ring::signature;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -51,10 +51,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context) -> Result<Value, Erro
     // parse the request
     let api_request = match serde_json::from_value::<ApiGatewayRequest>(event.clone()) {
         Err(e) => {
-            error!(
-                "Failed to deser APIGW request due to {}. Request: {}",
-                e, event
-            );
+            error!("Failed to deser APIGW request due to {}. Request: {}", e, event);
             return gw_response(Some(ERROR_500_MSG.to_owned()), 500);
         }
         Ok(v) => v,
@@ -63,9 +60,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context) -> Result<Value, Erro
     info!("Report from IP: {:?}", api_request.headers.x_forwarded_for);
 
     // these 2 headers are required no matter what
-    if api_request.headers.stackmuncher_key.is_none()
-        || api_request.headers.stackmuncher_sig.is_none()
-    {
+    if api_request.headers.stackmuncher_key.is_none() || api_request.headers.stackmuncher_sig.is_none() {
         error!(
             "Missing a header. Key: {:?}, Sig: {:?}",
             api_request.headers.stackmuncher_key, api_request.headers.stackmuncher_sig
@@ -113,10 +108,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context) -> Result<Value, Erro
     let pub_key = match bs58::decode(pub_key_bs58.clone()).into_vec() {
         Ok(v) => v,
         Err(e) => {
-            error!(
-                "Failed to decode the stackmuncher_key from based58 due to: {}",
-                e
-            );
+            error!("Failed to decode the stackmuncher_key from based58 due to: {}", e);
             return gw_response(Some(ERROR_500_MSG.to_owned()), 500);
         }
     };
@@ -132,10 +124,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context) -> Result<Value, Erro
     {
         Ok(v) => v,
         Err(e) => {
-            error!(
-                "Failed to decode the stackmuncher_key from based58 due to: {}",
-                e
-            );
+            error!("Failed to decode the stackmuncher_key from based58 due to: {}", e);
             return gw_response(Some(ERROR_500_MSG.to_owned()), 500);
         }
     };

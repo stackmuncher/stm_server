@@ -41,8 +41,7 @@ impl Config {
             .trim()
             .to_string();
 
-        let s3_region = Region::from_str(&s3_region)
-            .expect("Invalid S3 Region value. Must look like `us-east-1`.");
+        let s3_region = Region::from_str(&s3_region).expect("Invalid S3 Region value. Must look like `us-east-1`.");
 
         Config {
             s3_bucket: std::env::var(S3_BUCKET_ENV)
@@ -70,8 +69,7 @@ impl Config {
 fn generate_s3_client(s3_region: Region) -> S3Client {
     let https_connector = HttpsConnector::with_native_roots();
 
-    let cred_prov =
-        DefaultCredentialsProvider::new().expect("Cannot unwrap DefaultCredentialsProvider");
+    let cred_prov = DefaultCredentialsProvider::new().expect("Cannot unwrap DefaultCredentialsProvider");
 
     let mut builder = hyper::Client::builder();
     builder.pool_idle_timeout(Duration::from_secs(15));
