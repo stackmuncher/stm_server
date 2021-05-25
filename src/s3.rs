@@ -12,7 +12,7 @@ pub(crate) async fn upload_to_s3(config: &Config, report_bytes: Vec<u8>, pub_key
     let report_name = [Utc::now().timestamp().to_string(), pub_key].join("_");
 
     // the resulting key looks like `queue/1621680890_7prBWD7pzYk2czeXZeXzjxjDQbnuka2RLShdW5AxWuk7.json`
-    let s3_key: String = [&config.s3_prefix, "/", &report_name, ".json"].concat();
+    let s3_key: String = [&config.s3_prefix, "/", &report_name, ".gzip"].concat();
 
     info!("Uploading to S3 {}", s3_key);
     if let Err(e) = config
