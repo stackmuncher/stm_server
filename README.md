@@ -1,5 +1,9 @@
 # StackMuncher Inbox for Report Submissions
 
+There are multiple crates in this project. They form parts of a pipeline from accepting a stack report from a member to updating the member's profile. 
+
+# Inbox Crate
+
 This app is used as a Lambda function for receiving user report submissions.
 
 The client app signs and submits one or more reports at the end of its stack analysis. The submissions contain the report in the body of HTTP POST message and several meta-headers:
@@ -55,3 +59,8 @@ The above steps should trigger a chain of requests and responses:
 > APIGW -> Lambda *stm_inbox* proxy -> SQS Request Queue -> the locally run *stm_inbox* app -> SQS Response Queue -> Lambda *stm_inbox* proxy -> APIGW
 
 [main.rs](./src/main.rs) has sections of code annotated with `#[cfg(debug_assertions)]` to use *lambda-debug-proxy* feature in DEBUG mode or exclude it when built with `--release`.
+
+
+# Inbox Router Crate
+
+This Lambda app takes new submissions from the inbox in S3, checks the payload and moves them to the member's folder in S3. It does not update the member's profile. 

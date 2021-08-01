@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "inbox",
-    #"report_router"
+    "stm_inbox",
+    "stm_inbox_router"
 ]

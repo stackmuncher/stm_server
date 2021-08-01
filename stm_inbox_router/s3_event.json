@@ -1,0 +1,56 @@
+{
+  "event": {
+    "Records": [
+      {
+        "awsRegion": "us-east-1",
+        "eventName": "ObjectCreated:Put",
+        "eventSource": "aws:s3",
+        "eventTime": "2021-08-01T07:09:35.255Z",
+        "eventVersion": "2.1",
+        "requestParameters": {
+          "sourceIPAddress": "44.192.52.112"
+        },
+        "responseElements": {
+          "x-amz-id-2": "XzRlwpcXLC5syy2UXRXm6QsOuswb3/GCyrBYY2VW9mHZ0QfMrJyJV2Lh+YcuUeMzzj+//dFhosjQFD/z1yEtqNSjCyHclFNh",
+          "x-amz-request-id": "AXQGJRWMEWGYKH4T"
+        },
+        "s3": {
+          "bucket": {
+            "arn": "arn:aws:s3:::stm-reports-kb2quztb4wggjr3j7q3q",
+            "name": "stm-reports-kb2quztb4wggjr3j7q3q",
+            "ownerIdentity": {
+              "principalId": "AD3AEMH46FKM6"
+            }
+          },
+          "configurationId": "report_added",
+          "object": {
+            "eTag": "8fb4ce2384865e68aec0bddcd35cfe5e",
+            "key": "queue/1627801778_9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK.gzip",
+            "sequencer": "00610648B26CBF8143",
+            "size": 7172
+          },
+          "s3SchemaVersion": "1.0"
+        },
+        "userIdentity": {
+          "principalId": "AWS:AROAQNJGOVVJPHQHI3OIP:stm_inbox"
+        }
+      }
+    ]
+  },
+  "ctx": {
+    "request_id": "56907f91-9ce7-4ff4-b7bb-4a90b89ca8ab",
+    "deadline": 1627801809873,
+    "invoked_function_arn": "arn:aws:lambda:us-east-1:028534811986:function:stm_inbox_router_debug_proxy",
+    "xray_trace_id": "Root=1-610648b3-028f472a4f1e1f4b4d6668f0;Parent=47c5a58a59c450bc;Sampled=0",
+    "client_context": null,
+    "identity": null,
+    "env_config": {
+      "endpoint": "127.0.0.1:9001",
+      "function_name": "stm_inbox_router_debug_proxy",
+      "memory": 128,
+      "version": "$LATEST",
+      "log_stream": "2021/08/01/[$LATEST]ec787cc2d73549c8ae35a00fe17830ad",
+      "log_group": "/aws/lambda/stm_inbox_router_debug_proxy"
+    }
+  }
+}

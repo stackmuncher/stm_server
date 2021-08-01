@@ -1,0 +1,33 @@
+[package]
+name = "stm_inbox_router"
+version = "0.1.1"
+authors = ["rimutaka <max@onebro.me>"]
+edition = "2018"
+homepage = "https://stackmuncher.com"
+repository = "https://github.com/stackmuncher/stm_inbox"
+license = "AGPL-3.0-or-later"
+description = "An AWS Lambda function for routing StackMuncher reports stored AWS S3 inbox to member folders."
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.9", features = ["full"] }
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = "0.2"
+log = "0.4"
+lambda_runtime = { git = "https://github.com/awslabs/aws-lambda-rust-runtime.git" }
+hyper = { version = "0.14", features = ["http2"] }
+hyper-rustls = "0.22"
+rusoto_signature = "0.47"
+rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false }
+rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
+rusoto_s3 = { version = "0.47", features = ["rustls"], default-features = false }
+futures-util = "0.3"
+tokio-postgres = { version = "0.7", features = ["with-uuid-0_8", "with-chrono-0_4"] }
+base64 = "0.13"
+bs58 = "0.4"
+ring = "0.16"
+chrono = { version = "0.4" }
+uuid = { version = "0.8", features = ["serde", "v4"] }
+flate2 = "1.0"
+stackmuncher_lib = { git = "https://github.com/stackmuncher/stm.git" }
