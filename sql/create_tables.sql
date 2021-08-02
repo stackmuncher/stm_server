@@ -7,11 +7,11 @@ CREATE TABLE t_commit_ownership (
   owner_id varchar,
   -- can be a github project name or a guid in base58 for private member projects
     -- e.g. `stm` or `Wgx98Rbi8nQuL9ddn3mTk1`
-  project_id varchar,
+  project_id varchar NOT NULL,
   -- e.g. e29d17e6
   commit_hash varchar,
   -- e.g. 1627380297
-  commit_ts timestamp with time zone NULL,
+  commit_ts bigint NOT NULL,
 
   PRIMARY KEY (owner_id,commit_hash)
 );

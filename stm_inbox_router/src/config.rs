@@ -6,6 +6,7 @@ use rusoto_s3::S3Client;
 use std::str::FromStr;
 use std::time::Duration;
 use crate::postgres::get_pg_client;
+use regex::Regex;
 
 /// All buckets are expected to be in the same region (STM_INBOX_S3_REGION)
 /// E.g. `us-east-1`
@@ -48,7 +49,9 @@ pub struct Config {
     /// Contains an initialized S3 Client for reuse. Doesn't need to be public.
     pub s3_client: S3Client,
     /// An initialized Postgres client
-    pub pg_client: tokio_postgres::Client
+    pub pg_client: tokio_postgres::Client,
+    /// A compiled regex for validating 8-char commit hashes
+    pub commit_hash_regex: Regex,
 }
 
 impl Config {
@@ -108,6 +111,7 @@ impl Config {
                 .to_string(),
             s3_client: generate_s3_client(s3_region),
             pg_client: get_pg_client(&pg_connection_string).await,
+            commit_hash_regex: Regex::new("[a-z0-9]{8}").expect("Invalid commit_hash_regex. It's a bug.")
         }
     }
 }

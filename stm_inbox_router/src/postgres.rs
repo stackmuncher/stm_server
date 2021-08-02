@@ -1,4 +1,4 @@
-use chrono::Utc;
+use lambda_runtime::Error;
 use log::warn;
 use serde::{Deserialize, Serialize};
 use tokio_postgres::{Client, NoTls, Row};
@@ -8,9 +8,9 @@ use tracing::{debug, error, info};
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub(crate) struct CommitOwnership {
     pub owner_id: String,
-    pub project_id: Option<String>,
+    pub project_id: String,
     pub commit_hash: String,
-    pub commit_ts: Option<chrono::DateTime<Utc>>,
+    pub commit_ts: i64,
 }
 
 impl From<&Row> for CommitOwnership {
@@ -30,23 +30,23 @@ impl CommitOwnership {
     /// Do not use with an empty `commit_hash`.
     pub(crate) async fn find_matching_commits(
         pg_client: &Client,
-        commit_hash: Vec<String>,
-    ) -> Result<Vec<CommitOwnership>, ()> {
+        commit_hashes: Vec<&String>,
+    ) -> Result<Vec<CommitOwnership>, Error> {
         // make sure the list is not empty
-        if commit_hash.is_empty() {
+        if commit_hashes.is_empty() {
             warn!("Empty list of commits to search for. It's a bug!");
             return Ok(Vec::new());
         }
 
         // get the data from PG
         let rows = match pg_client
-            .query("select * from stm_find_projects_by_commits($1::varchar[])", &[&commit_hash])
+            .query("select * from stm_find_projects_by_commits($1::varchar[])", &[&commit_hashes])
             .await
         {
             Ok(v) => v,
             Err(e) => {
-                error!("stm_find_projects_by_commits for {} failed with {}", &commit_hash[0], e);
-                return Err(());
+                error!("stm_find_projects_by_commits for {} failed with {}", &commit_hashes[0], e);
+                return Err(Error::from(e));
             }
         };
 
@@ -62,31 +62,31 @@ impl CommitOwnership {
     /// Do not use with en empty `commit_hash`.
     pub(crate) async fn add_commits(
         pg_client: &Client,
-        owner_id: String,
-        project_id: String,
-        commit_hash: Vec<String>,
-        commit_ts: Vec<Option<chrono::DateTime<Utc>>>,
-    ) -> Result<(), ()> {
+        owner_id: &String,
+        project_id: &String,
+        commit_hashes: &Vec<String>,
+        commit_ts: &Vec<i64>,
+    ) -> Result<(), Error> {
         // make sure the list is not empty
-        if commit_hash.is_empty() {
+        if commit_hashes.is_empty() {
             warn!("Empty list of commits to add to DB. It's a bug!");
             return Ok(());
         }
 
-        info!("Adding {} commits starting from {}", commit_hash.len(), &commit_hash[0]);
+        info!("Adding {} commits starting from {}", commit_hashes.len(), &commit_hashes[0]);
 
         // push the data to PG, log the result, nothing to return
         let rows = match pg_client
             .execute(
-                "select stm_add_commits($1::varchar, $2::varchar,$3::varchar,$4::timestamptz[])",
-                &[&owner_id, &project_id, &commit_hash, &commit_ts],
+                "select stm_add_commits($1::varchar, $2::varchar, $3::varchar[], $4::bigint[])",
+                &[owner_id, project_id, commit_hashes, commit_ts],
             )
             .await
         {
             Ok(v) => v,
             Err(e) => {
                 error!("stm_add_commits failed with {}", e);
-                return Err(());
+                return Err(Error::from(e));
             }
         };
 

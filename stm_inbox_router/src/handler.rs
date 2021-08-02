@@ -1,10 +1,13 @@
 use crate::config::Config;
+use crate::postgres::CommitOwnership;
 use crate::s3::{get_bytes_from_s3, S3Event};
+use bs58;
 use flate2::read::GzDecoder;
 use lambda_runtime::{Context, Error};
 use log::info;
 use serde_json::Value;
 use stackmuncher_lib::report::Report;
+use std::collections::{HashMap, HashSet};
 use std::io::Read;
 use tracing::{debug, error};
 
@@ -31,12 +34,28 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     let s3_key = match event.records[0].s3.object.key.as_ref() {
         Some(v) => v.clone(),
         None => {
-            return Err(Error::from(format!("Empty object key in the event details")));
+            return Err(Error::from("Empty object key in the event details"));
         }
     };
 
     // required to ID the transaction in the log, otherwise it's not known which report failed
     info!("S3 key: {}", s3_key);
+
+    // extract the owner id from a key like this `queue/1621680890_7prBWD7pzYk2czeXZeXzjxjDQbnuka2RLShdW5AxWuk7.gzip`
+    let owner_id = match s3_key.split("_").last() {
+        Some(v) => v,
+        None => {
+            return Err(Error::from("Failed to split the key at _ as pub_key.ext"));
+        }
+    };
+    let owner_id = match owner_id.split(".").next() {
+        Some(v) => v.to_owned(),
+        None => {
+            return Err(Error::from("Failed to split the key at . as pub_key.ext"));
+        }
+    };
+
+    info!("OwnerID: {}", owner_id);
 
     // read and unzip the report from S3
     let report = get_bytes_from_s3(config, s3_key).await?;
@@ -62,7 +81,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
         .next()
         .as_ref()
         .expect("Cannot unwrap included project. It's a bug.")
-        .recent_project_commits
+        .commits
         .as_ref()
     {
         Some(v) => v,
@@ -72,7 +91,84 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
         }
     };
 
-    info!("{}", commit_list.join(", "));
+    debug!("{}", commit_list.join(", "));
+
+    // split the commits into hash and timestamp parts
+    let mut valid_commits: HashMap<String, i64> = HashMap::new();
+    // a valid commit looks like this: 7474684a_1595904770
+    // anything else is either a bug or some other kind of data corruption
+    for commit in commit_list {
+        let split = commit.split("_").collect::<Vec<&str>>();
+        if split.len() == 2 && split[0].len() == 8 && config.commit_hash_regex.is_match(split[0]) {
+            // there should be no commits with no dates
+            if let Ok(ts) = i64::from_str_radix(split[1], 10) {
+                valid_commits.insert(split[0].to_string(), ts);
+            } else {
+                // something's off here - no point processing this report any further
+                error!("Invalid commit date: {}", commit);
+                return Ok(());
+            };
+        } else {
+            // something's off here - no point processing this report any further
+            error!("Invalid commit: {}", commit);
+            return Ok(());
+        }
+    }
+
+    // get a list of hashes to search for existing projects
+    let commit_hashes_for_search = valid_commits
+        .keys()
+        .take(valid_commits.keys().len().min(50))
+        .collect::<Vec<&String>>();
+
+    // search for project matches by commit
+    let commit_ownerships = CommitOwnership::find_matching_commits(&config.pg_client, commit_hashes_for_search).await?;
+
+    info!("Found {} matching commits in PG", commit_ownerships.len());
+
+    // collect matching project IDs
+    let mut project_ids: HashSet<String> = HashSet::new();
+    for ownership in commit_ownerships {
+        // check if the commits match on the date as well
+        if let Some(commit_ts) = valid_commits.get(&ownership.commit_hash) {
+            if commit_ts == &ownership.commit_ts {
+                project_ids.insert(ownership.project_id);
+            }
+        }
+    }
+
+    // a Vec is easier to work with
+    let mut project_ids = project_ids.into_iter().collect::<Vec<String>>();
+    info!("Found matching projects: {}", project_ids.join(","));
+
+    // get or generate the project ID
+    let project_id = match project_ids.len() {
+        0 => {
+            // generate a new one
+            bs58::encode(uuid::Uuid::new_v4().as_bytes()).into_string()
+        }
+        1 => {
+            // use existing
+            project_ids.pop().expect("Failed to unwrap project_id")
+        }
+        _ => {
+            // resolve conflicts, but just log an error for now
+            error!("Project ID conflict resolution is not implemented.");
+            return Ok(());
+        }
+    };
+
+    info!("ProjectID: {}", project_id);
+
+    // split all all known commits into commit/timestamp and add them all to the DB
+    let mut commit_hashes: Vec<String> = Vec::new();
+    let mut commit_timestamps: Vec<i64> = Vec::new();
+    for commit in valid_commits {
+        commit_hashes.push(commit.0);
+        commit_timestamps.push(commit.1);
+    }
+
+    CommitOwnership::add_commits(&config.pg_client, &owner_id, &project_id, &commit_hashes, &commit_timestamps).await?;
 
     Ok(())
 }
