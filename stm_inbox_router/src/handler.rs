@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::postgres::CommitOwnership;
-use crate::s3::{get_bytes_from_s3, S3Event};
+use crate::s3::{copy_within_s3, get_bytes_from_s3, S3Event, REPORT_FILE_EXT_IN_S3};
 use bs58;
 use flate2::read::GzDecoder;
 use lambda_runtime::{Context, Error};
@@ -9,7 +9,7 @@ use serde_json::Value;
 use stackmuncher_lib::report::Report;
 use std::collections::{HashMap, HashSet};
 use std::io::Read;
-use tracing::{debug, error};
+use tracing::{debug, error, warn};
 
 pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> Result<(), Error> {
     // these 2 lines are for debugging only to see the raw request
@@ -55,10 +55,15 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
         }
     };
 
+    // check if the object has any contents
+    if event.records[0].s3.object.size.unwrap_or_default() == 0 {
+        return Err(Error::from(format!("Zero-sized object: {}", s3_key)));
+    }
+
     info!("OwnerID: {}", owner_id);
 
     // read and unzip the report from S3
-    let report = get_bytes_from_s3(config, s3_key).await?;
+    let report = get_bytes_from_s3(config, s3_key.clone()).await?;
     let mut decoder = GzDecoder::new(report.as_slice());
     let mut buffer: Vec<u8> = Vec::new();
     let len = decoder.read_to_end(&mut buffer)?;
@@ -71,6 +76,14 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     // check if there is just one project included in the report
     if report.projects_included.len() != 1 {
         error!("Wrong number of projects in the report: {}", report.projects_included.len());
+        return Ok(());
+    }
+
+    // validate the latest commit SHA1
+    let latest_report_commit_sha1 = report.last_contributor_commit_sha1.unwrap_or_default();
+    if latest_report_commit_sha1.len() != 40 || !config.commit_hash_regex_full.is_match(&latest_report_commit_sha1) {
+        // something's off here - no point proceeding
+        error!("Invalid latest report commit: {}", latest_report_commit_sha1);
         return Ok(());
     }
 
@@ -99,7 +112,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     // anything else is either a bug or some other kind of data corruption
     for commit in commit_list {
         let split = commit.split("_").collect::<Vec<&str>>();
-        if split.len() == 2 && split[0].len() == 8 && config.commit_hash_regex.is_match(split[0]) {
+        if split.len() == 2 && split[0].len() == 8 && config.commit_hash_regex_short.is_match(split[0]) {
             // there should be no commits with no dates
             if let Ok(ts) = i64::from_str_radix(split[1], 10) {
                 valid_commits.insert(split[0].to_string(), ts);
@@ -167,8 +180,59 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
         commit_hashes.push(commit.0);
         commit_timestamps.push(commit.1);
     }
-
     CommitOwnership::add_commits(&config.pg_client, &owner_id, &project_id, &commit_hashes, &commit_timestamps).await?;
+
+    // check if this report is the latest known for this project
+    let latest_report_commit_ts = report.last_contributor_commit_date_epoch.unwrap_or_default();
+    let latest_project_commit_ts =
+        CommitOwnership::get_latest_project_commit(&config.pg_client, &owner_id, &project_id).await?;
+
+    if latest_report_commit_ts < latest_project_commit_ts {
+        warn!(
+            "Out of order report for {}/{}. Latest commit ts in PG: {}, report: {}",
+            owner_id, project_id, latest_project_commit_ts, latest_report_commit_ts
+        );
+    }
+
+    // it is the latest - move it to the member's folder
+    // the source has the timestamp of the submission in the name, but the dest should have the timestamp of the last commit
+    copy_within_s3(
+        config,
+        s3_key.clone(),
+        [
+            config.s3_report_prefix.as_str(),
+            "/",
+            owner_id.as_str(),
+            "/",
+            project_id.as_str(),
+            "/",
+            latest_report_commit_ts.to_string().as_str(),
+            "_",
+            latest_report_commit_sha1.as_str(),
+            REPORT_FILE_EXT_IN_S3,
+        ]
+        .concat(),
+    )
+    .await?;
+
+    // copy it again as the latest report with a predefined file name
+    copy_within_s3(
+        config,
+        s3_key.clone(),
+        [
+            config.s3_report_prefix.as_str(),
+            "/",
+            owner_id.as_str(),
+            "/",
+            project_id.as_str(),
+            "/report",
+            REPORT_FILE_EXT_IN_S3,
+        ]
+        .concat(),
+    )
+    .await?;
+
+    // delete source
 
     Ok(())
 }

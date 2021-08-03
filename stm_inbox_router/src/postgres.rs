@@ -93,6 +93,47 @@ impl CommitOwnership {
         debug!("Rows updated: {}", rows);
         Ok(())
     }
+
+    /// Returns the latest timestamp for the specified owner/project ids.
+    /// Returns an error if the DB has no matching data.
+    pub(crate) async fn get_latest_project_commit(
+        pg_client: &Client,
+        owner_id: &String,
+        project_id: &String,
+    ) -> Result<i64, Error> {
+        // get the data from PG
+        let rows = match pg_client
+            .query(
+                "select * from stm_get_latest_project_commit($1::varchar, $2::varchar)",
+                &[owner_id, project_id],
+            )
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(Error::from(format!(
+                    "stm_get_latest_project_commit for {}/{} failed with {}",
+                    owner_id, project_id, e
+                )));
+            }
+        };
+
+        // there should always be some commits for the project if it's requested
+        if rows.is_empty() {
+            return Err(Error::from(format!("No commits found for {}/{}", owner_id, project_id)));
+        }
+
+        // try to return the result if it can be converted into i64
+        match rows[0].try_get(0) {
+            Ok(v) => Ok(v),
+            Err(e) => {
+                return Err(Error::from(format!(
+                    "Cannot convert latest commit ts to i64 for {}/{} with {}",
+                    owner_id, project_id, e
+                )));
+            }
+        }
+    }
 }
 
 /// Prepare a client for Postgres connection. Panics if cannot connect to the PG DB.

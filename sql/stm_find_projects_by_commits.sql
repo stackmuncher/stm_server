@@ -13,5 +13,5 @@ GRANT EXECUTE ON FUNCTION stm_find_projects_by_commits(varchar[]) to public;
 -- DROP FUNCTION IF EXISTS stm_find_projects_by_commits
 
 /*** TESTING ***/
-explain analyze select * from stm_find_projects_by_commits(array['c1', 'c2'])
+explain analyze select * from stm_find_projects_by_commits(array['bd97d02b'])
 explain analyze select * from t_commit_ownership where commit_hash = any(array['c1', 'c2']);

@@ -1,12 +1,12 @@
+use crate::postgres::get_pg_client;
 use hyper_rustls::HttpsConnector;
+use regex::Regex;
 use rusoto_core::credential::DefaultCredentialsProvider;
 use rusoto_core::HttpClient;
 use rusoto_core::Region;
 use rusoto_s3::S3Client;
 use std::str::FromStr;
 use std::time::Duration;
-use crate::postgres::get_pg_client;
-use regex::Regex;
 
 /// All buckets are expected to be in the same region (STM_INBOX_S3_REGION)
 /// E.g. `us-east-1`
@@ -29,7 +29,6 @@ pub const S3_MEMBER_REPORTS_BUCKET_ENV: &str = "STM_MEMBER_REPORTS_S3_BUCKET";
 /// E.g. `reports`, leading/trailing `/` are removed
 pub const S3_MEMBER_REPORTS_PREFIX_ENV: &str = "STM_MEMBER_REPORTS_S3_PREFIX";
 
-
 /// A struct with all the config info passed around as a single param
 pub struct Config {
     /// The name of the bucket for storing member reports before they are processed.
@@ -51,17 +50,16 @@ pub struct Config {
     /// An initialized Postgres client
     pub pg_client: tokio_postgres::Client,
     /// A compiled regex for validating 8-char commit hashes
-    pub commit_hash_regex: Regex,
+    pub commit_hash_regex_short: Regex,
+    /// A compiled regex for validating full-length commit hashes
+    pub commit_hash_regex_full: Regex,
 }
 
 impl Config {
     /// Initializes a new Config struct from the environment. Panics on invalid config values.
     pub async fn new() -> Self {
         let s3_region = std::env::var(S3_REGION_ENV)
-            .expect(&format!(
-                "Missing {} env var with S3 region name, e.g. us-east-1",
-                S3_REGION_ENV
-            ))
+            .expect(&format!("Missing {} env var with S3 region name, e.g. us-east-1", S3_REGION_ENV))
             .trim()
             .to_string();
 
@@ -86,14 +84,11 @@ impl Config {
                 .trim_end_matches("/")
                 .to_string(),
             s3_inbox_prefix: std::env::var(S3_INBOX_PREFIX_ENV)
-                .expect(&format!(
-                    "Missing {} env var with Inbox S3 prefix, e.g. `queue`",
-                    S3_INBOX_PREFIX_ENV
-                ))
+                .expect(&format!("Missing {} env var with Inbox S3 prefix, e.g. `queue`", S3_INBOX_PREFIX_ENV))
                 .trim()
                 .trim_end_matches("/")
                 .to_string(),
-                s3_report_bucket: std::env::var(S3_MEMBER_REPORTS_BUCKET_ENV)
+            s3_report_bucket: std::env::var(S3_MEMBER_REPORTS_BUCKET_ENV)
                 .expect(&format!(
                     "Missing {} env var with member reports S3 bucket name, e.g. stm-subs-j5awwhv9pb9np7d",
                     S3_MEMBER_REPORTS_BUCKET_ENV
@@ -111,7 +106,8 @@ impl Config {
                 .to_string(),
             s3_client: generate_s3_client(s3_region),
             pg_client: get_pg_client(&pg_connection_string).await,
-            commit_hash_regex: Regex::new("[a-z0-9]{8}").expect("Invalid commit_hash_regex. It's a bug.")
+            commit_hash_regex_short: Regex::new("[a-f0-9]{8}").expect("Invalid commit_hash_regex. It's a bug."),
+            commit_hash_regex_full: Regex::new("[a-f0-9]{40}").expect("Invalid commit_hash_regex. It's a bug."),
         }
     }
 }
