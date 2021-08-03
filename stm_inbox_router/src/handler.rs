@@ -196,7 +196,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
 
     // it is the latest - move it to the member's folder
     // the source has the timestamp of the submission in the name, but the dest should have the timestamp of the last commit
-    copy_within_s3(
+    let copy_with_ts = copy_within_s3(
         config,
         s3_key.clone(),
         [
@@ -212,11 +212,10 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
             REPORT_FILE_EXT_IN_S3,
         ]
         .concat(),
-    )
-    .await?;
+    );
 
     // copy it again as the latest report with a predefined file name
-    copy_within_s3(
+    let copy_latest = copy_within_s3(
         config,
         s3_key.clone(),
         [
@@ -229,8 +228,13 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
             REPORT_FILE_EXT_IN_S3,
         ]
         .concat(),
-    )
-    .await?;
+    );
+
+    // copy both concurrently
+    let copy_results = futures::join!(copy_with_ts, copy_latest);
+    if copy_results.0.is_err() || copy_results.1.is_err() {
+        return Err(Error::from("Failed to copy reports."));
+    }
 
     // delete the submission from inbox queue
     delete_s3_object(config, s3_key.clone()).await?;
