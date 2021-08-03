@@ -1,7 +1,7 @@
 use crate::config::Config;
 use futures_util::stream::TryStreamExt;
 use lambda_runtime::Error;
-use rusoto_s3::{CopyObjectRequest, GetObjectRequest, S3};
+use rusoto_s3::{CopyObjectRequest, DeleteObjectRequest, GetObjectRequest, S3};
 use serde::Deserialize;
 use tracing::info;
 
@@ -50,6 +50,25 @@ pub(crate) async fn copy_within_s3(config: &Config, source_key: String, dest_key
         .await
     {
         return Err(Error::from(format!("Copying from {} to {} failed with {}", source_key, dest_key, e)));
+    };
+
+    Ok(())
+}
+
+/// Delete an object from the inbox bucket.
+/// * `s3_key` must be the full object keys, including the prefix and the file extension
+pub(crate) async fn delete_s3_object(config: &Config, s3_key: String) -> Result<(), Error> {
+    info!("Deleting {}", s3_key);
+    if let Err(e) = config
+        .s3_client
+        .delete_object(DeleteObjectRequest {
+            bucket: config.s3_inbox_bucket.clone(),
+            key: s3_key.clone(),
+            ..Default::default()
+        })
+        .await
+    {
+        return Err(Error::from(format!("Deletion {} failed with {}", s3_key, e)));
     };
 
     Ok(())

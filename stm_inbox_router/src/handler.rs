@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::postgres::CommitOwnership;
-use crate::s3::{copy_within_s3, get_bytes_from_s3, S3Event, REPORT_FILE_EXT_IN_S3};
+use crate::s3::{copy_within_s3, delete_s3_object, get_bytes_from_s3, S3Event, REPORT_FILE_EXT_IN_S3};
 use bs58;
 use flate2::read::GzDecoder;
 use lambda_runtime::{Context, Error};
@@ -232,7 +232,8 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     )
     .await?;
 
-    // delete source
+    // delete the submission from inbox queue
+    delete_s3_object(config, s3_key.clone()).await?;
 
     Ok(())
 }
