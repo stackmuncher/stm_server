@@ -21,9 +21,6 @@ GRANT EXECUTE ON FUNCTION stm_add_email(varchar,varchar,boolean) to public;
 -- select stm_add_email('9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK','max@onebro.me', false)
 -- select stm_add_email('9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK','test@onebro.me', false)
 
--- select * from t_owner_idship limit 100 
--- truncate table t_email_ownership
+-- select * from t_email_ownership limit 100 
 -- select * from t_email_ownership where email = 'max@onebro.me'
 -- select * from t_email_ownership where owner_id ='9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK'
-
-

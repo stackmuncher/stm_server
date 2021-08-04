@@ -17,8 +17,6 @@ GRANT EXECUTE ON FUNCTION stm_add_commits(varchar,varchar,varchar[],bigint[]) to
 -- select stm_add_commits('o2','p3', array['c7','c8'],array[1627380297,1627338215])
 -- select stm_add_commits('o2','p3', array['c1','c2'],array[1627380297,1627338215])
 
--- select * from t_owner_idship limit 100 
+-- select * from t_commit_ownership limit 100 
 -- explain analyze select * from t_commit_ownership where commit_hash = any(array['c1', 'c2'])
 -- explain analyze select * from t_commit_ownership where commit_hash in ('c1', 'c2')
-
-

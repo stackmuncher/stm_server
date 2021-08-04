@@ -11,6 +11,7 @@ use stackmuncher_lib::report::Report;
 use std::collections::{HashMap, HashSet};
 use std::io::Read;
 use tracing::{debug, error, warn};
+use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> Result<(), Error> {
     // these 2 lines are for debugging only to see the raw request
@@ -85,21 +86,20 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
         .git_ids_included
         .iter()
         .filter_map(|email| {
-            // really basic validation if the git id/email is harmless
-            let email = email.trim().to_lowercase();
-            if email.len() > 4 && email.len() < 150 && email.contains("@") {
+            if let Some(email) = validate_email_address(email) {
                 Some((email, false))
             } else {
+                warn!("Invalid email: {}", email);
                 None
             }
         })
         .collect::<HashMap<String, bool>>();
+    // add the primary email, if any
     if let Some(email) = &report.primary_email {
-        // really basic validation if the git id/email is harmless
-        let email = email.trim().to_lowercase();
-        if email.len() > 4 && email.len() < 150 && email.contains("@") {
-            info!("Added primary email: {}", email);
+        if let Some(email) = validate_email_address(email) {
             user_emails.insert(email, true);
+        } else {
+            warn!("Invalid primary email: {}", email);
         }
     }
 
@@ -148,16 +148,8 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     // a valid commit looks like this: 7474684a_1595904770
     // anything else is either a bug or some other kind of data corruption
     for commit in commit_list {
-        let split = commit.split("_").collect::<Vec<&str>>();
-        if split.len() == 2 && split[0].len() == 8 && config.commit_hash_regex_short.is_match(split[0]) {
-            // there should be no commits with no dates
-            if let Ok(ts) = i64::from_str_radix(split[1], 10) {
-                valid_commits.insert(split[0].to_string(), ts);
-            } else {
-                // something's off here - no point processing this report any further
-                error!("Invalid commit date: {}", commit);
-                return Ok(());
-            };
+        if let Some(commit) = validate_short_commit_hash(commit, config) {
+            valid_commits.insert(commit.0, commit.1);
         } else {
             // something's off here - no point processing this report any further
             error!("Invalid commit: {}", commit);
@@ -166,6 +158,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     }
 
     // get a list of hashes to search for existing projects
+    // hashmap should give us a randomized list, but we may need to adjust its size
     let commit_hashes_for_search = valid_commits
         .keys()
         .take(valid_commits.keys().len().min(50))
@@ -299,4 +292,51 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     delete_s3_object(config, s3_key.clone()).await?;
 
     Ok(())
+}
+
+/// Returns a cleaned up and normalized email address or None if the address doesn't seem to be deliverable.
+/// The length must be between 4 and 150 unicode chars. This validation is specific for the purpose of this module and the DB constraints.
+fn validate_email_address(email: &String) -> Option<String> {
+    let email = email.trim();
+    let email = email.trim().to_lowercase();
+    if email.len() < 4
+        || email.split("@").count() != 2
+        || email.contains(" ")
+        || email.contains("\n")
+        || email.contains("\r")
+        || email.contains("\t")
+        || email.contains("\\")
+        || email.contains("\0")
+    {
+        return None;
+    }
+
+    // Postgres DB does not allow more than 150 unicode chars per email.
+    // A longer than that email address is probably meaningless and would get stuck in the pipes.
+    let unicode_char_count = email.graphemes(true).count();
+    if unicode_char_count > 150 {
+        return None;
+    }
+
+    Some(email.to_lowercase())
+}
+
+/// Returns a tuple with a valid commit hash and a timestamp if they seem to be valid.
+/// The timestamp can actually be any valid i64 number and not a realistic date.
+fn validate_short_commit_hash(commit_hash_with_ts: &String, config: &Config) -> Option<(String, i64)> {
+    let split = commit_hash_with_ts.split("_").collect::<Vec<&str>>();
+    if split.len() != 2 {
+        return None;
+    }
+
+    if split[0].len() != 8 || !config.commit_hash_regex_short.is_match(split[0]) {
+        return None;
+    }
+
+    // there should be no commits with no dates
+    if let Ok(ts) = i64::from_str_radix(split[1], 10) {
+        return Some((split[0].to_string(), ts));
+    }
+
+    None
 }
