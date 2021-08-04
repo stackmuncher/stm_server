@@ -25,6 +25,9 @@ impl From<&Row> for CommitOwnership {
     }
 }
 
+/// Corresponds to `t_email_ownership` table
+pub(crate) struct EmailOwnership {}
+
 impl CommitOwnership {
     /// Returns a list of all matching commit details, incl project, owner and timestamp.
     /// Do not use with an empty `commit_hash`.
@@ -133,6 +136,36 @@ impl CommitOwnership {
                 )));
             }
         }
+    }
+}
+
+impl EmailOwnership {
+    /// Associates an email address with a public key or updates `is_primary` flag for existing records.
+    pub(crate) async fn add_email(
+        pg_client: &Client,
+        owner_id: &String,
+        email: &String,
+        is_primary: &bool,
+    ) -> Result<(), Error> {
+        info!("Adding email {}, primary: {}", email, is_primary);
+
+        // push the data to PG, log the result, nothing to return
+        let rows = match pg_client
+            .execute(
+                "select stm_add_email($1::varchar, $2::varchar, $3::boolean)",
+                &[owner_id, email, is_primary],
+            )
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => {
+                error!("stm_add_email failed with {}", e);
+                return Err(Error::from(e));
+            }
+        };
+
+        debug!("Rows updated: {}", rows);
+        Ok(())
     }
 }
 

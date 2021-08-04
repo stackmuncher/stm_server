@@ -1,8 +1,9 @@
 use crate::config::Config;
-use crate::postgres::CommitOwnership;
+use crate::postgres::{CommitOwnership, EmailOwnership};
 use crate::s3::{copy_within_s3, delete_s3_object, get_bytes_from_s3, S3Event, REPORT_FILE_EXT_IN_S3};
 use bs58;
 use flate2::read::GzDecoder;
+use futures::stream::{FuturesUnordered, StreamExt};
 use lambda_runtime::{Context, Error};
 use log::info;
 use serde_json::Value;
@@ -62,6 +63,11 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
 
     info!("OwnerID: {}", owner_id);
 
+    // this should already be validated, but check just in case
+    if owner_id.len() != 44 {
+        return Err(Error::from(format!("Invalid owner_id length: {}", owner_id)));
+    }
+
     // read and unzip the report from S3
     let report = get_bytes_from_s3(config, s3_key.clone()).await?;
     let mut decoder = GzDecoder::new(report.as_slice());
@@ -73,8 +79,39 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     // load the file into a report struct
     let report = serde_json::from_slice::<Report>(buffer.as_slice())?;
 
+    // compile the full list of user emails and mark the primary email as such
+    // the primary email may or may not be in the list of git IDs
+    let mut user_emails = report
+        .git_ids_included
+        .iter()
+        .filter_map(|email| {
+            // really basic validation if the git id/email is harmless
+            let email = email.trim().to_lowercase();
+            if email.len() > 4 && email.len() < 150 && email.contains("@") {
+                Some((email, false))
+            } else {
+                None
+            }
+        })
+        .collect::<HashMap<String, bool>>();
+    if let Some(email) = &report.primary_email {
+        // really basic validation if the git id/email is harmless
+        let email = email.trim().to_lowercase();
+        if email.len() > 4 && email.len() < 150 && email.contains("@") {
+            info!("Added primary email: {}", email);
+            user_emails.insert(email, true);
+        }
+    }
+
+    // make a list of email jobs to update the DB
+    let mut email_jobs: FuturesUnordered<_> = user_emails
+        .iter()
+        .map(|email| EmailOwnership::add_email(&config.pg_client, &owner_id, &email.0, email.1))
+        .collect();
+
     // check if there is just one project included in the report
     if report.projects_included.len() != 1 {
+        // somehow a wrong report was submitted
         error!("Wrong number of projects in the report: {}", report.projects_included.len());
         return Ok(());
     }
@@ -234,6 +271,28 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     let copy_results = futures::join!(copy_with_ts, copy_latest);
     if copy_results.0.is_err() || copy_results.1.is_err() {
         return Err(Error::from("Failed to copy reports."));
+    }
+
+    // drive email insertion jobs to completion
+    let mut email_addition_failed = false;
+    loop {
+        match email_jobs.next().await {
+            Some(job_result) => {
+                // a job was completed
+                if job_result.is_err() {
+                    email_addition_failed = true;
+                }
+            }
+            None => {
+                // no more jobs left in the futures queue
+                info!("All repo jobs processed");
+                break;
+            }
+        }
+    }
+
+    if email_addition_failed {
+        return Err(Error::from("Failed to add one or more email addresses to t_email_ownership"));
     }
 
     // delete the submission from inbox queue

@@ -13,5 +13,5 @@ GRANT EXECUTE ON FUNCTION stm_get_latest_project_commit(varchar, varchar) to pub
 -- DROP FUNCTION IF EXISTS stm_get_latest_project_commit
 
 /*** TESTING ***/
-select * from stm_get_latest_project_commit('9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK', 'LJq8YVWJt7C9Sxa4poJKea')
-explain analyze select max(commit_ts) from t_commit_ownership where owner_id='9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK' and project_id='LJq8YVWJt7C9Sxa4poJKea'
+-- select * from stm_get_latest_project_commit('9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK', 'LJq8YVWJt7C9Sxa4poJKea')
+-- explain analyze select max(commit_ts) from t_commit_ownership where owner_id='9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK' and project_id='LJq8YVWJt7C9Sxa4poJKea'

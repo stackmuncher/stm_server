@@ -105,11 +105,16 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
 
     info!("Report for pub key: {}", pub_key_bs58);
 
+    if pub_key_bs58.len() != 44 {
+        error!("Invalid pub key length: {}", pub_key_bs58.len());
+        return gw_response(Some("Invalid public key length. Expecting 44 bytes.".to_owned()), 403);
+    }
+
     let pub_key = match bs58::decode(pub_key_bs58.clone()).into_vec() {
         Ok(v) => v,
         Err(e) => {
             error!("Failed to decode the stackmuncher_key from based58 due to: {}", e);
-            return gw_response(Some(ERROR_500_MSG.to_owned()), 500);
+            return gw_response(Some("Failed to decode public key from based58".to_owned()), 403);
         }
     };
 
