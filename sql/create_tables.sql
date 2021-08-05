@@ -47,3 +47,32 @@ CREATE INDEX idx_email ON t_email_ownership (email);
 
 DROP INDEX IF EXISTS idx_unconfirmed;
 CREATE INDEX idx_unconfirmed ON t_email_ownership (confirmation_id);
+
+---------------------------------------------------------------------------------------------------------------
+
+-- contains details of all registered members
+DROP TABLE IF EXISTS t_dev CASCADE;
+CREATE TABLE t_dev (
+      -- can only be the public key of the member for inbox submissions, no prefix
+    -- e.g. `9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK`
+  owner_id varchar PRIMARY KEY,
+  -- NULL = no report, date = when the last good report was GENERATED
+  -- reset it to NULL to reguest report re-generation
+  report_ts timestamp with time zone,
+  -- NULL = no active report generation job running, UUID = ID of an active job or the last failed job
+  report_in_flight_id uuid,
+  -- timestamp when the last report generation job started, may or may not be set to NULL on completion
+  report_in_flight_ts timestamp with time zone,
+  -- a consequitive number of failures trying to produce a report, reset to 0 on success
+  report_fail_counter integer NOT NULL DEFAULT (0),
+  -- the timestamp of the latest submission
+  -- it should be earlier than the report_ts, otherwise the report is stale and should be regenerated
+  last_submission_ts timestamp with time zone
+);
+
+-- find devs with different combo of report_ts, in_flight and fail counter
+DROP INDEX IF EXISTS idx_dev_stale_reports;
+CREATE INDEX idx_dev_stale_reports ON t_dev (
+  owner_id
+)
+WHERE (report_ts IS NULL or report_ts < last_submission_ts)  and report_in_flight_id is NULL and last_submission_ts is NOT NULL;

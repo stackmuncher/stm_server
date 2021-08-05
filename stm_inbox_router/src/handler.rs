@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::postgres::{CommitOwnership, EmailOwnership};
+use crate::postgres::{CommitOwnership, Dev, EmailOwnership};
 use crate::s3::{copy_within_s3, delete_s3_object, get_bytes_from_s3, S3Event, REPORT_FILE_EXT_IN_S3};
 use bs58;
 use flate2::read::GzDecoder;
@@ -265,6 +265,9 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     if copy_results.0.is_err() || copy_results.1.is_err() {
         return Err(Error::from("Failed to copy reports."));
     }
+
+    // mark the developer record for re-processing
+    Dev::queue_up_for_update(&config.pg_client, &owner_id).await?;
 
     // drive email insertion jobs to completion
     let mut email_addition_failed = false;

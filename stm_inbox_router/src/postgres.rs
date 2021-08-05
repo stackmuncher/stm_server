@@ -28,6 +28,9 @@ impl From<&Row> for CommitOwnership {
 /// Corresponds to `t_email_ownership` table
 pub(crate) struct EmailOwnership {}
 
+/// Corresponds to `t_dev` table
+pub(crate) struct Dev {}
+
 impl CommitOwnership {
     /// Returns a list of all matching commit details, incl project, owner and timestamp.
     /// Do not use with an empty `commit_hash`.
@@ -160,6 +163,28 @@ impl EmailOwnership {
             Ok(v) => v,
             Err(e) => {
                 error!("stm_add_email failed with {}", e);
+                return Err(Error::from(e));
+            }
+        };
+
+        debug!("Rows updated: {}", rows);
+        Ok(())
+    }
+}
+
+impl Dev {
+    /// Updates the developer record to make it selectable for report update after a new submission.
+    pub(crate) async fn queue_up_for_update(pg_client: &Client, owner_id: &String) -> Result<(), Error> {
+        info!("Queueing up report dev {}", owner_id);
+
+        // push the data to PG, log the result, nothing to return
+        let rows = match pg_client
+            .execute("select stm_queue_up_dev_report($1::varchar)", &[owner_id])
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => {
+                error!("stm_queue_up_dev_report failed with {}", e);
                 return Err(Error::from(e));
             }
         };
