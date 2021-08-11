@@ -1,0 +1,93 @@
+{
+  "$id": "https://schemas.stackmuncher.com/stm_inbox_flows_config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "config",
+  "description": "Describes the config file for stm_inbox_flows app.",
+  "type": "object",
+  "required": [
+    "s3_bucket_private_reports",
+    "s3_region",
+    "es_url",
+    "es_idx",
+    "job_queues",
+    "flow",
+    "log_level"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL of the JSON schema. Specific to VSCode."
+    },
+    "line_endings": {
+      "const": "unix",
+      "description": "Only LF line endings are allowed for consistency."
+    },
+    "s3_bucket_private_reports": {
+      "type": "string",
+      "description": "Name of the S3 bucket with report submissions"
+    },
+    "s3_region": {
+      "type": "string",
+      "description": "AWS Region"
+    },
+    "es_url": {
+      "type": "string",
+      "description": "ElasticSearch URL"
+    },
+    "es_idx": {
+      "type": "object",
+      "description": "List of ElasticSearch index names",
+      "required": [
+        "dev"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "description": "Developer details with all reports merged into one index"
+        }
+      }
+    },
+    "job_queues": {
+      "type": "object",
+      "description": "DB connection string, timeouts and other properties required to interact with DB-based job queues.",
+      "required": [
+        "con_str",
+        "max_time_in_flight_dev",
+        "max_number_of_fails"
+      ],
+      "properties": {
+        "con_str": {
+          "type": "string",
+          "description": "A PgSQL connection string to the job queues for processing dev reports and other tasks."
+        },
+        "max_time_in_flight_dev": {
+          "type": "integer",
+          "description": "Maximum duration for an active DEV job before it is returned to the queue, in seconds."
+        },
+        "max_number_of_fails": {
+          "type": "integer",
+          "description": "Maximum number of processing failures before the job stops being reprocessed. This value will be multiplied by `max_time_in_flight_*` to calculate the wait time before the job is requeued for every failure count."
+        }
+      }
+    },
+    "flow": {
+      "type": "string",
+      "enum": [
+        "dev_queue"
+      ],
+      "description": "The default value for -flow param. Can be overridden by CLI args. Values: dev_queue"
+    },
+    "log_level": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warn",
+        "info",
+        "debug",
+        "trace"
+      ],
+      "description": "The default value for log level. Can be overridden by -l CLI arg."
+    }
+  },
+  "additionalProperties": false
+}

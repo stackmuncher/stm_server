@@ -1,3 +1,5 @@
 /target
 Cargo.lock
 *.zip
+trace*.txt
+config.json
