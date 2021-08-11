@@ -1,7 +1,9 @@
 use crate::config::Config;
 use crate::jobs::{wait_for_next_cycle, DevJob, FailureType};
 use crate::utils;
+use chrono::Utc;
 use futures::stream::{FuturesUnordered, StreamExt};
+use serde::Serialize;
 use stackmuncher_lib::report::Report;
 use tokio::time::Instant;
 use tokio_postgres::Client as PgClient;
@@ -217,7 +219,7 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     let report_s3_keys = project_reports.into_iter().map(|v| v.1).collect::<Vec<String>>();
 
     info!("Merging {} dev reports for {}", report_s3_keys.len(), owner_id);
-    let combined_report = match merge_reports(report_s3_keys, &config).await {
+    let dev_profile = match merge_reports_into_profile(report_s3_keys, &config).await {
         Err(_) => {
             return Err(FailureType::Retry(owner_id));
         }
@@ -225,7 +227,7 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     };
 
     // push to ES
-    if utils::elastic::upload_to_es(config, &combined_report, &owner_id, &config.es_idx.dev)
+    if utils::elastic::upload_to_es(config, &dev_profile, &owner_id, &config.es_idx.dev)
         .await
         .is_err()
     {
@@ -235,8 +237,8 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     Ok(owner_id)
 }
 
-/// Merge all project reports from S3 into a single dev report
-pub(crate) async fn merge_reports(report_s3_keys: Vec<String>, config: &Config) -> Result<Report, ()> {
+/// Merges all project reports from S3 into a single dev report, extracts the latest personal details and returns a complete developer profile
+pub(crate) async fn merge_reports_into_profile(report_s3_keys: Vec<String>, config: &Config) -> Result<DevProfile, ()> {
     // put all the S3 requests into one futures container
     let mut s3_jobs: FuturesUnordered<_> = report_s3_keys
         .into_iter()
@@ -262,7 +264,7 @@ pub(crate) async fn merge_reports(report_s3_keys: Vec<String>, config: &Config) 
     for report in s3_resp {
         match serde_json::from_slice::<Report>(report.as_slice()) {
             Ok(other_report) => {
-                combined_report = Report::merge(combined_report, other_report);
+                combined_report = Report::merge(combined_report, other_report.abridge());
             }
             Err(e) => {
                 error!("Cannot convert S3report into struct {}", e);
@@ -281,5 +283,24 @@ pub(crate) async fn merge_reports(report_s3_keys: Vec<String>, config: &Config) 
     let mut combined_report = combined_report.unwrap();
     combined_report.reset_combined_dev_report();
 
-    Ok(combined_report)
+    let dev_profile = DevProfile {
+        report: Some(combined_report),
+        updated_at: Utc::now().to_rfc3339(),
+        name: None,
+        blog: None,
+        email: None,
+    };
+
+    Ok(dev_profile)
+}
+
+/// A developer profile with the stack report and some personal info
+#[derive(Debug, Serialize)]
+pub(crate) struct DevProfile {
+    pub name: Option<String>,
+    pub blog: Option<String>,
+    pub email: Option<String>,
+    pub updated_at: String,
+    #[serde(skip_deserializing)]
+    pub report: Option<Report>,
 }

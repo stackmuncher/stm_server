@@ -8,7 +8,7 @@ UPDATE t_dev
   SET report_ts = now(), report_in_flight_id = NULL
   WHERE owner_id = _owner_id AND report_in_flight_id = _report_in_flight_id;
 
-END
+END;
 $$ COST 100 VOLATILE LANGUAGE 'plpgsql' SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION stm_complete_dev_job(varchar, uuid) to public;
 -- DROP FUNCTION IF EXISTS stm_complete_dev_job

@@ -13,11 +13,7 @@ pub(crate) mod types;
 
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
-async fn call_es_api_put(
-    es_api_endpoint: String,
-    aws_credentials: &AwsCredentials,
-    payload: String,
-) -> Result<(), ()> {
+async fn call_es_api_put(es_api_endpoint: String, aws_credentials: &AwsCredentials, payload: String) -> Result<(), ()> {
     // The URL will need to be split into parts to extract region, host, etc.
     let uri = Uri::from_maybe_shared(es_api_endpoint).expect("Invalid ES URL");
 
@@ -32,9 +28,7 @@ async fn call_es_api_put(
     // prepare the request
     let mut req = SignedRequest::new("PUT", "es", &region, uri.path());
     req.set_payload(Some(payload.as_bytes().to_owned()));
-    req.set_hostname(Some(
-        uri.host().expect("Missing host in ES URL").to_string(),
-    ));
+    req.set_hostname(Some(uri.host().expect("Missing host in ES URL").to_string()));
 
     // these headers are required by ES
     req.add_header("Content-Type", "application/json");
@@ -103,12 +97,16 @@ where
     info!("Uploading to ES idx {} as {}", idx, object_id);
 
     let es_api_endpoint = [config.es_url.as_ref(), "/", idx, "/_doc/", object_id].concat();
-    call_es_api_put(
-        es_api_endpoint,
-        config.aws_credentials(),
-        serde_json::to_string(object_to_upload).expect("Failed to serialize the document struct"),
-    )
-    .await?;
+
+    let payload = match serde_json::to_string(object_to_upload) {
+        Err(e) => {
+            error!("Failed to serialize payload for {} due to {}", object_id, e);
+            return Err(());
+        }
+        Ok(v) => v,
+    };
+
+    call_es_api_put(es_api_endpoint, config.aws_credentials(), payload).await?;
 
     info!("ES upload completed");
 

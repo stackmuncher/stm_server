@@ -28,7 +28,7 @@ impl DevJob {
 
         // push the data to PG, log the result, nothing to return
         let rows = match pg_client
-            .execute("select stm_complete_dev_job($1::varchar, , $2::uuid)", &[owner_id, report_in_flight_id])
+            .execute("select stm_complete_dev_job($1::varchar, $2::uuid)", &[owner_id, report_in_flight_id])
             .await
         {
             Ok(v) => v,

@@ -262,7 +262,7 @@ pub(crate) fn is_combined_project_report(s3_key: &String, owner_id: &String) -> 
 pub(crate) fn parse_date_header(header: &Option<String>) -> Result<i64, ()> {
     // there is some data re. the object - check `last modified` header.
     if let Some(last_modified) = header {
-        match chrono::DateTime::parse_from_rfc2822(&last_modified) {
+        match chrono::DateTime::parse_from_rfc3339(&last_modified) {
             Ok(last_mod) => {
                 return Ok(last_mod.timestamp());
             }
