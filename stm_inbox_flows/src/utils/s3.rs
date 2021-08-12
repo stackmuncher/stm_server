@@ -4,14 +4,15 @@ use futures::stream::TryStreamExt;
 use hyper_rustls::HttpsConnector;
 use rusoto_core::credential::DefaultCredentialsProvider;
 use rusoto_core::HttpClient;
-use rusoto_s3::{GetObjectRequest, ListObjectsV2Request, S3Client, S3};
+use rusoto_s3::{GetObjectRequest, ListObjectsV2Request, PutObjectRequest, S3Client, S3};
 use std::io::Read;
 use std::time::Duration;
 use tracing::{error, info, warn};
 
 /// An S3 prefix for dev reports organized by owner_id/project_id
 pub(crate) const S3_FOLDER_DEV_REPORTS: &str = "reports";
-pub(crate) const S3_COMBINED_DEV_REPORT_NAME: &str = "report.gzip";
+pub(crate) const S3_COMBINED_DEV_REPORT_FILE_NAME: &str = "report.gzip";
+pub(crate) const S3_DEV_PROFILE_FILE_NAME: &str = "profile.gzip";
 
 /// Contains some of the object properties returned by S3 ListObjectV2
 /// There are also size, owner and etag props that were not included
@@ -193,6 +194,30 @@ pub(crate) async fn get_text_from_s3(
     Err(())
 }
 
+/// Uploads the payload to S3.
+pub(crate) async fn upload_to_s3(
+    s3_client: &S3Client,
+    s3_bucket: &String,
+    s3_key: String,
+    payload: Vec<u8>,
+) -> Result<(), ()> {
+    info!("Uploading to S3: {}", s3_key);
+    if let Err(e) = s3_client
+        .put_object(PutObjectRequest {
+            bucket: s3_bucket.clone(),
+            key: s3_key,
+            body: Some(payload.into()),
+            ..Default::default()
+        })
+        .await
+    {
+        error!("Uploading failed: {}", e);
+        return Err(());
+    }
+
+    Ok(())
+}
+
 /// Generates an S3Client with custom settings to match AWS server defaults.
 /// AWS times out idle connections after 20s as per https://aws.amazon.com/premiumsupport/knowledge-center/s3-socket-connection-timeout-error/
 /// We need to sync the idle time of our client with that setting.
@@ -235,7 +260,7 @@ pub(crate) fn build_dev_s3_key_from_owner_id(config: &Config, owner_id: &String)
 /// E.g. `reports/9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK/FZ8zezMFji6VXcWEDxckwy/report.gzip`
 pub(crate) fn is_combined_project_report(s3_key: &String, owner_id: &String) -> bool {
     // trim the ending part of the key as it's the one most likely to differ
-    let trimmed_end = s3_key.trim_end_matches(&["/", S3_COMBINED_DEV_REPORT_NAME].concat());
+    let trimmed_end = s3_key.trim_end_matches(&["/", S3_COMBINED_DEV_REPORT_FILE_NAME].concat());
     // return false if nothing was trimmed - it's obviously not a match
     if trimmed_end.len() == s3_key.len() {
         return false;

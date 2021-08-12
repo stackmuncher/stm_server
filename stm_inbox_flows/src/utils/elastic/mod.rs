@@ -4,7 +4,6 @@ use hyper::{Body, Client, Request, Uri};
 use hyper_rustls::HttpsConnector;
 use rusoto_core::credential::AwsCredentials;
 use rusoto_core::signature::SignedRequest;
-use serde::Serialize;
 use std::convert::TryInto;
 use std::str::FromStr;
 use tracing::{debug, error, info};
@@ -13,7 +12,11 @@ pub(crate) mod types;
 
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
-async fn call_es_api_put(es_api_endpoint: String, aws_credentials: &AwsCredentials, payload: String) -> Result<(), ()> {
+async fn call_es_api_put(
+    es_api_endpoint: String,
+    aws_credentials: &AwsCredentials,
+    payload: Vec<u8>,
+) -> Result<(), ()> {
     // The URL will need to be split into parts to extract region, host, etc.
     let uri = Uri::from_maybe_shared(es_api_endpoint).expect("Invalid ES URL");
 
@@ -27,7 +30,7 @@ async fn call_es_api_put(es_api_endpoint: String, aws_credentials: &AwsCredentia
 
     // prepare the request
     let mut req = SignedRequest::new("PUT", "es", &region, uri.path());
-    req.set_payload(Some(payload.as_bytes().to_owned()));
+    req.set_payload(Some(payload.to_owned()));
     req.set_hostname(Some(uri.host().expect("Missing host in ES URL").to_string()));
 
     // these headers are required by ES
@@ -82,31 +85,17 @@ async fn call_es_api_put(es_api_endpoint: String, aws_credentials: &AwsCredentia
     Err(())
 }
 
-/// Serializes `object_to_upload` and puts it into one of the indexes.
-/// `object_to_upload` cannot be a primitive (e.g. String) - it must be a deserialisable object.
-/// Use `upload_string_to_es` for uploading JSON that is already a String.
-pub(crate) async fn upload_to_es<T>(
+/// Put the JSON string into the specified ES index. The string must be deserialisable into a valid JSON.
+pub(crate) async fn upload_serialized_object_to_es(
     config: &Config,
-    object_to_upload: &T,
+    object_to_upload: Vec<u8>,
     object_id: &String,
     idx: &str,
-) -> Result<(), ()>
-where
-    T: Serialize,
-{
+) -> Result<(), ()> {
     info!("Uploading to ES idx {} as {}", idx, object_id);
 
     let es_api_endpoint = [config.es_url.as_ref(), "/", idx, "/_doc/", object_id].concat();
-
-    let payload = match serde_json::to_string(object_to_upload) {
-        Err(e) => {
-            error!("Failed to serialize payload for {} due to {}", object_id, e);
-            return Err(());
-        }
-        Ok(v) => v,
-    };
-
-    call_es_api_put(es_api_endpoint, config.aws_credentials(), payload).await?;
+    call_es_api_put(es_api_endpoint, config.aws_credentials(), object_to_upload).await?;
 
     info!("ES upload completed");
 

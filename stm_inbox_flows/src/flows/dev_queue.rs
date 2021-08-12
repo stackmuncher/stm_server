@@ -1,10 +1,8 @@
 use crate::config::Config;
+use crate::dev_profile::DevProfile;
 use crate::jobs::{wait_for_next_cycle, DevJob, FailureType};
 use crate::utils;
-use chrono::Utc;
 use futures::stream::{FuturesUnordered, StreamExt};
-use serde::Serialize;
-use stackmuncher_lib::report::Report;
 use tokio::time::Instant;
 use tokio_postgres::Client as PgClient;
 use tracing::{debug, error, info, instrument, warn};
@@ -21,7 +19,7 @@ const MAX_NUMBER_OF_DEV_JOBS_TO_QUEUE_UP: i32 = 100;
 /// Generates a combined developer report by merging all existing repo reports for that login and stores it in ES.
 /// The merge requests come from DB DevJob queue.
 pub(crate) async fn merge_devs_reports(mut config: Config) {
-    info!("Merging dev reports already stored in S3 and store the results in ES.");
+    info!("Merging dev reports already stored in S3 and store the results in S3 + ES.");
 
     // used to determine repeated errors and abort processing
     let mut err_counter = 0usize;
@@ -218,16 +216,15 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     project_reports.sort_unstable_by(|a, b| a.0.cmp(&b.0));
     let report_s3_keys = project_reports.into_iter().map(|v| v.1).collect::<Vec<String>>();
 
-    info!("Merging {} dev reports for {}", report_s3_keys.len(), owner_id);
-    let dev_profile = match merge_reports_into_profile(report_s3_keys, &config).await {
-        Err(_) => {
-            return Err(FailureType::Retry(owner_id));
-        }
-        Ok(v) => v,
-    };
+    // merge multiple reports into a single dev profile
+    let dev_profile = DevProfile::from_contributor_reports(report_s3_keys, &config, &owner_id).await?;
+    let serialized_profile = dev_profile.to_vec()?;
 
-    // push to ES
-    if utils::elastic::upload_to_es(config, &dev_profile, &owner_id, &config.es_idx.dev)
+    // save the profile in S3
+    dev_profile.save_in_s3(&config, &serialized_profile).await?;
+
+    // save the same serialized profile in ES
+    if utils::elastic::upload_serialized_object_to_es(config, serialized_profile, &owner_id, &config.es_idx.dev)
         .await
         .is_err()
     {
@@ -235,72 +232,4 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     }
 
     Ok(owner_id)
-}
-
-/// Merges all project reports from S3 into a single dev report, extracts the latest personal details and returns a complete developer profile
-pub(crate) async fn merge_reports_into_profile(report_s3_keys: Vec<String>, config: &Config) -> Result<DevProfile, ()> {
-    // put all the S3 requests into one futures container
-    let mut s3_jobs: FuturesUnordered<_> = report_s3_keys
-        .into_iter()
-        .map(|s3_key| s3::get_text_from_s3(&config.s3_client(), &config.s3_bucket_private_reports, s3_key, true))
-        .collect();
-
-    // a container for a list of reports as raw bytes retrieved from S3
-    let mut s3_resp: Vec<Vec<u8>> = Vec::new();
-    loop {
-        match s3_jobs.next().await {
-            Some(result) => {
-                s3_resp.push(result?);
-            }
-            None => {
-                // no more jobs left in the futures queue
-                break;
-            }
-        }
-    }
-
-    // merge all user reports into one
-    let mut combined_report: Option<Report> = None;
-    for report in s3_resp {
-        match serde_json::from_slice::<Report>(report.as_slice()) {
-            Ok(other_report) => {
-                combined_report = Report::merge(combined_report, other_report.abridge());
-            }
-            Err(e) => {
-                error!("Cannot convert S3report into struct {}", e);
-                // it would be good to know which report that is, but it's too big to log
-            }
-        }
-    }
-
-    // it's possible there are no reports in the user struct
-    if combined_report.is_none() {
-        error!("No merged report was produced.");
-        return Err(());
-    }
-
-    // unwrap and clean up some fields
-    let mut combined_report = combined_report.unwrap();
-    combined_report.reset_combined_dev_report();
-
-    let dev_profile = DevProfile {
-        report: Some(combined_report),
-        updated_at: Utc::now().to_rfc3339(),
-        name: None,
-        blog: None,
-        email: None,
-    };
-
-    Ok(dev_profile)
-}
-
-/// A developer profile with the stack report and some personal info
-#[derive(Debug, Serialize)]
-pub(crate) struct DevProfile {
-    pub name: Option<String>,
-    pub blog: Option<String>,
-    pub email: Option<String>,
-    pub updated_at: String,
-    #[serde(skip_deserializing)]
-    pub report: Option<Report>,
 }
