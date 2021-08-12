@@ -14,13 +14,13 @@ use utils::s3;
 /// A developer profile with the stack report and some personal info
 #[derive(Debug, Serialize)]
 pub(crate) struct DevProfile {
+    pub owner_id: String,
     pub name: Option<String>,
     pub blog: Option<String>,
     pub email: Option<String>,
     pub updated_at: String,
     #[serde(skip_deserializing)]
     pub report: Option<Report>,
-    pub owner_id: String,
 }
 
 impl DevProfile {
@@ -51,12 +51,12 @@ impl DevProfile {
             .collect();
 
         // a container for a list of reports as raw bytes retrieved from S3
-        let mut s3_resp: Vec<Vec<u8>> = Vec::new();
+        let mut s3_resp: Vec<(Vec<u8>, String)> = Vec::new();
         loop {
             match s3_jobs.next().await {
                 Some(result) => {
-                    if let Ok(result) = result {
-                        s3_resp.push(result);
+                    if let Ok((contents, s3_key)) = result {
+                        s3_resp.push((contents, s3_key));
                     };
                 }
                 None => {
@@ -68,10 +68,21 @@ impl DevProfile {
 
         // merge all user reports into one
         let mut combined_report: Option<Report> = None;
-        for report in s3_resp {
+        for (report, s3_key) in s3_resp {
             match serde_json::from_slice::<Report>(report.as_slice()) {
                 Ok(other_report) => {
-                    combined_report = Report::merge(combined_report, other_report.abridge());
+                    let mut other_report = other_report.abridge();
+                    // add S3 key to the project overview, otherwise there is no way of telling which overview belongs to which project
+                    // there should be just one project overview in each of these reports because they are project reports
+                    other_report.owner_id = Some(owner_id.clone());
+                    other_report.project_id = Some(s3::split_key_into_parts(&s3_key).1);
+                    other_report.github_user_name = None;
+                    other_report.github_repo_name = None;
+                    info!(
+                        "Project ID: {:?}, epoch: {:?}",
+                        other_report.project_id, other_report.last_contributor_commit_date_epoch
+                    );
+                    combined_report = Report::merge(combined_report, other_report);
                 }
                 Err(e) => {
                     error!("Cannot convert S3report into struct {}", e);
@@ -86,12 +97,8 @@ impl DevProfile {
             return Err(FailureType::DoNotRetry(owner_id.clone()));
         }
 
-        // unwrap and clean up some fields
-        let mut combined_report = combined_report.unwrap();
-        combined_report.reset_combined_dev_report();
-
         let dev_profile = DevProfile {
-            report: Some(combined_report),
+            report: combined_report,
             updated_at: Utc::now().to_rfc3339(),
             name: None,
             blog: None,
@@ -103,7 +110,11 @@ impl DevProfile {
     }
 
     /// GZips the json form of the profile and saves it in S3 using a fixed file name in the owner's folder.
-    pub(crate) async fn save_in_s3(&self, config: &Config, serialized_profile: &Vec<u8>) -> Result<(), FailureType<String>> {
+    pub(crate) async fn save_in_s3(
+        &self,
+        config: &Config,
+        serialized_profile: &Vec<u8>,
+    ) -> Result<(), FailureType<String>> {
         let s3_key = [
             s3::S3_FOLDER_DEV_REPORTS,
             "/",
@@ -129,8 +140,11 @@ impl DevProfile {
         };
 
         // write the report details to S3
-        if s3::upload_to_s3(&config.s3_client(), &config.s3_bucket_private_reports, s3_key, profile_json).await.is_err() {
-          return Err(FailureType::Retry(self.owner_id.clone()));
+        if s3::upload_to_s3(&config.s3_client(), &config.s3_bucket_private_reports, s3_key, profile_json)
+            .await
+            .is_err()
+        {
+            return Err(FailureType::Retry(self.owner_id.clone()));
         };
 
         info!("Upload completed");

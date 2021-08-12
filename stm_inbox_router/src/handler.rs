@@ -109,31 +109,16 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
         .map(|email| EmailOwnership::add_email(&config.pg_client, &owner_id, &email.0, email.1))
         .collect();
 
-    // check if there is just one project included in the report
-    if report.projects_included.len() != 1 {
-        // somehow a wrong report was submitted
-        error!("Wrong number of projects in the report: {}", report.projects_included.len());
-        return Ok(());
-    }
-
     // validate the latest commit SHA1
-    let latest_report_commit_sha1 = report.last_contributor_commit_sha1.unwrap_or_default();
-    if latest_report_commit_sha1.len() != 40 || !config.commit_hash_regex_full.is_match(&latest_report_commit_sha1) {
+    let last_contributor_commit_sha1 = report.last_contributor_commit_sha1.unwrap_or_default();
+    if last_contributor_commit_sha1.len() != 40 || !config.commit_hash_regex_full.is_match(&last_contributor_commit_sha1) {
         // something's off here - no point proceeding
-        error!("Invalid latest report commit: {}", latest_report_commit_sha1);
+        error!("Invalid latest report commit: {}", last_contributor_commit_sha1);
         return Ok(());
     }
 
-    // get the list of commits a few levels down into the hierarchy
-    let commit_list = match report
-        .projects_included
-        .iter()
-        .next()
-        .as_ref()
-        .expect("Cannot unwrap included project. It's a bug.")
-        .commits
-        .as_ref()
-    {
+    // get the list of recent project commits
+    let commit_list = match report.recent_project_commits.as_ref() {
         Some(v) => v,
         None => {
             info!("No commit details found.");
@@ -217,14 +202,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     let latest_project_commit_ts =
         CommitOwnership::get_latest_project_commit(&config.pg_client, &owner_id, &project_id).await?;
 
-    if latest_report_commit_ts < latest_project_commit_ts {
-        warn!(
-            "Out of order report for {}/{}. Latest commit ts in PG: {}, report: {}",
-            owner_id, project_id, latest_project_commit_ts, latest_report_commit_ts
-        );
-    }
-
-    // it is the latest - move it to the member's folder
+    // move it to the member's folder
     // the source has the timestamp of the submission in the name, but the dest should have the timestamp of the last commit
     let copy_with_ts = copy_within_s3(
         config,
@@ -238,11 +216,27 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
             "/",
             latest_report_commit_ts.to_string().as_str(),
             "_",
-            latest_report_commit_sha1.as_str(),
+            last_contributor_commit_sha1.as_str(),
             REPORT_FILE_EXT_IN_S3,
         ]
         .concat(),
     );
+
+    // short-circuit the processing here if it's an out of order report
+    // it may be possible that someone makes a commit with a date 100 years ahead in the future
+    // then that commit will always be the latest and the project will never update according to this logic
+    if latest_report_commit_ts < latest_project_commit_ts {
+        warn!(
+            "Out of order report for {}/{}. Latest commit ts in PG: {}, report: {}",
+            owner_id, project_id, latest_project_commit_ts, latest_report_commit_ts
+        );
+
+        // copy the report with the timestamp, but do not update the latest report for the project
+        // because this one arrived out of order
+        copy_with_ts.await?;
+        delete_s3_object(config, s3_key.clone()).await?;
+        return Ok(());
+    }
 
     // copy it again as the latest report with a predefined file name
     let copy_latest = copy_within_s3(

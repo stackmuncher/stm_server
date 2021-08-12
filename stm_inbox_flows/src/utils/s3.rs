@@ -131,7 +131,7 @@ async fn list_up_to_10000_objects_from_s3(
     Ok((key_list, s3_resp.is_truncated.unwrap_or_default()))
 }
 
-/// Returns the contents of the object as non-empty String, otherwise return an error.
+/// Returns the contents of the object as a non-empty String + it's S3 key, otherwise return an error.
 /// An empty object is an error.
 /// * *missing_is_error*: set to true if the object must exist to log an ERROR if it's missing, otherwise it will log it as INFO
 pub(crate) async fn get_text_from_s3(
@@ -139,7 +139,7 @@ pub(crate) async fn get_text_from_s3(
     s3_bucket: &String,
     s3_key: String,
     missing_is_error: bool,
-) -> Result<Vec<u8>, ()> {
+) -> Result<(Vec<u8>, String), ()> {
     info!("Getting S3 object {}", s3_key);
 
     let s3_resp = match s3_client
@@ -183,10 +183,10 @@ pub(crate) async fn get_text_from_s3(
 
                 info!("Unzipped to {} bytes", len);
 
-                return Ok(buffer);
+                return Ok((buffer, s3_key));
             }
 
-            return Ok(data);
+            return Ok((data, s3_key));
         }
     };
 
@@ -245,7 +245,7 @@ pub(crate) fn build_dev_s3_key_from_owner_id(config: &Config, owner_id: &String)
     if !config
         .owner_id_validation_regex
         .as_ref()
-        .expect("Missing owner_id_validation_regex. It's a bub.")
+        .expect("Missing owner_id_validation_regex. It's a bug.")
         .is_match(owner_id)
     {
         error!("Invalid owner id: {}", owner_id);
@@ -300,4 +300,29 @@ pub(crate) fn parse_date_header(header: &Option<String>) -> Result<i64, ()> {
         error!("last_modified header is missing");
         return Err(());
     }
+}
+
+/// Splits the S3 key into _owner_ and _project_ IDs by looking at the S3 key from the end of the string.
+/// E.g. `some_prefix/9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK/NeYatzas1FrogKLDe2nBG8/1628730164_d6f8b0fea106c94f185ae246a2cd43fac1b1c3b0.gzip`
+/// -> `9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK` and `9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK` using PathBuf.
+/// #### This only works on full keys that include the object name.
+/// # Panics
+/// Panics if the string has less than 4 parts: prefix, owner, project and object.
+pub(crate) fn split_key_into_parts(s3_key: &String) -> (String, String) {
+    let mut parts = s3_key.split("/").collect::<Vec<&str>>();
+    if parts.len() < 4 {
+        panic!("Invalid S3 key: {}. It's a bug.", s3_key);
+    }
+
+    let _file_name = parts
+        .pop()
+        .expect(&format!("Failed to extract file name from S3 Key: {}. it's a bug", s3_key));
+    let project_id = parts
+        .pop()
+        .expect(&format!("Failed to extract project ID from S3 Key: {}. it's a bug", s3_key));
+    let owner_id = parts
+        .pop()
+        .expect(&format!("Failed to extract owner ID from S3 Key: {}. it's a bug", s3_key));
+
+    (owner_id.to_owned(), project_id.to_owned())
 }
