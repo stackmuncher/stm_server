@@ -11,8 +11,8 @@ use tracing::{error, info, warn};
 
 /// An S3 prefix for dev reports organized by owner_id/project_id
 pub(crate) const S3_FOLDER_DEV_REPORTS: &str = "reports";
-pub(crate) const S3_COMBINED_DEV_REPORT_FILE_NAME: &str = "report.gzip";
-pub(crate) const S3_DEV_PROFILE_FILE_NAME: &str = "profile.gzip";
+pub(crate) const S3_COMBINED_DEV_REPORT_FILE_NAME: &str = "report.gz";
+pub(crate) const S3_DEV_PROFILE_FILE_NAME: &str = "profile.gz";
 
 /// Contains some of the object properties returned by S3 ListObjectV2
 /// There are also size, owner and etag props that were not included
@@ -257,7 +257,7 @@ pub(crate) fn build_dev_s3_key_from_owner_id(config: &Config, owner_id: &String)
 
 /// Returns true if the key points at an object in `reports_prefix/owner_id/project_id/combined_report_name`.
 /// The combined report name is the same for everyone and comes from `S3_COMBINED_DEV_REPORT_NAME` constant.
-/// E.g. `reports/9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK/FZ8zezMFji6VXcWEDxckwy/report.gzip`
+/// E.g. `reports/9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK/FZ8zezMFji6VXcWEDxckwy/report.gz`
 pub(crate) fn is_combined_project_report(s3_key: &String, owner_id: &String) -> bool {
     // trim the ending part of the key as it's the one most likely to differ
     let trimmed_end = s3_key.trim_end_matches(&["/", S3_COMBINED_DEV_REPORT_FILE_NAME].concat());
@@ -303,7 +303,7 @@ pub(crate) fn parse_date_header(header: &Option<String>) -> Result<i64, ()> {
 }
 
 /// Splits the S3 key into _owner_ and _project_ IDs by looking at the S3 key from the end of the string.
-/// E.g. `some_prefix/9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK/NeYatzas1FrogKLDe2nBG8/1628730164_d6f8b0fea106c94f185ae246a2cd43fac1b1c3b0.gzip`
+/// E.g. `some_prefix/9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK/NeYatzas1FrogKLDe2nBG8/1628730164_d6f8b0fea106c94f185ae246a2cd43fac1b1c3b0.gz`
 /// -> `9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK` and `9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK` using PathBuf.
 /// #### This only works on full keys that include the object name.
 /// # Panics

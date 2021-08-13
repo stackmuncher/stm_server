@@ -25,7 +25,7 @@
           "configurationId": "report_added",
           "object": {
             "eTag": "8fb4ce2384865e68aec0bddcd35cfe5e",
-            "key": "queue/1627801778_9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK.gzip",
+            "key": "queue/1627801778_9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK.gz",
             "sequencer": "00610648B26CBF8143",
             "size": 7172
           },

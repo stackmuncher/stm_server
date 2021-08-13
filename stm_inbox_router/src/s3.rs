@@ -6,7 +6,7 @@ use serde::Deserialize;
 use tracing::info;
 
 /// This const must be in sync with the same constant in other crates.
-pub(crate) const REPORT_FILE_EXT_IN_S3: &str = ".gzip";
+pub(crate) const REPORT_FILE_EXT_IN_S3: &str = ".gz";
 
 // /// Reuses the existing S3 client and calls `put_object` for the provided payload and config.
 // /// The reports are stored under `timestamp_pubkey.json`
@@ -131,7 +131,7 @@ pub(crate) struct S3Entity {
 
 #[derive(Deserialize)]
 pub(crate) struct S3Object {
-    /// S3 key, ex bucket name, e.g. `queue/1627801778_9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK.gzip`
+    /// S3 key, ex bucket name, e.g. `queue/1627801778_9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK.gz`
     pub key: Option<String>,
     /// The object size in bytes, e.g. 7172
     pub size: Option<i64>,

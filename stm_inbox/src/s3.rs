@@ -4,7 +4,7 @@ use rusoto_s3::{PutObjectRequest, S3};
 use tracing::{error, info};
 
 /// This const must be in sync with the same constant in other crates.
-pub(crate) const REPORT_FILE_EXT_IN_S3: &str = ".gzip";
+pub(crate) const REPORT_FILE_EXT_IN_S3: &str = ".gz";
 
 /// Reuses the existing S3 client and calls `put_object` for the provided payload and config.
 /// The reports are stored under `timestamp_pubkey.json`
@@ -14,7 +14,7 @@ pub(crate) async fn upload_to_s3(config: &Config, report_bytes: Vec<u8>, pub_key
     // so it's safe to be used in the object name as-is
     let report_name = [Utc::now().timestamp().to_string(), pub_key].join("_");
 
-    // the resulting key looks like `queue/1621680890_7prBWD7pzYk2czeXZeXzjxjDQbnuka2RLShdW5AxWuk7.gzip`
+    // the resulting key looks like `queue/1621680890_7prBWD7pzYk2czeXZeXzjxjDQbnuka2RLShdW5AxWuk7.gz`
     let s3_key: String = [&config.s3_prefix, "/", &report_name, REPORT_FILE_EXT_IN_S3].concat();
 
     info!("Uploading to S3 {}", s3_key);

@@ -43,7 +43,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     // required to ID the transaction in the log, otherwise it's not known which report failed
     info!("S3 key: {}", s3_key);
 
-    // extract the owner id from a key like this `queue/1621680890_7prBWD7pzYk2czeXZeXzjxjDQbnuka2RLShdW5AxWuk7.gzip`
+    // extract the owner id from a key like this `queue/1621680890_7prBWD7pzYk2czeXZeXzjxjDQbnuka2RLShdW5AxWuk7.gz`
     let owner_id = match s3_key.split("_").last() {
         Some(v) => v,
         None => {
