@@ -1,0 +1,403 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "lowercase": {
+          "type": "custom",
+          "tokenizer": "lowercase",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      },
+      "normalizer": {
+        "lowercase": {
+          "type": "custom",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "avatar_url": {
+        "type": "text"
+      },
+      "bio": {
+        "type": "text"
+      },
+      "blog": {
+        "type": "text"
+      },
+      "company": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "created_at": {
+        "type": "date"
+      },
+      "email": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "followers": {
+        "type": "long"
+      },
+      "following": {
+        "type": "long"
+      },
+      "hireable": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "long"
+      },
+      "location": {
+        "type": "text"
+      },
+      "login": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "name": {
+        "type": "text",
+        "analyzer": "lowercase"
+      },
+      "node_id": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "owner_id": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "public_gists": {
+        "type": "long"
+      },
+      "public_repos": {
+        "type": "long"
+      },
+      "report": {
+        "properties": {
+          "contributor_git_ids": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            },
+            "analyzer": "lowercase"
+          },
+          "date_head": {
+            "type": "date"
+          },
+          "date_init": {
+            "type": "date"
+          },
+          "git_ids_included": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            },
+            "analyzer": "lowercase"
+          },
+          "is_single_commit": {
+            "type": "boolean"
+          },
+          "last_contributor_commit_date_epoch": {
+            "type": "long"
+          },
+          "last_contributor_commit_date_iso": {
+            "type": "date"
+          },
+          "last_contributor_commit_sha1": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "owner_id": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "primary_email": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "project_id": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "projects_included": {
+            "type": "object",
+            "enabled": false
+          },
+          "recent_project_commits": {
+            "type": "object",
+            "enabled": false
+          },
+          "report_id": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "reports_included": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 20,
+                "normalizer": "lowercase"
+              }
+            },
+            "analyzer": "lowercase"
+          },
+          "tech": {
+            "type": "nested",
+            "include_in_root": true,
+            "properties": {
+              "blank_lines": {
+                "type": "long"
+              },
+              "block_comments": {
+                "type": "long"
+              },
+              "bracket_only_lines": {
+                "type": "long"
+              },
+              "code_lines": {
+                "type": "long"
+              },
+              "docs_comments": {
+                "type": "long"
+              },
+              "files": {
+                "type": "long"
+              },
+              "inline_comments": {
+                "type": "long"
+              },
+              "keywords": {
+                "properties": {
+                  "c": {
+                    "type": "long"
+                  },
+                  "k": {
+                    "type": "text",
+                    "fields": {
+                      "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256,
+                        "normalizer": "lowercase"
+                      }
+                    },
+                    "analyzer": "lowercase"
+                  }
+                }
+              },
+              "language": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256,
+                    "normalizer": "lowercase"
+                  }
+                },
+                "analyzer": "lowercase"
+              },
+              "line_comments": {
+                "type": "long"
+              },
+              "muncher_hash": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                  }
+                }
+              },
+              "muncher_name": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                  }
+                }
+              },
+              "pkgs": {
+                "properties": {
+                  "c": {
+                    "type": "long"
+                  },
+                  "k": {
+                    "type": "text",
+                    "fields": {
+                      "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256,
+                        "normalizer": "lowercase"
+                      }
+                    },
+                    "analyzer": "lowercase"
+                  },
+                  "t": {
+                    "type": "text"
+                  }
+                }
+              },
+              "pkgs_kw": {
+                "properties": {
+                  "c": {
+                    "type": "long"
+                  },
+                  "k": {
+                    "type": "text",
+                    "fields": {
+                      "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256,
+                        "normalizer": "lowercase"
+                      }
+                    },
+                    "analyzer": "lowercase"
+                  }
+                }
+              },
+              "refs": {
+                "properties": {
+                  "c": {
+                    "type": "long"
+                  },
+                  "k": {
+                    "type": "text",
+                    "fields": {
+                      "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256,
+                        "normalizer": "lowercase"
+                      }
+                    },
+                    "analyzer": "lowercase"
+                  },
+                  "t": {
+                    "type": "text"
+                  }
+                }
+              },
+              "refs_kw": {
+                "properties": {
+                  "c": {
+                    "type": "long"
+                  },
+                  "k": {
+                    "type": "text",
+                    "fields": {
+                      "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256,
+                        "normalizer": "lowercase"
+                      }
+                    },
+                    "analyzer": "lowercase"
+                  }
+                }
+              },
+              "total_lines": {
+                "type": "long"
+              }
+            }
+          },
+          "timestamp": {
+            "type": "date"
+          },
+          "unknown_file_types": {
+            "properties": {
+              "c": {
+                "type": "long"
+              },
+              "k": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "twitter_username": {
+        "type": "text"
+      },
+      "updated_at": {
+        "type": "date"
+      }
+    }
+  }
+}
