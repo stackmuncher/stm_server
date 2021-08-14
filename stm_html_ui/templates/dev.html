@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+
+{% include "includes/head.html" %}
+
+<body>
+  {% include "includes/top-nav.html" %}
+  <div class="container-fluid">
+    <div class="row">
+      {% if devs.hits.hits | length > 0 %}
+      <div class="col-md-3">
+        {% for hit in devs.hits.hits %}
+        {% set user = hit._source %}
+
+        <h1><small>{% if user.name %}{{user.name}}{% else %}{{user.login}}{% endif %}</small></h1>
+        <h5><small>Software Developer</small></h5>
+
+        <ul class="mt-3 ps-3">
+          {% if user.hireable %}
+          <li class="mb-1"><strong><span class="badge bg-success">Open to work</span></strong></li>
+          {% endif %}
+          {% if user.location %}
+          <li class="mb-1"><strong>Location</strong>: {{user.location}}</li>
+          {% endif %}
+          {% if user.company %}
+          <li class="mb-1"><strong>Company</strong>: {{user.company}}</li>
+          {% endif %}
+          <li class="mb-1"><strong>Github</strong>: <a href="https://github.com/{{user.login}}">{{user.login}}</a></li>
+          {% if user.blog %}
+          <li class="mb-1">
+            <div class="text-truncate"><strong>Website</strong>: <a class="text-truncate" href="{% if user.blog is not starting_with('http') %}//{% endif %}{{user.blog}}">{{user.blog}}</a></div>
+          </li>
+          {% endif %}
+          {% if user.email %}
+          <li class="mb-1"><strong>Email</strong>: {{user.email}}</li>
+          {% endif %}
+
+          {% set init = user.report.date_init | date(format="%Y") | int() %}
+          {% set today = now() | date(format="%Y") | int() %}
+          <li class="mb-1"><strong>Code history</strong>: {% if today == init %}
+            &lt; 1 year
+            {% else %}
+            {{ today - init + 1 }} years
+            {% endif %}
+          </li>
+          <li class="mb-1"><strong>Report date</strong>:
+            {{ user.report.timestamp | date(format="%d %b %Y") }}
+          </li>
+        </ul>
+
+      </div>
+      <div class="col-md-9">
+        <div class="table-responsive">
+          <table class="table mt-4">
+            <thead>
+              <tr>
+                <th scope="col">Language</th>
+                <th scope="col">File count</th>
+                <th scope="col">Lines of code</th>
+                <th scope="col">Libraries</th>
+                <th scope="col">Doco comments</th>
+                <th scope="col">Inline comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tech in user.report.tech | sort(attribute="total_lines") | reverse %}
+              <tr>
+                <td scope="row"><strong>{{tech.language}}</strong></td>
+                <td>{{tech.files}}</td>
+                <td>{{tech.code_lines}}</td>
+                <td>{% if tech.pkgs and tech.pkgs | length > 0 %}{{tech.pkgs | length}}{% endif %}</td>
+                <td>{% if tech.docs_comments > 0 %}{{tech.docs_comments}}{% endif %}</td>
+                <td>{% if tech.line_comments > 0 %}{{tech.line_comments}}{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="mt-4">Projects</h3>
+        <ul class="list-inline">
+          {% if user.report.projects_included %}
+
+          {% for proj in user.report.projects_included | sort(attribute="date_head") | reverse %}
+          {% if proj.loc > 100 %}
+          <li class="pe-4 mb-4 .text-nowrap list-inline-item">
+            <div class="card" style="width: 20rem;">
+              <div class="card-body">
+                <h6 class="card-title"><a href="https://github.com/{{user.login}}/{{proj.project_name}}" title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. View the details.">{{proj.project_name | truncate(length=50)}}</a></h5>
+                  <h6 class="card-subtitle mb-2 text-muted">
+                    <span title="Lines of code" class="loc-badge">{{proj.loc}}</span>
+                    <span title="Number of external libraries" class="libs-badge ms-3">{{proj.libs}}</span>
+                    {% if proj.date_init and proj.date_head %}
+                    <span title="Date of the last commit" class="calendar-badge ms-3"><small>{{proj.date_head | date(format="%b %Y")}}</small></span>
+                    {% endif %}
+                  </h6>
+                  <p class="card-text">{{proj.tech | sort(attribute="loc") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ")}}</p>
+              </div>
+            </div>
+          </li>
+          {% endif %}
+          {% endfor %}
+
+          {% else %}
+
+          {% for proj in user.report.reports_included | sort %}
+          {% set len = proj | length | int() %}
+          <li class="pe-4 .text-nowrap list-inline-item">
+            {% set pname = proj | truncate(length=len-7, end="") | replace(from=user.login, to="") | replace(from="/",
+            to="") %}
+            <a href="https://github.com/{{user.login}}/{{pname}}">{{pname}}</a>
+          </li>
+          {% endfor %}
+
+          {% endif %}
+        </ul>
+
+        {% for tech in user.report.tech %}
+
+        {% if tech.refs and tech.refs | length > 0 %}
+        {% set_global refs = tech.refs %}
+        {% elif tech.pkgs and tech.pkgs | length > 0 %}
+        {% set_global refs = tech.pkgs %}
+        {% else %}
+        {% set_global refs = [] %}
+        {% endif %}
+
+        {% if refs | length > 0 %}
+        {% set col = refs | length / 2 | int() %}
+        <h3 class="mt-4">{{tech.language}} Libraries</h3>
+        <div class="row">
+
+          <div class="col-lg-6">
+
+            <dl class="row mb-0">
+              <dt class="col-10 text-truncate">
+                <strong>Name</strong>
+              </dt>
+              <dd class="col-2 text-end">
+                <strong>Times used</strong>
+              </dd>
+              {% for ref in refs | sort(attribute="k") | slice(start=0, end=col+1) %}
+              <dt class="col-10 text-truncate">
+                <a href="/?{{tech.language | urlencode}} {{ref.k}}">{{ref.k}}</a>
+              </dt>
+              <dd class="col-2 text-end pe-3">
+                <small>{{ref.c}}</small>
+              </dd>
+              {% endfor %}
+            </dl>
+          </div>
+
+          <div class="col-lg-6">
+            <dl class="row mb-0">
+              <dt class="col-10 text-truncate d-none d-lg-block">
+                <strong>Name</strong>
+              </dt>
+              <dd class="col-2 text-end d-none d-lg-block">
+                <strong>Times used</strong>
+              </dd>
+              {% for ref in refs | sort(attribute="k") | slice(start=col+1) %}
+              <dt class="col-10 text-truncate">
+                <a href="/?{{tech.language | urlencode}} {{ref.k}}">{{ref.k}}</a>
+              </dt>
+              <dd class="col-2 text-end pe-3">
+                <small>{{ref.c}}</small>
+              </dd>
+              {% endfor %}
+            </dl>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        {% if user.report.unknown_file_types %}
+        <h3 class="mt-4">Other files</h3>
+        <ul class="list-inline">
+          {% for ftype in user.report.unknown_file_types | sort(attribute="c") | reverse %}
+          <li class="list-inline-item bg-light text-dark py-0 ps-1 rounded mb-2 border">{{ftype.k}}
+            <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{ftype.c}}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% endfor %}
+      </div>
+      {% else %}
+      <h1 class="mt-3 ms-3">User not found</h1>
+      {% endif %}
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</body>
+
+</html>

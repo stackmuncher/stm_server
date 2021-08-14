@@ -1,0 +1,70 @@
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  {% if meta_robots %}
+  <meta name="robots" content="{{meta_robots}}">
+  {% endif %}
+
+  {% if keywords_str %}
+  <title>{{keywords_str}} software developers and engineers</title>
+  <meta name="description" content="A list of software developers and engineers with experience in {{keywords_str}}.">
+  {% elif login_str and devs.hits.hits | length > 0 %}
+  <title>{% if devs.hits.hits[0]._source.name %}{{devs.hits.hits[0]._source.name}}{% else %}{{devs.hits.hits[0]._source.login}}{% endif %} | Software Developer Profile</title>
+  {% if devs.hits.hits[0]._source.report and devs.hits.hits[0]._source.report.tech %}
+  {% set skills = devs.hits.hits[0]._source.report.tech | sort(attribute="total_lines") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ") %}
+  <meta name="description" content="Uses {{ skills }} and more (as of {{ devs.hits.hits[0]._source.report.date_head | date(format='%b %Y') }}). View their current technology stack and other code-related metrics since {{ devs.hits.hits[0]._source.report.date_init | date(format='%b %Y') }}.">
+  <meta name="keywords" content="software engineer, {{ devs.hits.hits[0]._source.report.tech | map(attribute='language') | join(sep=', ') }}">
+  {% else %}
+  <meta name="description" content="We did not have any technology stack details for this developer when this page was indexed. Visit StackMuncher to check for updates or find more skilled software developers.">
+  {% endif %}
+  {% else %}
+  <title>Global Directory of Software Developers and Engineers</title>
+  <meta name="description" content="Search for software developers and engineers by their technology stack, package use, coding style and other metrics.">
+  {% endif %}
+
+  <link rel="icon" type="image/x-icon" href="/about/logo/favicon.ico" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+  <style>
+    body {
+      font-size: 14px
+    }
+
+    strong,
+    th {
+      font-weight: 600;
+    }
+
+    dt {
+      font-weight: normal;
+    }
+
+    .nav-link {
+      font-size: 16px;
+    }
+
+    .loc-badge {
+      background-image: url("https://assets.stackmuncher.com/icons/lines_of_code.svg");
+      background-clip: padding-box;
+      background-position: left;
+      background-repeat: no-repeat;
+      padding-left: 1.6rem;
+    }
+
+    .libs-badge {
+      background-image: url("https://assets.stackmuncher.com/icons/libraries.svg");
+      background-clip: padding-box;
+      background-position: left;
+      background-repeat: no-repeat;
+      padding-left: 1.6rem;
+    }
+
+    .calendar-badge {
+      background-image: url("https://assets.stackmuncher.com/icons/calendar.svg");
+      background-clip: padding-box;
+      background-position: left;
+      background-repeat: no-repeat;
+      padding-left: 1.6rem;
+    }
+  </style>
+</head>

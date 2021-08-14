@@ -1,0 +1,27 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-3 px-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" title="Home" style="background: left/contain no-repeat url(https://stackmuncher.com/about/logo/logo-bw.svg); padding-left: 50px;" href="/">Stack Muncher</a>
+    <div class="collapse navbar-collapse show" id="navbarSupportedContent">
+      <div class="navbar-nav ms-md-5 me-auto">
+        <ul class="nav justify-content-center">
+          <li class="nav-item">
+            <a class="nav-link px-2 active" href="/"><strong>Directory</strong></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-2" href="/about/"><strong>About</strong></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-2" href="/about/developers/"><strong>Developers</strong></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-2" href="/about/employers/"><strong>Employers</strong></a>
+          </li>
+        </ul>
+      </div>
+      <div class="d-flex my-2 my-lg-0">
+        <input class="form-control me-2" type="search" placeholder="Language + lib names or keywords" title="Find devs working with a particular language, library or API, e.g. C# + Twilio + Azure." value="{{raw_search}}" id="kw" minlength="1" maxlength="100" onkeydown="if (event.keyCode===13) document.getElementById('btn').click()">
+        <button class="btn btn-outline-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="const v=document.getElementById('kw'); if (v.validity.valid) window.location.href='/?'+encodeURIComponent(v.value)">Search</button>
+      </div>
+    </div>
+  </div>
+</nav>

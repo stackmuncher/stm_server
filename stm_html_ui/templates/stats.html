@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+
+{% include "includes/head.html" %}
+
+<body>
+  {% include "includes/top-nav.html" %}
+  <div class="container-fluid">
+    <div class="col-12">
+      <h3 class="mt-5">DEV queue metrics</h3>
+      <div class="table-responsive">
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th scope="col" class="text-start">Timestamp</th>
+              <th scope="col" class="text-end">EPOCH</th>
+              <th title="Total number of devs in the jobs DB" scope="col" class="text-end">Total devs</th>
+              <th title="With a successfully generated or abandoned report" scope="col" class="text-end">with report</th>
+              <th title="No report, excluding devs with an abandoned report" scope="col" class="text-end">no report</th>
+              <th title="No repos, no report can be produced" scope="col" class="text-end">sync'd, zero repos</th>
+              <th title="Tried to generate a report, failed many times, abandoned" scope="col" class="text-end">abandoned report</th>
+              <th title="Have repos, but no report. The repos may or may not have a report." scope="col" class="text-end">repos, no report</th>
+              <th title="All repos have reports, ready to generate dev report" scope="col" class="text-end">repo reports ready</th>
+              <th title="No in flight and hasn't been sync'd" scope="col" class="text-end">to be sync'd</th>
+              <th title="All unsync'd" scope="col" class="text-end">unsynced</th>
+              <th title="All in flight" scope="col" class="text-end">in flight</th>
+              <th title="In flight with max number failed attempts" scope="col" class="text-end">stuck in flight</th>
+              <th title="Sync in progress" scope="col" class="text-end">in flight sync</th>
+              <th title="Failed to sync, remaining in flight" scope="col" class="text-end">stuck on sync</th>
+              <th title="Report in progress" scope="col" class="text-end">report in flight</th>
+              <th title="In flight with max number failed report generation attempts" scope="col" class="text-end">stuck on report</th>
+            </tr>
+          </thead>
+          {% if stats_jobs.stm_stats_dev_job_counts.hits.hits %}
+          <tbody>
+            {% for hit in stats_jobs.stm_stats_dev_job_counts.hits.hits %}
+            {% set stat = hit._source.stm_stats_dev_job_counts %}
+
+            <tr>
+              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td class="text-end">{{stat.ts}}</td>
+              <td class="text-end">{{stat.devs_total}}</td>
+              <td title="{{stat.w_report / stat.devs_total * 100 | round}}%" class="text-end">{{stat.w_report}}</td>
+              <td title="{{stat.no_report / stat.devs_total * 100 | round}}%" class="text-end">{{stat.no_report}}</td>
+              <td title="{{stat.synced_no_repos / stat.devs_total * 100 | round}}%" class="text-end">{{stat.synced_no_repos}}</td>
+              <td title="{{stat.bad_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{stat.bad_report}}</td>
+              <td title="{{stat.readying_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{stat.readying_report}}</td>
+              <td class="text-end">{{stat.pending_report}}</td>
+              <td class="text-end">{{stat.pending_sync}}</td>
+              <td class="text-end">{{stat.unsynced}}</td>
+              <td class="text-end">{{stat.in_fl}}</td>
+              <td class="text-end">{{stat.in_fl_stuck}}</td>
+              <td class="text-end">{{stat.in_fl_sync}}</td>
+              <td class="text-end">{{stat.in_fl_sync_stuck}}</td>
+              <td class="text-end">{{stat.in_fl_report}}</td>
+              <td class="text-end">{{stat.in_fl_report_stuck}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+
+      <h3 class="mt-5">REPO queue metrics</h3>
+      <div class="table-responsive">
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th title="" scope="col" class="text-start">Timestamp</th>
+              <th title="" scope="col" class="text-end">EPOCH</th>
+              <th title="Total number of repos in the jobs DB" scope="col" class="text-end">Total repos</th>
+              <th title="With a report, successful or abandoned" scope="col" class="text-end">with report</th>
+              <th title="All without a report for whatever reason" scope="col" class="text-end">without report</th>
+              <th title="With an abandoned report" scope="col" class="text-end">report abandoned</th>
+              <th title="Sync'd, not in flight, failures < max" scope="col" class="text-end">ready to generate report</th>
+              <th title="Unsync'd, not in flight" scope="col" class="text-end">pending sync</th>
+              <th title="All unsync'd" scope="col" class="text-end">all unsynced</th>
+              <th title="In-flight" scope="col" class="text-end">in-flight</th>
+              <th title="In-flight, failures > max" scope="col" class="text-end">stuck in-flight</th>
+              <th title="In-fligt being sync'd" scope="col" class="text-end">sync in-flight</th>
+              <th title="Tried to sync, failures > max" scope="col" class="text-end">stuck on sync</th>
+              <th title="In-flight, generating report" scope="col" class="text-end">report in-flight</th>
+              <th title="Tried to generate report, failures > max" scope="col" class="text-end">stuck on report</th>
+            </tr>
+          </thead>
+          {% if stats_jobs.stm_stats_repo_job_counts.hits.hits %}
+          <tbody>
+            {% for hit in stats_jobs.stm_stats_repo_job_counts.hits.hits %}
+            {% set stat = hit._source.stm_stats_repo_job_counts %}
+            <tr>
+              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td class="text-end">{{stat.ts}}</td>
+              <td class="text-end">{{stat.repos_total}}</td>
+              <td title="{{stat.w_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.w_report}}</td>
+              <td title="{{stat.no_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.no_report}}</td>
+              <td title="{{stat.bad_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.bad_report}}</td>
+              <td title="{{stat.pending_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.pending_report}}</td>
+              <td class="text-end">{{stat.pending_sync}}</td>
+              <td class="text-end">{{stat.unsynced}}</td>
+              <td class="text-end">{{stat.in_fl}}</td>
+              <td class="text-end">{{stat.in_fl_stuck}}</td>
+              <td class="text-end">{{stat.in_fl_sync}}</td>
+              <td class="text-end">{{stat.in_fl_sync_stuck}}</td>
+              <td class="text-end">{{stat.in_fl_report}}</td>
+              <td class="text-end">{{stat.in_fl_report_stuck}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+
+      <h3 class="mt-5">Report failures</h3>
+      <div class="table-responsive">
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th title="" scope="col" class="text-start">Timestamp</th>
+              <th title="" scope="col" class="text-end">EPOCH</th>
+              <th title="Number of report generation attempts" scope="col" class="text-end">Report failures</th>
+              <th title="Number of repos at this failure stage" scope="col" class="text-end">Repos</th>
+              <th title="Number of devs at this failure stage" scope="col" class="text-end">Devs</th>
+            </tr>
+          </thead>
+          {% if stats_jobs.stm_stats_report_fail_counts.hits.hits %}
+          <tbody>
+            {% for hit in stats_jobs.stm_stats_report_fail_counts.hits.hits %}
+            {% set stat = hit._source.stm_stats_report_fail_counts %}
+            <tr>
+              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td class="text-end">{{stat.ts}}</td>
+              <td class="text-end">{{stat.report_fail_counter}}</td>
+              <td class="text-end">{{stat.repos}}</td>
+              <td class="text-end">{{stat.devs}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+
+      <h3 class="mt-5">Report success vs failure</h3>
+      <div class="table-responsive">
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th title="" scope="col" class="text-start">Timestamp</th>
+              <th title="" scope="col" class="text-end">EPOCH</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK repo reports, last 10m</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed repo reports, last 10m</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK repo reports, last 1hr</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed repo reports, last 1hr</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK repo reports, last 24hr</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed repo reports, last 24hr</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK dev reports, last 10m</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed dev reports, last 10m</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK dev reports, last 1hr</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed dev reports, last 1hr</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK dev reports, last 24hr</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed dev reports, last 24hr</th>
+            </tr>
+          </thead>
+          {% if stats_jobs.stm_stats_report_success_counts.hits.hits %}
+          <tbody>
+            {% for hit in stats_jobs.stm_stats_report_success_counts.hits.hits %}
+            {% set stat = hit._source.stm_stats_report_success_counts %}
+            <tr>
+              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td class="text-end">{{stat.ts}}</td>
+              <td class="text-end">{{stat.r10m}}</td>
+              <td class="text-end">{{stat.rf10m}}</td>
+              <td class="text-end">{{stat.r1hr}}</td>
+              <td class="text-end">{{stat.rf1hr}}</td>
+              <td class="text-end">{{stat.r24hr}}</td>
+              <td class="text-end">{{stat.rf24hr}}</td>
+              <td class="text-end">{{stat.d10m}}</td>
+              <td class="text-end">{{stat.df10m}}</td>
+              <td class="text-end">{{stat.d1hr}}</td>
+              <td class="text-end">{{stat.df1hr}}</td>
+              <td class="text-end">{{stat.d24hr}}</td>
+              <td class="text-end">{{stat.df24hr}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+
+      <h3 class="mt-5">Report generation timing</h3>
+      <div class="table-responsive">
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th title="" scope="col" class="text-start">Timestamp</th>
+              <th title="" scope="col" class="text-end">EPOCH</th>
+              <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">Repo report gen, last 10m</th>
+              <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">Repo report gen, last 1hr</th>
+              <th title="Average time for report generation from the moment the repo was sync'd, in seconds" scope="col" class="text-end">Repo sync to report, last 10m</th>
+              <th title="Average time for report generation from the moment the repo was sync'd, in seconds" scope="col" class="text-end">Repo sync to report, last 1hr</th>
+              <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">Dev report gen, last 10m</th>
+              <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">Dev report gen, last 1hr</th>
+              <th title="Average time for report generation from the moment the dev was sync'd, in seconds" scope="col" class="text-end">Dev sync to report, last 10m</th>
+              <th title="Average time for report generation from the moment the dev was sync'd, in seconds" scope="col" class="text-end">Dev sync to report, last 1hr</th>
+            </tr>
+          </thead>
+          {% if stats_jobs.stm_stats_report_generation_time_avg.hits.hits %}
+          <tbody>
+            {% for hit in stats_jobs.stm_stats_report_generation_time_avg.hits.hits %}
+            {% set stat = hit._source.stm_stats_report_generation_time_avg %}
+            <tr>
+              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td class="text-end">{{stat.ts}}</td>
+              <td class="text-end">{% if stat.r_r10m %}{{stat.r_r10m | round(method="ceil", precision=1)}}{% endif %}</td>
+              <td class="text-end">{% if stat.r_r1hr %}{{stat.r_r1hr | round(method="ceil", precision=1)}}{% endif %}</td>
+              <td class="text-end">{% if stat.r_s2r10m %}{{stat.r_s2r10m | round(method="ceil")}}{% endif %}</td>
+              <td class="text-end">{% if stat.r_s2r1hr %}{{stat.r_s2r1hr | round(method="ceil")}}{% endif %}</td>
+              <td class="text-end">{% if stat.d_r10m %}{{stat.d_r10m | round(method="ceil", precision=1)}}{% endif %}</td>
+              <td class="text-end">{% if stat.d_r1hr %}{{stat.d_r1hr | round(method="ceil", precision=1)}}{% endif %}</td>
+              <td class="text-end">{% if stat.d_s2r10m %}{{stat.d_s2r10m | round(method="ceil")}}{% endif %}</td>
+              <td class="text-end">{% if stat.d_s2r1hr %}{{stat.d_s2r1hr | round(method="ceil")}}{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+
+
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</body>
+
+</html>

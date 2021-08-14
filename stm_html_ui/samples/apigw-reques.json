@@ -1,0 +1,45 @@
+{
+  "headers": {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.5",
+    "authorization": "hello",
+    "cache-control": "no-cache",
+    "content-length": "0",
+    "dnt": "1",
+    "host": "tvsnjgadva.execute-api.us-east-1.amazonaws.com",
+    "pragma": "no-cache",
+    "upgrade-insecure-requests": "1",
+    "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0",
+    "x-amzn-trace-id": "Root=1-602c7c38-2c31e8e86749c1723f413aff",
+    "x-forwarded-for": "125.238.199.135",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "proxy": "rimutaka"
+  },
+  "rawPath": "/rimutaka",
+  "rawQueryString": "",
+  "requestContext": {
+    "accountId": "028534811986",
+    "apiId": "tvsnjgadva",
+    "domainName": "tvsnjgadva.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "tvsnjgadva",
+    "http": {
+      "method": "GET",
+      "path": "/rimutaka",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "125.238.199.135",
+      "userAgent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0"
+    },
+    "requestId": "a3hYzgQMoAMEJiw=",
+    "routeKey": "ANY /{proxy+}",
+    "stage": "$default",
+    "time": "17/Feb/2021:02:15:20 +0000",
+    "timeEpoch": 1613528120201
+  },
+  "routeKey": "ANY /{proxy+}",
+  "version": "2.0"
+}

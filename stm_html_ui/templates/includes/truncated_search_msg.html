@@ -1,0 +1,3 @@
+{% if devs and devs.hits.total.value > devs.hits.hits | length %}
+<p class="text-muted">Search results for unregistered users are truncated to {{devs.hits.hits | length}} records and limited to 4 keywords. <a href="mailto:info@stackmuncher.com">Contact us</a> for full access.</p>
+{% endif %}

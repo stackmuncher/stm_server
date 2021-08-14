@@ -1,0 +1,35 @@
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center" width="100%" height="50">
+      <h5 class="card-title ma-1"><a href="/{{dev._source.login}}">
+          {% if keyword or package %}
+          Dev #{{dev._source.id}}
+          {% elif dev._source.name %}
+          {{dev._source.name}}
+          {% else %}
+          {{dev._source.login}}
+          {% endif %}
+        </a>
+      </h5>
+    </div>
+    {% set init = dev._source.report.date_init | date(format="%Y") | int() %}
+    {% set today = now() | date(format="%Y") | int() %}
+    <p class="card-subtitle mb-2 text-muted">{{dev._source.public_repos}} projects over
+      {{ today - init + 1}}+ years
+      {% if dev._source.hireable %}
+      <a href="/{{dev._source.login}}"><span class="badge bg-success">Hire me</span></a>
+      {% endif %}
+      {% if dev._source.email or dev._source.blog %}
+      <a href="/{{dev._source.login}}" title="Contact me directly"><span class="badge bg-warning">@</span></a>
+      {% endif %}
+    </p>
+    <ul class="list-inline">
+      {% for tech in dev._source.report.tech | sort(attribute="total_lines") | reverse %}
+      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border"><a style="text-decoration: none;" class="text-dark" href="/?{{tech.language | urlencode}}">{{tech.language}}</a>
+        <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{tech.total_lines}}</span>
+      </li>
+      {% endfor %}
+    </ul>
+
+  </div>
+</div>

@@ -1,2 +1,2 @@
 [workspace]
-members = ["stm_inbox", "stm_inbox_router", "stm_inbox_flows"]
+members = ["stm_inbox", "stm_inbox_router", "stm_inbox_flows", "stm_html_ui"]

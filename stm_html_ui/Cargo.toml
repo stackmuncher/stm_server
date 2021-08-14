@@ -1,0 +1,24 @@
+[package]
+name = "stm_html_ui"
+version = "0.1.1"
+authors = ["rimutaka <max@onebro.me>"]
+edition = "2018"
+
+[dependencies]
+tera = { version = "1", default-features = false, features = ["builtins"] }
+serde_json = "1"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = "0.2"
+log = "0.4"
+lambda_runtime = { git = "https://github.com/awslabs/aws-lambda-rust-runtime.git" }
+hyper = { version = "0.14", features = ["http2"] }
+hyper-rustls = "0.22"
+regex = "1.4"
+rust-embed = { version = "6", features = ["compression"] }
+rusoto_signature = "0.47"
+rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false }
+rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
+futures = "0.3"
+urlencoding = "2.1"
