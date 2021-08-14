@@ -98,10 +98,10 @@ impl DevProfile {
         }
 
         let dev_profile = DevProfile {
-            report: combined_report,
             updated_at: Utc::now().to_rfc3339(),
-            name: None,
-            blog: None,
+            name: combined_report.as_ref().unwrap().public_name.clone(),
+            blog: combined_report.as_ref().unwrap().public_contact.clone(),
+            report: combined_report,
             email: None,
             owner_id: owner_id.clone(),
         };
