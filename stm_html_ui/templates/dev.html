@@ -25,7 +25,11 @@
           {% if user.company %}
           <li class="mb-1"><strong>Company</strong>: {{user.company}}</li>
           {% endif %}
+          {% if user.login %}
           <li class="mb-1"><strong>Github</strong>: <a href="https://github.com/{{user.login}}">{{user.login}}</a></li>
+          {% else %}
+          <li class="mb-1"><strong>Github</strong>: not linked</li>
+          {% endif %}
           {% if user.blog %}
           <li class="mb-1">
             <div class="text-truncate"><strong>Website</strong>: <a class="text-truncate" href="{% if user.blog is not starting_with('http') %}//{% endif %}{{user.blog}}">{{user.blog}}</a></div>
@@ -43,7 +47,7 @@
             {{ today - init + 1 }} years
             {% endif %}
           </li>
-          <li class="mb-1"><strong>Report date</strong>:
+          <li class="mb-1"><strong>Report updated</strong>:
             {{ user.report.timestamp | date(format="%d %b %Y") }}
           </li>
         </ul>
@@ -86,15 +90,17 @@
           <li class="pe-4 mb-4 .text-nowrap list-inline-item">
             <div class="card" style="width: 20rem;">
               <div class="card-body">
-                <h6 class="card-title"><a href="https://github.com/{{user.login}}/{{proj.project_name}}" title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. View the details.">{{proj.project_name | truncate(length=50)}}</a></h5>
-                  <h6 class="card-subtitle mb-2 text-muted">
-                    <span title="Lines of code" class="loc-badge">{{proj.loc}}</span>
-                    <span title="Number of external libraries" class="libs-badge ms-3">{{proj.libs}}</span>
-                    {% if proj.date_init and proj.date_head %}
-                    <span title="Date of the last commit" class="calendar-badge ms-3"><small>{{proj.date_head | date(format="%b %Y")}}</small></span>
-                    {% endif %}
-                  </h6>
-                  <p class="card-text">{{proj.tech | sort(attribute="loc") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ")}}</p>
+                <h6 class="card-title">
+                  <a {% if user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% else %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. View the details.">{{proj.project_name | truncate(length=50)}}</a>
+                </h6>
+                <h6 class="card-subtitle mb-2 text-muted">
+                  <span title="Lines of code" class="loc-badge">{{proj.loc}}</span>
+                  <span title="Number of external libraries" class="libs-badge ms-3">{{proj.libs}}</span>
+                  {% if proj.date_init and proj.date_head %}
+                  <span title="Date of the last commit" class="calendar-badge ms-3"><small>{{proj.date_head | date(format="%b %Y")}}</small></span>
+                  {% endif %}
+                </h6>
+                <p class="card-text">{{proj.tech | sort(attribute="loc") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ")}}</p>
               </div>
             </div>
           </li>
@@ -106,9 +112,13 @@
           {% for proj in user.report.reports_included | sort %}
           {% set len = proj | length | int() %}
           <li class="pe-4 .text-nowrap list-inline-item">
+            {% if user.login %}
             {% set pname = proj | truncate(length=len-7, end="") | replace(from=user.login, to="") | replace(from="/",
             to="") %}
-            <a href="https://github.com/{{user.login}}/{{pname}}">{{pname}}</a>
+              <a href="https://github.com/{{user.login}}/{{pname}}">{{pname}}</a>
+            {% else %}
+              <a href="/?project={{proj.project_id}}">{{proj.project_name}}</a>
+            {% endif %}
           </li>
           {% endfor %}
 

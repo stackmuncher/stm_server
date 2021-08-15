@@ -9,7 +9,7 @@
   <title>{{keywords_str}} software developers and engineers</title>
   <meta name="description" content="A list of software developers and engineers with experience in {{keywords_str}}.">
   {% elif login_str and devs.hits.hits | length > 0 %}
-  <title>{% if devs.hits.hits[0]._source.name %}{{devs.hits.hits[0]._source.name}}{% else %}{{devs.hits.hits[0]._source.login}}{% endif %} | Software Developer Profile</title>
+  <title>{% if devs.hits.hits[0]._source.name %}{{devs.hits.hits[0]._source.name}}{% elif devs.hits.hits[0]._source.login %}{{devs.hits.hits[0]._source.login}}{% else %}Anonymous{% endif %} | Software Developer Profile</title>
   {% if devs.hits.hits[0]._source.report and devs.hits.hits[0]._source.report.tech %}
   {% set skills = devs.hits.hits[0]._source.report.tech | sort(attribute="total_lines") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ") %}
   <meta name="description" content="Uses {{ skills }} and more (as of {{ devs.hits.hits[0]._source.report.date_head | date(format='%b %Y') }}). View their current technology stack and other code-related metrics since {{ devs.hits.hits[0]._source.report.date_init | date(format='%b %Y') }}.">
@@ -17,6 +17,8 @@
   {% else %}
   <meta name="description" content="We did not have any technology stack details for this developer when this page was indexed. Visit StackMuncher to check for updates or find more skilled software developers.">
   {% endif %}
+  {% elif owner_id_str and devs.hits.hits | length > 0 %}
+  <title>{% if devs.hits.hits[0]._source.name %}{{devs.hits.hits[0]._source.name}}{% else %}Anonymous{% endif %} | Software Developer Profile</title>
   {% else %}
   <title>Global Directory of Software Developers and Engineers</title>
   <meta name="description" content="Search for software developers and engineers by their technology stack, package use, coding style and other metrics.">

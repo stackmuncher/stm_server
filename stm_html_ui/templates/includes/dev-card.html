@@ -1,26 +1,34 @@
 <div class="card mb-4">
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-center" width="100%" height="50">
-      <h5 class="card-title ma-1"><a href="/{{dev._source.login}}">
+      <h5 class="card-title ma-1">
+        <a href="{% if dev._source.login %}/{{dev._source.login}}{% else %}/?dev={{dev._source.owner_id}}{% endif %}">
           {% if keyword or package %}
           Dev #{{dev._source.id}}
           {% elif dev._source.name %}
           {{dev._source.name}}
-          {% else %}
+          {% elif dev._source.login %}
           {{dev._source.login}}
+          {% else %}
+          Anonymous Software Engineer
           {% endif %}
         </a>
       </h5>
     </div>
     {% set init = dev._source.report.date_init | date(format="%Y") | int() %}
     {% set today = now() | date(format="%Y") | int() %}
-    <p class="card-subtitle mb-2 text-muted">{{dev._source.public_repos}} projects over
+
+    <p class="card-subtitle mb-2 text-muted">
+      {% if dev._source.public_repos %}{{dev._source.public_repos}}
+      {% elif dev._source.report.projects_included %}{{dev._source.report.projects_included | length}}
+      {% else %}some
+      {% endif %} projects over
       {{ today - init + 1}}+ years
       {% if dev._source.hireable %}
-      <a href="/{{dev._source.login}}"><span class="badge bg-success">Hire me</span></a>
+      <a {% if dev._source.login %} href="/{{dev._source.login}}" {% elif dev._source.owner_id %} href="/?dev={{dev._source.owner_id}}" {% endif %}><span class="badge bg-success">Hire me</span></a>
       {% endif %}
       {% if dev._source.email or dev._source.blog %}
-      <a href="/{{dev._source.login}}" title="Contact me directly"><span class="badge bg-warning">@</span></a>
+      <a {% if dev._source.login %} href="/{{dev._source.login}}" {% elif dev._source.owner_id %} href="/?dev={{dev._source.owner_id}}" {% endif %} title="Contact me directly"><span class="badge bg-warning">@</span></a>
       {% endif %}
     </p>
     <ul class="list-inline">

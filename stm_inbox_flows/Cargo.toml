@@ -25,4 +25,4 @@ rusoto_s3 = { version = "0.47", features = ["rustls"], default-features = false 
 rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
 tokio-postgres = { version = "0.7", features = ["with-uuid-0_8", "with-chrono-0_4"] }
 regex = "1.4"
-stackmuncher_lib = { version = "0.2", path = "../../stackmuncher/stackmuncher_lib" }
+stackmuncher_lib = { version = "0.2", path = "../../stm_app/stackmuncher_lib" }

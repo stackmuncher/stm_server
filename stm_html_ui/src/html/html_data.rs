@@ -25,6 +25,9 @@ pub(crate) struct HtmlData {
     /// A normalized version of the user login for dev profile page title
     #[serde(skip_serializing_if = "Option::is_none")]
     pub login_str: Option<String>,
+    /// `owner_id` for the dev, if known. For registered devs only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_id_str: Option<String>,
     /// Name of the HTML template to use. Defaults to 404
     pub template_name: String,
     /// Time to live for the HTTP response

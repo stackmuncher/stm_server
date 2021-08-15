@@ -4,7 +4,8 @@ use html_data::{HtmlData, KeywordMetadata};
 use regex::Regex;
 use tracing::{info, warn};
 
-mod dev;
+mod dev_profile;
+mod gh_login_profile;
 mod home;
 mod html_data;
 mod keyword;
@@ -19,6 +20,7 @@ pub(crate) async fn html(
     config: &Config,
     url_path: String,
     url_query: String,
+    dev: Option<String>,
 ) -> Result<HtmlData, ()> {
     // prepare a common structure for feeding into Tera templates
     let html_data = HtmlData {
@@ -35,6 +37,7 @@ pub(crate) async fn html(
         http_resp_code: 404,
         meta_robots: None,
         login_str: None,
+        owner_id_str: None,
         stats_jobs: None,
     };
 
@@ -78,7 +81,21 @@ pub(crate) async fn html(
         }
 
         // return dev profile page
-        return Ok(dev::html(config, login, html_data).await?);
+        return gh_login_profile::html(config, login, html_data).await;
+    }
+
+    // check if dev ID was specified
+    if let Some(owner_id) = dev {
+        let owner_id = owner_id.trim().to_owned();
+
+        // is it a valid format for a dev login?
+        if !config.owner_id_validation_regex.is_match(&owner_id) {
+            warn!("Invalid owner_id: {} from {}", owner_id, url_query);
+            return Ok(html_data);
+        }
+
+        // return dev profile page
+        return dev_profile::html(config, owner_id, html_data).await;
     }
 
     // is there something in the query string?
@@ -92,10 +109,7 @@ pub(crate) async fn html(
         info!("Terms: {:?}", search_terms);
 
         // normalise and dedupe the search terms
-        let mut search_terms = search_terms
-            .iter()
-            .map(|v| v.to_lowercase())
-            .collect::<Vec<String>>();
+        let mut search_terms = search_terms.iter().map(|v| v.to_lowercase()).collect::<Vec<String>>();
         search_terms.dedup();
         let search_terms = search_terms;
 
@@ -134,10 +148,7 @@ pub(crate) async fn html(
             // e.g. xml vs System.XML vs SomeVendor.XML
             let (fields, can_be_lang) = if search_term.contains(".") {
                 // this is a fully qualified name and cannot be a language
-                (
-                    vec!["report.tech.refs.k.keyword", "report.tech.pkgs.k.keyword"],
-                    false,
-                )
+                (vec!["report.tech.refs.k.keyword", "report.tech.pkgs.k.keyword"], false)
             } else {
                 // this is a keyword, which may be all there is, but it will be in _kw field anyway
                 // this can also be a language

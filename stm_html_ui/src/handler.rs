@@ -20,11 +20,18 @@ struct ApiGatewayResponse {
 }
 
 #[derive(Deserialize, Debug)]
+struct ApiGatewayQueryStringParameters {
+    dev: Option<String>,
+    //project: String
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct ApiGatewayRequest {
     raw_path: String,
     raw_query_string: String,
     headers: HashMap<String, String>,
+    query_string_parameters: Option<ApiGatewayQueryStringParameters>
 }
 
 #[derive(RustEmbed)]
@@ -61,15 +68,17 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
     let tera = tera_init()?;
 
     // decode possible URL path and query string
-    info!("Path: {}", &api_request.raw_path);
-    info!("Query: {}", &api_request.raw_query_string);
+    info!("Raw path: {}, Query: {}", &api_request.raw_path, &api_request.raw_query_string);
     let url_path = decode(&api_request.raw_path).unwrap_or_default().to_string();
     let url_query = decode(&api_request.raw_query_string).unwrap_or_default().to_string();
-    info!("Path: {}", url_path);
-    info!("Query: {}", url_query);
+    let dev = match api_request.query_string_parameters {
+        None => None,
+        Some(v) => v.dev,
+    };
+    info!("Decoded path: {}, query: {}, dev: {:?}", url_path, url_query, dev);
 
     // send the user request downstream for processing
-    let html_data = html::html(&config, url_path, url_query).await.expect("html() failed");
+    let html_data = html::html(&config, url_path, url_query, dev).await.expect("html() failed");
 
     // render the prepared data as HTML
     let html = tera

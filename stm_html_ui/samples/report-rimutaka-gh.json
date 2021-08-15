@@ -1,0 +1,1680 @@
+{
+  "_source": {
+    "login": "rimutaka",
+    "id": 5926028,
+    "node_id": "MDQ6VXNlcjU5MjYwMjg=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/5926028?v=4",
+    "name": "mx",
+    "company": null,
+    "blog": "https://www.linkedin.com/in/maxvoskob/",
+    "location": "New Zealand",
+    "email": "max@onebro.me",
+    "hireable": true,
+    "bio": null,
+    "twitter_username": null,
+    "public_repos": 19,
+    "public_gists": 13,
+    "followers": 8,
+    "following": 0,
+    "created_at": "2013-11-13T05:06:37Z",
+    "updated_at": "2021-05-26T23:05:43Z",
+    "report": {
+      "timestamp": "2021-08-03T18:57:13.153693930+00:00",
+      "is_single_commit": false,
+      "date_init": "2016-04-04T16:56:38+12:00",
+      "date_head": "2021-08-03T18:55:28+00:00",
+      "contributor_git_ids": [
+        "me@davidbarsky.com",
+        "bmoffatt@users.noreply.github.com",
+        "szabo.antal.92@gmail.com",
+        "luciofranco14@gmail.com",
+        "lpackham@protonmail.com",
+        "d.tangren@gmail.com",
+        "jake@zenlist.com",
+        "srijs@airpost.net",
+        "robert@sixbynine.org",
+        "jamesiri@amazon.com",
+        "Phrohdoh@users.noreply.github.com",
+        "ubuntu@ip-172-31-46-218.ap-southeast-2.compute.internal",
+        "2996317+sapessi@users.noreply.github.com",
+        "anmonteiro@gmail.com",
+        "aozdemir@hmc.edu",
+        "Eh.yogendra@gmail.com",
+        "ander.ender@gmail.com",
+        "rmcteggart@rapid7.com",
+        "johansmitsnl@users.noreply.github.com",
+        "bdonlan@gmail.com",
+        "ubuntu@ip-172-31-47-28.ap-southeast-2.compute.internal",
+        "LegNeato@users.noreply.github.com",
+        "veetaha2@gmail.com",
+        "ricardo.ambrogi@gmail.com",
+        "dbarsky@amazon.com",
+        "max@onebro.me",
+        "yishengxu@outlook.com",
+        "marcbowes@gmail.com",
+        "frank@naa.li",
+        "jones_ld@protonmail.com",
+        "stefano.buliani@gmail.com",
+        "saks@users.noreply.github.com",
+        "ubuntu@ip-172-31-23-191.ap-southeast-2.compute.internal",
+        "Darrenmeehan@users.noreply.github.com"
+      ],
+      "tech": [
+        {
+          "language": "Markdown",
+          "muncher_name": "",
+          "muncher_hash": 8242424712527654289,
+          "files": 31,
+          "total_lines": 4794,
+          "blank_lines": 1539,
+          "bracket_only_lines": 0,
+          "code_lines": 3255,
+          "inline_comments": 0,
+          "line_comments": 0,
+          "block_comments": 0,
+          "docs_comments": 0
+        },
+        {
+          "language": "JavaScript",
+          "muncher_name": "",
+          "muncher_hash": 396781617788049253,
+          "files": 4,
+          "total_lines": 397,
+          "blank_lines": 73,
+          "bracket_only_lines": 48,
+          "code_lines": 176,
+          "inline_comments": 20,
+          "line_comments": 53,
+          "block_comments": 27,
+          "docs_comments": 0
+        },
+        {
+          "language": "Rust",
+          "muncher_name": "",
+          "muncher_hash": 17486963195977110261,
+          "files": 49,
+          "total_lines": 7829,
+          "blank_lines": 885,
+          "bracket_only_lines": 952,
+          "code_lines": 4780,
+          "inline_comments": 32,
+          "line_comments": 506,
+          "block_comments": 18,
+          "docs_comments": 656,
+          "keywords": [
+            {
+              "k": "false",
+              "c": 23
+            },
+            {
+              "k": "mod",
+              "c": 36
+            },
+            {
+              "k": "const",
+              "c": 15
+            },
+            {
+              "k": "break",
+              "c": 5
+            },
+            {
+              "k": "continue",
+              "c": 23
+            },
+            {
+              "k": "pub",
+              "c": 397
+            },
+            {
+              "k": "return",
+              "c": 79
+            },
+            {
+              "k": "await",
+              "c": 155
+            },
+            {
+              "k": "enum",
+              "c": 9
+            },
+            {
+              "k": "in",
+              "c": 95
+            },
+            {
+              "k": "crate",
+              "c": 115
+            },
+            {
+              "k": "true",
+              "c": 9
+            },
+            {
+              "k": "for",
+              "c": 171
+            },
+            {
+              "k": "if",
+              "c": 187
+            },
+            {
+              "k": "self",
+              "c": 248
+            },
+            {
+              "k": "struct",
+              "c": 71
+            },
+            {
+              "k": "loop",
+              "c": 9
+            },
+            {
+              "k": "fn",
+              "c": 277
+            },
+            {
+              "k": "dyn",
+              "c": 18
+            },
+            {
+              "k": "else",
+              "c": 44
+            },
+            {
+              "k": "while",
+              "c": 4
+            },
+            {
+              "k": "use",
+              "c": 213
+            },
+            {
+              "k": "impl",
+              "c": 84
+            },
+            {
+              "k": "super",
+              "c": 16
+            },
+            {
+              "k": "where",
+              "c": 39
+            },
+            {
+              "k": "let",
+              "c": 617
+            },
+            {
+              "k": "mut",
+              "c": 167
+            },
+            {
+              "k": "static",
+              "c": 51
+            },
+            {
+              "k": "type",
+              "c": 45
+            },
+            {
+              "k": "match",
+              "c": 73
+            },
+            {
+              "k": "extern",
+              "c": 2
+            },
+            {
+              "k": "ref",
+              "c": 5
+            },
+            {
+              "k": "as",
+              "c": 40
+            },
+            {
+              "k": "move",
+              "c": 3
+            },
+            {
+              "k": "yield",
+              "c": 1
+            },
+            {
+              "k": "Self",
+              "c": 91
+            },
+            {
+              "k": "async",
+              "c": 80
+            },
+            {
+              "k": "trait",
+              "c": 7
+            }
+          ],
+          "pkgs": [
+            {
+              "k": "encoding_rs_io",
+              "t": [
+                "0.1"
+              ],
+              "c": 1
+            },
+            {
+              "k": "bytes",
+              "t": [
+                "0.5"
+              ],
+              "c": 1
+            },
+            {
+              "k": "tracing",
+              "t": [
+                "0.1"
+              ],
+              "c": 4
+            },
+            {
+              "k": "syn",
+              "t": [
+                "1.0.5"
+              ],
+              "c": 1
+            },
+            {
+              "k": "uuid",
+              "t": [
+                "0.8"
+              ],
+              "c": 2
+            },
+            {
+              "k": "http",
+              "t": [
+                "0.2"
+              ],
+              "c": 2
+            },
+            {
+              "k": "serde_urlencoded",
+              "t": [
+                "0.6"
+              ],
+              "c": 1
+            },
+            {
+              "k": "rusoto_core",
+              "t": [
+                "0.44.0",
+                "0.47"
+              ],
+              "c": 2
+            },
+            {
+              "k": "rand",
+              "t": [
+                "0.7"
+              ],
+              "c": 1
+            },
+            {
+              "k": "hyper",
+              "t": [
+                "0.13"
+              ],
+              "c": 1
+            },
+            {
+              "k": "tokio-postgres",
+              "t": [
+                "0.5"
+              ],
+              "c": 1
+            },
+            {
+              "k": "edition",
+              "t": [
+                "2018"
+              ],
+              "c": 8
+            },
+            {
+              "k": "chrono",
+              "t": [
+                "0.4"
+              ],
+              "c": 2
+            },
+            {
+              "k": "tokio",
+              "t": [
+                "0.2.22",
+                "1.9",
+                "0.2.4",
+                "0.2"
+              ],
+              "c": 7
+            },
+            {
+              "k": "async-stream",
+              "t": [
+                "0.2"
+              ],
+              "c": 1
+            },
+            {
+              "k": "sha-1",
+              "t": [
+                "0.9"
+              ],
+              "c": 1
+            },
+            {
+              "k": "rusoto_dynamodb",
+              "t": [
+                "0.44.0"
+              ],
+              "c": 1
+            },
+            {
+              "k": "proc-macro2",
+              "t": [
+                "0.4.30"
+              ],
+              "c": 1
+            },
+            {
+              "k": "serde_derive",
+              "t": [
+                "1.0.112",
+                "1.0"
+              ],
+              "c": 2
+            },
+            {
+              "k": "tower-service",
+              "t": [
+                "0.3"
+              ],
+              "c": 1
+            },
+            {
+              "k": "serde_json",
+              "t": [
+                "1.0",
+                "1.0.39"
+              ],
+              "c": 4
+            },
+            {
+              "k": "serde",
+              "t": [
+                "1.0",
+                "1.0.112"
+              ],
+              "c": 3
+            },
+            {
+              "k": "maplit",
+              "t": [
+                "1.0"
+              ],
+              "c": 1
+            },
+            {
+              "k": "dynomite",
+              "t": [
+                "0.9"
+              ],
+              "c": 1
+            },
+            {
+              "k": "tracing-futures",
+              "t": [
+                "0.2"
+              ],
+              "c": 1
+            },
+            {
+              "k": "encoding_rs",
+              "t": [
+                "0.8"
+              ],
+              "c": 1
+            },
+            {
+              "k": "version",
+              "t": [
+                "0.1.2",
+                "0.1.0"
+              ],
+              "c": 8
+            },
+            {
+              "k": "log",
+              "t": [
+                "0.4.8",
+                "0.4"
+              ],
+              "c": 5
+            },
+            {
+              "k": "stackmuncher",
+              "t": [
+                "0.1"
+              ],
+              "c": 1
+            },
+            {
+              "k": "simple-error",
+              "t": [
+                "0.2",
+                "0.1.9"
+              ],
+              "c": 3
+            },
+            {
+              "k": "tracing-subscriber",
+              "t": [
+                "0.2"
+              ],
+              "c": 4
+            },
+            {
+              "k": "base64",
+              "t": [
+                "0.12"
+              ],
+              "c": 1
+            },
+            {
+              "k": "rusoto_sqs",
+              "t": [
+                "0.47"
+              ],
+              "c": 1
+            },
+            {
+              "k": "simple_logger",
+              "t": [
+                "1.6.0",
+                "1.6"
+              ],
+              "c": 3
+            },
+            {
+              "k": "once_cell",
+              "t": [
+                "1.4.0"
+              ],
+              "c": 1
+            }
+          ],
+          "pkgs_kw": [
+            {
+              "k": "dynomite",
+              "c": 1
+            },
+            {
+              "k": "http",
+              "c": 2
+            },
+            {
+              "k": "hyper",
+              "c": 1
+            },
+            {
+              "k": "maplit",
+              "c": 1
+            },
+            {
+              "k": "tokio-postgres",
+              "c": 1
+            },
+            {
+              "k": "stackmuncher",
+              "c": 1
+            },
+            {
+              "k": "syn",
+              "c": 1
+            },
+            {
+              "k": "uuid",
+              "c": 2
+            },
+            {
+              "k": "serde_derive",
+              "c": 2
+            },
+            {
+              "k": "serde_urlencoded",
+              "c": 1
+            },
+            {
+              "k": "encoding_rs_io",
+              "c": 1
+            },
+            {
+              "k": "sha-1",
+              "c": 1
+            },
+            {
+              "k": "rusoto_core",
+              "c": 2
+            },
+            {
+              "k": "log",
+              "c": 5
+            },
+            {
+              "k": "bytes",
+              "c": 1
+            },
+            {
+              "k": "edition",
+              "c": 8
+            },
+            {
+              "k": "serde_json",
+              "c": 4
+            },
+            {
+              "k": "tokio",
+              "c": 7
+            },
+            {
+              "k": "version",
+              "c": 8
+            },
+            {
+              "k": "tracing-subscriber",
+              "c": 4
+            },
+            {
+              "k": "rusoto_sqs",
+              "c": 1
+            },
+            {
+              "k": "chrono",
+              "c": 2
+            },
+            {
+              "k": "tower-service",
+              "c": 1
+            },
+            {
+              "k": "rand",
+              "c": 1
+            },
+            {
+              "k": "tracing",
+              "c": 4
+            },
+            {
+              "k": "async-stream",
+              "c": 1
+            },
+            {
+              "k": "rusoto_dynamodb",
+              "c": 1
+            },
+            {
+              "k": "encoding_rs",
+              "c": 1
+            },
+            {
+              "k": "tracing-futures",
+              "c": 1
+            },
+            {
+              "k": "proc-macro2",
+              "c": 1
+            },
+            {
+              "k": "simple_logger",
+              "c": 3
+            },
+            {
+              "k": "serde",
+              "c": 3
+            },
+            {
+              "k": "base64",
+              "c": 1
+            },
+            {
+              "k": "once_cell",
+              "c": 1
+            },
+            {
+              "k": "simple-error",
+              "c": 3
+            }
+          ]
+        },
+        {
+          "language": "CSS",
+          "muncher_name": "",
+          "muncher_hash": 4384928842482396352,
+          "files": 1,
+          "total_lines": 384,
+          "blank_lines": 66,
+          "bracket_only_lines": 76,
+          "code_lines": 234,
+          "inline_comments": 0,
+          "line_comments": 0,
+          "block_comments": 8,
+          "docs_comments": 0
+        },
+        {
+          "language": "C#",
+          "muncher_name": "",
+          "muncher_hash": 1494668712864283278,
+          "files": 23,
+          "total_lines": 2872,
+          "blank_lines": 393,
+          "bracket_only_lines": 576,
+          "code_lines": 1424,
+          "inline_comments": 43,
+          "line_comments": 202,
+          "block_comments": 0,
+          "docs_comments": 234,
+          "keywords": [
+            {
+              "k": "set",
+              "c": 1
+            },
+            {
+              "k": "case",
+              "c": 33
+            },
+            {
+              "k": "bool",
+              "c": 13
+            },
+            {
+              "k": "enum",
+              "c": 1
+            },
+            {
+              "k": "class",
+              "c": 29
+            },
+            {
+              "k": "try",
+              "c": 17
+            },
+            {
+              "k": "is",
+              "c": 4
+            },
+            {
+              "k": "in",
+              "c": 22
+            },
+            {
+              "k": "private",
+              "c": 22
+            },
+            {
+              "k": "void",
+              "c": 27
+            },
+            {
+              "k": "default",
+              "c": 3
+            },
+            {
+              "k": "for",
+              "c": 19
+            },
+            {
+              "k": "else",
+              "c": 7
+            },
+            {
+              "k": "on",
+              "c": 4
+            },
+            {
+              "k": "if",
+              "c": 124
+            },
+            {
+              "k": "public",
+              "c": 123
+            },
+            {
+              "k": "from",
+              "c": 16
+            },
+            {
+              "k": "by",
+              "c": 3
+            },
+            {
+              "k": "throw",
+              "c": 6
+            },
+            {
+              "k": "continue",
+              "c": 9
+            },
+            {
+              "k": "while",
+              "c": 7
+            },
+            {
+              "k": "readonly",
+              "c": 1
+            },
+            {
+              "k": "namespace",
+              "c": 19
+            },
+            {
+              "k": "ref",
+              "c": 12
+            },
+            {
+              "k": "char",
+              "c": 2
+            },
+            {
+              "k": "foreach",
+              "c": 13
+            },
+            {
+              "k": "true",
+              "c": 12
+            },
+            {
+              "k": "switch",
+              "c": 5
+            },
+            {
+              "k": "get",
+              "c": 1
+            },
+            {
+              "k": "extern",
+              "c": 5
+            },
+            {
+              "k": "object",
+              "c": 6
+            },
+            {
+              "k": "as",
+              "c": 1
+            },
+            {
+              "k": "return",
+              "c": 59
+            },
+            {
+              "k": "const",
+              "c": 29
+            },
+            {
+              "k": "internal",
+              "c": 2
+            },
+            {
+              "k": "this",
+              "c": 62
+            },
+            {
+              "k": "select",
+              "c": 6
+            },
+            {
+              "k": "abstract",
+              "c": 1
+            },
+            {
+              "k": "long",
+              "c": 1
+            },
+            {
+              "k": "value",
+              "c": 2
+            },
+            {
+              "k": "var",
+              "c": 23
+            },
+            {
+              "k": "params",
+              "c": 2
+            },
+            {
+              "k": "new",
+              "c": 65
+            },
+            {
+              "k": "using",
+              "c": 82
+            },
+            {
+              "k": "catch",
+              "c": 12
+            },
+            {
+              "k": "fixed",
+              "c": 1
+            },
+            {
+              "k": "finally",
+              "c": 6
+            },
+            {
+              "k": "int",
+              "c": 47
+            },
+            {
+              "k": "false",
+              "c": 12
+            },
+            {
+              "k": "ulong",
+              "c": 1
+            },
+            {
+              "k": "decimal",
+              "c": 1
+            },
+            {
+              "k": "break",
+              "c": 36
+            },
+            {
+              "k": "byte",
+              "c": 3
+            },
+            {
+              "k": "out",
+              "c": 2
+            },
+            {
+              "k": "null",
+              "c": 18
+            },
+            {
+              "k": "join",
+              "c": 1
+            },
+            {
+              "k": "add",
+              "c": 3
+            },
+            {
+              "k": "where",
+              "c": 6
+            },
+            {
+              "k": "static",
+              "c": 50
+            },
+            {
+              "k": "uint",
+              "c": 8
+            },
+            {
+              "k": "string",
+              "c": 311
+            }
+          ],
+          "refs": [
+            {
+              "k": "System.Management",
+              "c": 1
+            },
+            {
+              "k": "System.IO",
+              "c": 13
+            },
+            {
+              "k": "System.Threading",
+              "c": 1
+            },
+            {
+              "k": "System.Data.SqlClient",
+              "c": 1
+            },
+            {
+              "k": "Newtonsoft.Json",
+              "c": 13
+            },
+            {
+              "k": "System.Text",
+              "c": 4
+            },
+            {
+              "k": "System.Runtime.InteropServices",
+              "c": 2
+            },
+            {
+              "k": "System.Linq",
+              "c": 1
+            },
+            {
+              "k": "ForGeneralUse",
+              "c": 1
+            },
+            {
+              "k": "System.IO.Ports",
+              "c": 1
+            },
+            {
+              "k": "System",
+              "c": 19
+            },
+            {
+              "k": "System.Collections.Generic",
+              "c": 7
+            },
+            {
+              "k": "System.Collections",
+              "c": 3
+            },
+            {
+              "k": "Get_COMX",
+              "c": 1
+            },
+            {
+              "k": "System.Runtime.CompilerServices",
+              "c": 1
+            },
+            {
+              "k": "System.Reflection",
+              "c": 2
+            },
+            {
+              "k": "System.Text.RegularExpressions",
+              "c": 5
+            }
+          ],
+          "refs_kw": [
+            {
+              "k": "Reflection",
+              "c": 2
+            },
+            {
+              "k": "Ports",
+              "c": 1
+            },
+            {
+              "k": "ForGeneralUse",
+              "c": 1
+            },
+            {
+              "k": "Collections",
+              "c": 10
+            },
+            {
+              "k": "CompilerServices",
+              "c": 1
+            },
+            {
+              "k": "Linq",
+              "c": 1
+            },
+            {
+              "k": "SqlClient",
+              "c": 1
+            },
+            {
+              "k": "System",
+              "c": 61
+            },
+            {
+              "k": "Generic",
+              "c": 7
+            },
+            {
+              "k": "Json",
+              "c": 13
+            },
+            {
+              "k": "Newtonsoft",
+              "c": 13
+            },
+            {
+              "k": "Get_COMX",
+              "c": 1
+            },
+            {
+              "k": "Threading",
+              "c": 1
+            },
+            {
+              "k": "Text",
+              "c": 9
+            },
+            {
+              "k": "InteropServices",
+              "c": 2
+            },
+            {
+              "k": "Management",
+              "c": 1
+            },
+            {
+              "k": "Runtime",
+              "c": 3
+            },
+            {
+              "k": "RegularExpressions",
+              "c": 5
+            },
+            {
+              "k": "Data",
+              "c": 1
+            }
+          ],
+          "pkgs": [
+            {
+              "k": "System.Core",
+              "c": 1
+            },
+            {
+              "k": "TargetFrameworkVersion",
+              "t": [
+                "v4.0"
+              ],
+              "c": 1
+            },
+            {
+              "k": "Microsoft.NET.Sdk",
+              "c": 1
+            },
+            {
+              "k": "System.Data.SqlClient",
+              "t": [
+                "4.8.0"
+              ],
+              "c": 1
+            },
+            {
+              "k": "System",
+              "c": 1
+            },
+            {
+              "k": "Newtonsoft.Json",
+              "t": [
+                "12.0.3"
+              ],
+              "c": 1
+            },
+            {
+              "k": "System.Management",
+              "c": 1
+            },
+            {
+              "k": "netcoreapp3.0",
+              "c": 1
+            },
+            {
+              "k": "Microsoft.CodeAnalysis.FxCopAnalyzers",
+              "t": [
+                "2.9.8"
+              ],
+              "c": 1
+            }
+          ],
+          "pkgs_kw": [
+            {
+              "k": "System",
+              "c": 4
+            },
+            {
+              "k": "TargetFrameworkVersion",
+              "c": 1
+            },
+            {
+              "k": "Newtonsoft",
+              "c": 1
+            },
+            {
+              "k": "FxCopAnalyzers",
+              "c": 1
+            },
+            {
+              "k": "netcoreapp3",
+              "c": 1
+            },
+            {
+              "k": "CodeAnalysis",
+              "c": 1
+            },
+            {
+              "k": "Core",
+              "c": 1
+            },
+            {
+              "k": "Microsoft",
+              "c": 2
+            },
+            {
+              "k": "Json",
+              "c": 1
+            },
+            {
+              "k": "NET",
+              "c": 1
+            },
+            {
+              "k": "Sdk",
+              "c": 1
+            },
+            {
+              "k": "Management",
+              "c": 1
+            },
+            {
+              "k": "Data",
+              "c": 1
+            },
+            {
+              "k": "SqlClient",
+              "c": 1
+            }
+          ]
+        }
+      ],
+      "unknown_file_types": [
+        {
+          "k": "txt",
+          "c": 32
+        },
+        {
+          "k": "gradle",
+          "c": 3
+        },
+        {
+          "k": "ico",
+          "c": 1
+        },
+        {
+          "k": "apk",
+          "c": 12
+        },
+        {
+          "k": "java",
+          "c": 13
+        },
+        {
+          "k": "dxf",
+          "c": 6
+        },
+        {
+          "k": "toml",
+          "c": 4
+        },
+        {
+          "k": "html",
+          "c": 2
+        },
+        {
+          "k": "sh",
+          "c": 2
+        },
+        {
+          "k": "jpg",
+          "c": 21
+        },
+        {
+          "k": "ttf",
+          "c": 4
+        },
+        {
+          "k": "web-extension-id",
+          "c": 2
+        },
+        {
+          "k": "lock",
+          "c": 5
+        },
+        {
+          "k": "gitattributes",
+          "c": 3
+        },
+        {
+          "k": "yml",
+          "c": 1
+        },
+        {
+          "k": "crc",
+          "c": 1
+        },
+        {
+          "k": "bin",
+          "c": 5
+        },
+        {
+          "k": "pdf",
+          "c": 3
+        },
+        {
+          "k": "iml",
+          "c": 2
+        },
+        {
+          "k": "store",
+          "c": 2
+        },
+        {
+          "k": "rawproto",
+          "c": 5
+        },
+        {
+          "k": "properties",
+          "c": 4
+        },
+        {
+          "k": "ap_",
+          "c": 3
+        },
+        {
+          "k": "xml",
+          "c": 76
+        },
+        {
+          "k": "gitignore",
+          "c": 11
+        },
+        {
+          "k": "dex",
+          "c": 13
+        },
+        {
+          "k": "png",
+          "c": 165
+        },
+        {
+          "k": "svg",
+          "c": 4
+        },
+        {
+          "k": "sln",
+          "c": 2
+        },
+        {
+          "k": "jar",
+          "c": 5
+        },
+        {
+          "k": "zip",
+          "c": 1
+        },
+        {
+          "k": "bat",
+          "c": 1
+        },
+        {
+          "k": "json",
+          "c": 44
+        },
+        {
+          "k": "class",
+          "c": 591
+        }
+      ],
+      "reports_included": [
+        "rimutaka/lambda-debug-proxy.report",
+        "rimutaka/3pr.report",
+        "rimutaka/rusty_lambdas.report",
+        "rimutaka/stm.report",
+        "rimutaka/onprem2az-elastic-query.report",
+        "rimutaka/ld-lambdas.report",
+        "rimutaka/LazyBoneBLE2016.report",
+        "rimutaka/posts.report",
+        "rimutaka/resume.report",
+        "rimutaka/upwork-browser-addon.report",
+        "rimutaka/spotify-play-all-saved-albums.report",
+        "rimutaka/folding-furniture.report",
+        "rimutaka/QM1571-Logger.report",
+        "rimutaka/lambda-proxy-bak.report"
+      ],
+      "projects_included": [
+        {
+          "project_name": "resume",
+          "report_s3_key": "rimutaka/resume.report",
+          "date_init": "2019-07-29T13:54:23+12:00",
+          "date_head": "2020-04-07T20:44:16+12:00",
+          "loc": 65,
+          "libs": 0,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 65,
+              "libs": 0,
+              "loc_percentage": 100
+            }
+          ],
+          "remote_url_hashes": [
+            "39fc0066d40e885984a30d5e51244b439c2cfeea"
+          ]
+        },
+        {
+          "project_name": "rusty_lambdas",
+          "report_s3_key": "rimutaka/rusty_lambdas.report",
+          "date_init": "2020-06-18T13:53:52+12:00",
+          "date_head": "2020-07-19T08:54:58+00:00",
+          "loc": 79,
+          "libs": 9,
+          "ppl": 3,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 35,
+              "libs": 0,
+              "loc_percentage": 44
+            },
+            {
+              "language": "Rust",
+              "loc": 44,
+              "libs": 9,
+              "loc_percentage": 55
+            }
+          ],
+          "remote_url_hashes": [
+            "539fd0ca965a6539b524817d01a0abd0dade1c84"
+          ]
+        },
+        {
+          "project_name": "3pr",
+          "report_s3_key": "rimutaka/3pr.report",
+          "date_init": "2020-04-18T22:14:25+12:00",
+          "date_head": "2020-04-22T13:49:36+12:00",
+          "loc": 384,
+          "libs": 0,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "CSS",
+              "loc": 384,
+              "libs": 0,
+              "loc_percentage": 100
+            }
+          ],
+          "remote_url_hashes": [
+            "63d6c8ccfa02bb62356976eddff8663e23d23f05"
+          ]
+        },
+        {
+          "project_name": "upwork-browser-addon",
+          "report_s3_key": "rimutaka/upwork-browser-addon.report",
+          "date_init": "2020-04-02T12:55:53+13:00",
+          "date_head": "2020-04-02T14:07:25+13:00",
+          "loc": 135,
+          "libs": 0,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 28,
+              "libs": 0,
+              "loc_percentage": 20
+            },
+            {
+              "language": "JavaScript",
+              "loc": 107,
+              "libs": 0,
+              "loc_percentage": 79
+            }
+          ],
+          "remote_url_hashes": [
+            "74e842c50fc3c4a45a158795643937273548a5a1"
+          ]
+        },
+        {
+          "project_name": "onprem2az-elastic-query",
+          "report_s3_key": "rimutaka/onprem2az-elastic-query.report",
+          "date_init": "2019-12-04T06:41:04+13:00",
+          "date_head": "2020-02-24T14:30:43+13:00",
+          "loc": 2489,
+          "libs": 13,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 340,
+              "libs": 0,
+              "loc_percentage": 13
+            },
+            {
+              "language": "C#",
+              "loc": 2149,
+              "libs": 13,
+              "loc_percentage": 86
+            }
+          ],
+          "remote_url_hashes": [
+            "e50e8dc74b9a48b7c991e633d47ce52960730e2d"
+          ]
+        },
+        {
+          "project_name": "QM1571-Logger",
+          "report_s3_key": "rimutaka/QM1571-Logger.report",
+          "date_init": "2016-04-04T16:56:38+12:00",
+          "date_head": "2016-04-17T15:38:58+12:00",
+          "loc": 750,
+          "libs": 19,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "C#",
+              "loc": 723,
+              "libs": 19,
+              "loc_percentage": 96
+            },
+            {
+              "language": "Markdown",
+              "loc": 27,
+              "libs": 0,
+              "loc_percentage": 3
+            }
+          ],
+          "remote_url_hashes": [
+            "7270574a724c20a0533a231a8443c36154ceea89"
+          ]
+        },
+        {
+          "project_name": "spotify-play-all-saved-albums",
+          "report_s3_key": "rimutaka/spotify-play-all-saved-albums.report",
+          "date_init": "2020-04-13T15:40:15+12:00",
+          "date_head": "2020-04-13T16:39:03+12:00",
+          "loc": 356,
+          "libs": 0,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "JavaScript",
+              "loc": 290,
+              "libs": 0,
+              "loc_percentage": 81
+            },
+            {
+              "language": "Markdown",
+              "loc": 66,
+              "libs": 0,
+              "loc_percentage": 18
+            }
+          ],
+          "remote_url_hashes": [
+            "d2f0ec70b9e27851f8b6748c6f8b11ec91262ce3"
+          ]
+        },
+        {
+          "project_name": "ld-lambdas",
+          "report_s3_key": "rimutaka/ld-lambdas.report",
+          "date_init": "2020-07-02T23:58:54+00:00",
+          "date_head": "2020-07-17T22:25:01+00:00",
+          "loc": 1452,
+          "libs": 16,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Rust",
+              "loc": 1452,
+              "libs": 16,
+              "loc_percentage": 100
+            }
+          ],
+          "remote_url_hashes": [
+            "146ad936132670cd31e232ea3de411b555bb4b62"
+          ]
+        },
+        {
+          "project_name": "stm",
+          "report_s3_key": "rimutaka/stm.report",
+          "date_init": "2020-07-28T02:52:50+00:00",
+          "date_head": "2021-01-07T08:57:45+00:00",
+          "loc": 2559,
+          "libs": 14,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Rust",
+              "loc": 2559,
+              "libs": 14,
+              "loc_percentage": 100
+            }
+          ],
+          "remote_url_hashes": [
+            "b0c317b7a8bfabf95154bb27b70197561e321813"
+          ]
+        },
+        {
+          "project_name": "folding-furniture",
+          "report_s3_key": "rimutaka/folding-furniture.report",
+          "date_init": "2020-03-25T23:50:09+13:00",
+          "date_head": "2020-03-26T15:02:31+13:00",
+          "loc": 191,
+          "libs": 0,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 191,
+              "libs": 0,
+              "loc_percentage": 100
+            }
+          ],
+          "remote_url_hashes": [
+            "4f02865ccae4221e4598dc8ca909f0f1af777045"
+          ]
+        },
+        {
+          "project_name": "posts",
+          "report_s3_key": "rimutaka/posts.report",
+          "date_init": "2020-02-16T13:22:21+13:00",
+          "date_head": "2020-07-26T15:45:27+12:00",
+          "loc": 3367,
+          "libs": 0,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 3367,
+              "libs": 0,
+              "loc_percentage": 100
+            }
+          ],
+          "remote_url_hashes": [
+            "9dfe1055395c075aee678b13a1001fca78783760"
+          ]
+        },
+        {
+          "project_name": "lambda-debug-proxy",
+          "report_s3_key": "rimutaka/lambda-debug-proxy.report",
+          "date_init": "2020-08-19T10:52:29+00:00",
+          "date_head": "2021-08-03T18:55:28+00:00",
+          "loc": 388,
+          "libs": 8,
+          "ppl": 1,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 86,
+              "libs": 0,
+              "loc_percentage": 22
+            },
+            {
+              "language": "Rust",
+              "loc": 302,
+              "libs": 8,
+              "loc_percentage": 77
+            }
+          ],
+          "remote_url_hashes": [
+            "2abfef312f601a7a3e9c671270322eeb65833b46"
+          ],
+          "recent_project_commits": [
+            "51e09b6a",
+            "ed99601b",
+            "0cac2f4b",
+            "15d29ef9",
+            "41fc6956",
+            "252fd0dd",
+            "cfaea112",
+            "39de3d00",
+            "5513c92f",
+            "8526f713",
+            "fb82045d",
+            "73655a32",
+            "d799b930",
+            "09b7a6f7"
+          ]
+        },
+        {
+          "project_name": "LazyBoneBLE2016",
+          "report_s3_key": "rimutaka/LazyBoneBLE2016.report",
+          "date_init": "2017-05-18T17:07:12+12:00",
+          "date_head": "2017-05-18T17:07:12+12:00",
+          "loc": 0,
+          "libs": 0,
+          "ppl": 1,
+          "tech": [],
+          "remote_url_hashes": [
+            "854877e5a9fa014119cd445572c8eb24ee60bac1"
+          ]
+        },
+        {
+          "project_name": "lambda-proxy-bak",
+          "report_s3_key": "rimutaka/lambda-proxy-bak.report",
+          "date_init": "2018-11-08T10:36:54-08:00",
+          "date_head": "2020-09-22T10:26:39+00:00",
+          "loc": 4061,
+          "libs": 21,
+          "ppl": 32,
+          "tech": [
+            {
+              "language": "Markdown",
+              "loc": 589,
+              "libs": 0,
+              "loc_percentage": 14
+            },
+            {
+              "language": "Rust",
+              "loc": 3472,
+              "libs": 21,
+              "loc_percentage": 85
+            }
+          ],
+          "remote_url_hashes": [
+            "81f0c0f9001a1a4df5007f13db6b320fdaeff81e"
+          ],
+          "recent_project_commits": []
+        }
+      ]
+    }
+  }
+}
