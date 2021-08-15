@@ -2,7 +2,7 @@
 
 #### This app is a collection of handlers (flows) running as a background process on a VM.
 
-The VM instance is self-configuring from the *instance user data*.
+The VM instance is self-configuring from the EC2 *instance user data* with this bootstrap sequence:
 
 1. Copy the contents of config.json into "user data" of the instance
 2. `stm_inbox_flows_bootstrap.service` will run first and bootstrap the environment
@@ -118,14 +118,4 @@ See [scripts/prod/crontab.bak](scripts/prod/crontab.bak) for details.
 
 ### Updating dev profiles from submitted reports
 
-`-flow dev_queue` generates stats data and saves it in S3 and ES. It is run in an infinite loop on an internal (hardcoded) schedule.
-
-There are two types of stats: ES index counts (ES `stats` ids and S3 prefix) and job stats (`stats_jobs` S3 prefix and multiple `stm_stats_*` indexes).
-There is no concurrency control. Run only a single instance of the app to avoid conflicts. 
-The app will panic if the process cannot be completed for more than N cycles.
-
-
-
-
-
-
+`-flow dev_queue` processes reports after *stm_inbox* and *stm_inbox_router* steps. It loads the contents of the reports and combines them into a single dev profile. Public profile details such name and contact are displayed exactly as they are in the very last report. Dev profiles are saved in ElasticSearch and S3.

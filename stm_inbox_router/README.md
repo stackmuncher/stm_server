@@ -1,6 +1,6 @@
 # StackMuncher Inbox Router
 
-This Lambda app takes new stack report submissions from the inbox folder in S3, checks the payload and moves them to the member's folder in S3. It does not update the member's profile.
+This AWS Lambda function takes new stack report submissions from the inbox folder in S3, checks the payload, moves them to the member's folder in S3 and creates a new job in a Postgres table used as a queue. It does not update the member's profile.
 
 #### Lambda deployment
 
