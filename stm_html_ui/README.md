@@ -8,7 +8,7 @@ This is a stop-gap solution to get something simple out quickly. Better templati
 
 ## Lambda deployment
 
-Create a function called `stm_html_iu` with `stm-www` role, a custom runtime and customize these settings:
+Create a function called `stm_html_ui` with `stm-www` role, a custom runtime and customize these settings:
 * env vars: see [config.rs](./src/config.rs) for the full list
 * timeout: 30s
 * reserved concurrency: 5
@@ -16,8 +16,8 @@ Create a function called `stm_html_iu` with `stm-www` role, a custom runtime and
 
 ```
 cargo build --release --target x86_64-unknown-linux-gnu
-cp ./target/x86_64-unknown-linux-gnu/release/stm_html_iu ./bootstrap && zip proxy.zip bootstrap && rm bootstrap
-aws lambda update-function-code --region us-east-1 --function-name stm_html_iu --zip-file fileb://proxy.zip
+cp ./target/x86_64-unknown-linux-gnu/release/stm_html_ui ./bootstrap && zip stm_html_ui.zip bootstrap && rm bootstrap
+aws lambda update-function-code --region us-east-1 --function-name stm_html_ui --zip-file fileb://stm_html_ui.zip
 ```
 
 #### Authorizer

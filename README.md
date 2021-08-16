@@ -12,3 +12,12 @@ StackMuncher Server processes stack reports submitted by devs and provides a UI 
 Each crate included in this project has its own ReadMe with architecture and deployment details.
 
 See https://github.com/stackmuncher/stm_app for more info on the app making the submissions.
+
+
+## Build
+
+All release builds should be done for `x86_64-unknown-linux-gnu` target to deploy on AWS Linux2. 
+
+```
+cargo build --release --target x86_64-unknown-linux-gnu
+```

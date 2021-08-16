@@ -23,15 +23,8 @@ pub(crate) struct LogLevel(tracing::Level);
 /// on the same instance.
 #[derive(Debug, Deserialize)]
 pub(crate) struct EsIdx {
-    /// Contains repository-level reports
-    pub repo: String,
-    /// Contains individual contributor report as set by Git identity.
-    /// Multiple contributor reports may be merged into a single developer report.
-    pub contributor: String,
     /// Contains GitHub user details and a combined report for all contributor identities.
     pub dev: String,
-    /// Contains some stats produced by `stats` flow.
-    pub stats: String,
 }
 
 /// ### Params of DB-based job queues
@@ -41,8 +34,6 @@ pub(crate) struct JobQueues {
     pub con_str: String,
     /// Maximum duration for an active DEV job before it is returned to the queue, in seconds.
     pub max_time_in_flight_dev: i64,
-    /// Maximum duration for an active REPO job before it is returned to the queue, in seconds.
-    pub max_time_in_flight_repo: i64,
     /// Maximum number of processing failures before the job stops being reprocessed.
     pub max_number_of_fails: i32,
 }

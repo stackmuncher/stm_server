@@ -45,7 +45,8 @@
           "type": "string",
           "description": "Developer details with all reports merged into one index"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "job_queues": {
       "type": "object",
@@ -68,7 +69,8 @@
           "type": "integer",
           "description": "Maximum number of processing failures before the job stops being reprocessed. This value will be multiplied by `max_time_in_flight_*` to calculate the wait time before the job is requeued for every failure count."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "flow": {
       "type": "string",

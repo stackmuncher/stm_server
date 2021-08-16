@@ -25,11 +25,18 @@ The file is bootstrapped from the user instance metadata (user data) during the 
 
 ## VM set up
 
-1. Create the directory structure with `mkdirs.sh` script
-- copy `stm_inbox_flows_bootstrap.sh` into `rust` folder
-- run `sudo apt-get install apache2 apache2-utils` to install `rotatelogs`
+1. Install pre-requisites
+- **rotatelogs**: `sudo apt-get install apache2 apache2-utils`
+- **unzip**: `sudo apt install unzip`
+- **AWS CLI**: `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && sudo ./aws/install`
 
-2. Create `sudo nano /etc/systemd/system/stm_inbox_flows_bootstrap.service` with
+2. Create the directory structure with `mkdirs.sh` script
+3. `cd rust` and copy or manually create the following:
+- copy `stm_inbox_flows_bootstrap.sh`, `stm_inbox_flows.sh`, `cleanup.sh` into `rust` folder
+- run `chmod u=rwx,g=rx,o=r /home/ubuntu/rust/*.sh` to make the shell scripts runnable
+
+
+4. Create `sudo nano /etc/systemd/system/stm_inbox_flows_bootstrap.service` with
 ```
 [Unit]
 Description=StackMuncher App Bootstrapper
@@ -47,7 +54,7 @@ WantedBy=multi-user.target
 ```
 Set `STM_S3_BUCKET_PROD_BOOTSTRAP` value to the bucket name with the executable.
 
-3. Create `sudo nano /etc/systemd/system/stm_inbox_flows.service` with the following content:
+5. Create `sudo nano /etc/systemd/system/stm_inbox_flows.service` with the following content:
 
 ```
 [Unit]
@@ -70,9 +77,9 @@ Environment=RUST_BACKTRACE=1
 WantedBy=multi-user.target
 ```
 
-3. Set user password for `ubuntu` with `sudo passwd ubuntu`
+6. Set user password for `ubuntu` with `sudo passwd ubuntu`. The password is not used by any of the scripts, but it has to be set in order for the service to function.
 
-4. Run 
+7. Run 
  - `sudo systemctl enable stm_inbox_flows_bootstrap.service`
  - `sudo systemctl enable stm_inbox_flows.service`
  - `sudo systemctl start stm_inbox_flows_bootstrap.service`
