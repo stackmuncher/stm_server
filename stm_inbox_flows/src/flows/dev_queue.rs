@@ -67,7 +67,7 @@ pub(crate) async fn merge_devs_reports(mut config: Config) {
         // check if there need to be a delay before the next jobs call
         let qmsgs_len = qmsgs.len();
         if qmsgs_len == 0 {
-            wait_for_next_cycle(&main_loop_start, log_sleep_msg, MIN_CYCLE_DURATION_IN_MS * 5).await;
+            wait_for_next_cycle(&main_loop_start, log_sleep_msg, MIN_CYCLE_DURATION_IN_MS).await;
             log_sleep_msg = false;
         } else {
             // process all dev jobs received from the queue

@@ -6,7 +6,7 @@ use serde::Deserialize;
 pub use stackmuncher_lib::config::Config as CoreConfig;
 use std::fs;
 use std::str::FromStr;
-use tracing::{info, warn};
+use tracing::{debug, warn};
 
 mod deser;
 
@@ -209,7 +209,7 @@ impl Config {
     pub(crate) async fn renew_aws_credentials(&mut self) {
         if let Some(creds) = &self.aws_credentials {
             if let Some(expiration) = creds.expires_at() {
-                info!("AWS token expiration: {}", expiration.to_rfc3339());
+                debug!("AWS token expiration: {}", expiration.to_rfc3339());
                 // renew if expires within the next 2 minutes
                 // normally tokens have many hours of life
                 if expiration.timestamp() - Utc::now().timestamp() > 120 {
