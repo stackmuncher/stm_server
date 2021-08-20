@@ -12,7 +12,7 @@
         {% for hit in devs.hits.hits %}
         {% set user = hit._source %}
 
-        <h1><small>{% if user.name %}{{user.name}}{% else %}{{user.login}}{% endif %}</small></h1>
+        <h1><small>{% if user.name %}{{user.name}}{% elif user.login %}{{user.login}}{% else %}Anonymous{% endif %}</small></h1>
         <h5><small>Software Developer</small></h5>
 
         <ul class="mt-3 ps-3">
