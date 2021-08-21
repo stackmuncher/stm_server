@@ -81,12 +81,10 @@
           </table>
         </div>
 
+        {% if user.report.projects_included %}
         <h3 class="mt-4">Projects</h3>
         <ul class="list-inline">
-          {% if user.report.projects_included %}
-
           {% for proj in user.report.projects_included | sort(attribute="date_head") | reverse %}
-          {% if proj.loc > 100 %}
           <li class="pe-4 mb-4 .text-nowrap list-inline-item">
             <div class="card" style="width: 20rem;">
               <div class="card-body">
@@ -104,26 +102,9 @@
               </div>
             </div>
           </li>
-          {% endif %}
           {% endfor %}
-
-          {% else %}
-
-          {% for proj in user.report.reports_included | sort %}
-          {% set len = proj | length | int() %}
-          <li class="pe-4 .text-nowrap list-inline-item">
-            {% if user.login %}
-            {% set pname = proj | truncate(length=len-7, end="") | replace(from=user.login, to="") | replace(from="/",
-            to="") %}
-              <a href="https://github.com/{{user.login}}/{{pname}}">{{pname}}</a>
-            {% else %}
-              <a href="/?project={{proj.project_id}}">{{proj.project_name}}</a>
-            {% endif %}
-          </li>
-          {% endfor %}
-
-          {% endif %}
         </ul>
+        {% endif %}
 
         {% for tech in user.report.tech %}
 
