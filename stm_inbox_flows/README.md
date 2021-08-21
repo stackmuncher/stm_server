@@ -12,6 +12,13 @@ Software updates can be done by restarting the instance to invoke the bootstrapp
 
 ## stm_inbox_flows config
 
+#### Build and deploy
+```shell
+cargo build --release --target x86_64-unknown-linux-gnu --package stm_inbox_flows
+aws s3 cp target/x86_64-unknown-linux-gnu/release/stm_inbox_flows s3://$STM_S3_BUCKET_PROD_BOOTSTRAP/apps/stm_inbox_flows
+```
+Restart the instance - it will run its bootstrap script which downloads the latest binary from the above S3 location.
+
 #### Arguments
 
 `-flow` is optional with one of: ["dev_queue",], optional `-l` [trace, debug, info] for logging.

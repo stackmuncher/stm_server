@@ -11,7 +11,7 @@ Create function called `stm_inbox_router` with `stm_inbox` role, a custom runtim
 * async invocation: retry 3 times
 
 ```
-cargo build --release --target x86_64-unknown-linux-gnu
+cargo build --release --target x86_64-unknown-linux-gnu --package stm_inbox_router
 cp ./target/x86_64-unknown-linux-gnu/release/stm_inbox_router ./bootstrap && zip stm_inbox_router.zip bootstrap && rm bootstrap
 aws lambda update-function-code --region us-east-1 --function-name stm_inbox_router --zip-file fileb://stm_inbox_router.zip
 ```

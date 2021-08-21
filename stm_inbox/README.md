@@ -24,7 +24,7 @@ Create function called `stm_inbox` with `stm_inbox` role, a custom runtime and c
 * async invocation: do not retry
 
 ```
-cargo build --release --target x86_64-unknown-linux-gnu
+cargo build --release --target x86_64-unknown-linux-gnu --package stm_inbox
 cp ./target/x86_64-unknown-linux-gnu/release/stm_inbox ./bootstrap && zip stm_inbox.zip bootstrap && rm bootstrap
 aws lambda update-function-code --region us-east-1 --function-name stm_inbox --zip-file fileb://stm_inbox.zip
 ```
