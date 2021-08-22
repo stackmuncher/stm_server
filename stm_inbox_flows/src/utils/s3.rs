@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{validate_owner_id, Config};
 use flate2::read::GzDecoder;
 use futures::stream::TryStreamExt;
 use hyper_rustls::HttpsConnector;
@@ -240,14 +240,9 @@ pub(crate) fn generate_s3_client(config: &Config) -> S3Client {
 /// The key includes a trailing `/` to make sure that the match is exact because `report/abc` will match `report/abc/` and `report/abcd/`.
 /// The validation is to enforce zero-trust with other parts of the system,
 /// but it is unlikely that the owner_id is invalid because it is validated many times elsewhere.
-pub(crate) fn build_dev_s3_key_from_owner_id(config: &Config, owner_id: &String) -> Result<String, ()> {
-    // validate the owner id, which should be a base58 encoded string of 44 chars
-    if !config
-        .owner_id_validation_regex
-        .as_ref()
-        .expect("Missing owner_id_validation_regex. It's a bug.")
-        .is_match(owner_id)
-    {
+pub(crate) fn build_dev_s3_key_from_owner_id(owner_id: &String) -> Result<String, ()> {
+    // validate the owner id, which should be a base58 encoded string of 32 bytes
+    if !validate_owner_id(owner_id) {
         error!("Invalid owner id: {}", owner_id);
         return Err(());
     }

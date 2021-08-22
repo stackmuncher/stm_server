@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{validate_owner_id, Config};
 use crate::elastic;
 use html_data::{HtmlData, KeywordMetadata};
 use regex::Regex;
@@ -89,7 +89,7 @@ pub(crate) async fn html(
         let owner_id = owner_id.trim().to_owned();
 
         // is it a valid format for a dev login?
-        if !config.owner_id_validation_regex.is_match(&owner_id) {
+        if !validate_owner_id(&owner_id) {
             warn!("Invalid owner_id: {} from {}", owner_id, url_query);
             return Ok(html_data);
         }

@@ -16,6 +16,7 @@ lambda_runtime = { git = "https://github.com/awslabs/aws-lambda-rust-runtime.git
 hyper = { version = "0.14", features = ["http2"] }
 hyper-rustls = "0.22"
 regex = "1.4"
+bs58 = "0.4"
 rust-embed = { version = "6", features = ["compression"] }
 rusoto_signature = "0.47"
 rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false }

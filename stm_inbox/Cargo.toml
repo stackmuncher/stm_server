@@ -18,10 +18,10 @@ log = "0.4.14"
 lambda_runtime = { git = "https://github.com/awslabs/aws-lambda-rust-runtime.git" }
 hyper = { version = "0.14.7", features = ["http2"] }
 hyper-rustls = "0.22.1"
-rusoto_signature = "0.46.0"
-rusoto_sqs = { version = "0.46.0", features = ["rustls"], default-features = false }
-rusoto_core = { version = "0.46.0", features = ["rustls"], default-features = false }
-rusoto_s3 = { version = "0.46.0", features = ["rustls"], default-features = false }
+rusoto_signature = "0.47"
+rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false }
+rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
+rusoto_s3 = { version = "0.47", features = ["rustls"], default-features = false }
 base64 = "0.13.0"
 bs58 = "0.4.0"
 ring = "0.16.20"

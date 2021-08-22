@@ -1,3 +1,4 @@
+use bs58;
 use chrono::Utc;
 use regex::Regex;
 use rusoto_core::credential::{AwsCredentials, DefaultCredentialsProvider, ProvideAwsCredentials};
@@ -85,10 +86,6 @@ pub(crate) struct Config {
     /// Doesn't need to be public. It is retrieved using a function call.
     #[serde(skip)]
     aws_credentials: Option<AwsCredentials>,
-    /// A compiled regex to validate a 44-char long owner id in base58 form.
-    /// E.g. 9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK
-    #[serde(skip)]
-    pub owner_id_validation_regex: Option<Regex>,
 }
 
 /// Defines what flow is activated in the app when its launched
@@ -186,12 +183,6 @@ impl Config {
         config.no_sql_param_invalidation_regex_inner =
             Some(Regex::new(r#"[^#\-\._0-9a-zA-Z]"#).expect("Failed to compile no_sql_string_value_regex"));
 
-        // pre-compile owner id validation regex
-        config.owner_id_validation_regex = Some(
-            Regex::new(r#"^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$"#)
-                .expect("Failed to compile owner_id_validation_regex"),
-        );
-
         // get AWS creds
         let provider = DefaultCredentialsProvider::new().expect("Cannot get default creds provider");
         config.aws_credentials = Some(provider.credentials().await.expect("Cannot find creds"));
@@ -240,5 +231,25 @@ impl Config {
         }
         let err_msg = &["Invalid tracing level value: ", s].concat();
         tracing::Level::from_str(s).expect(err_msg)
+    }
+}
+
+/// Returns TRUE if the owner_id decodes from base58 into exactly 256 bytes.
+/// Logs a warning and returns FALSE otherwise.
+/// TODO: this should be a shared utility function!!!
+pub(crate) fn validate_owner_id(owner_id: &str) -> bool {
+    match bs58::decode(owner_id).into_vec() {
+        Err(e) => {
+            warn!("Invalid owner_id: {}. Cannot decode from bs58: {}", owner_id, e);
+            false
+        }
+        Ok(v) => {
+            if v.len() == 32 {
+                true
+            } else {
+                warn!("Invalid owner_id: {}. Decoded to {} bytes", owner_id, v.len());
+                false
+            }
+        }
     }
 }

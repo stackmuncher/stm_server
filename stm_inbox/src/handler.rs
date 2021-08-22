@@ -6,7 +6,7 @@ use ring::signature;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -105,9 +105,9 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
 
     info!("Report for pub key: {}", pub_key_bs58);
 
-    if pub_key_bs58.len() != 44 {
+    if !validate_owner_id(&pub_key_bs58) {
         error!("Invalid pub key length: {}", pub_key_bs58.len());
-        return gw_response(Some("Invalid public key length. Expecting 44 bytes.".to_owned()), 403);
+        return gw_response(Some("Invalid public key length. Expecting 32 bytes as base58.".to_owned()), 403);
     }
 
     let pub_key = match bs58::decode(pub_key_bs58.clone()).into_vec() {
@@ -169,4 +169,24 @@ fn gw_response(body: Option<String>, status_code: u32) -> Result<Value, Error> {
     };
 
     Ok(serde_json::to_value(resp).expect("Failed to serialize response"))
+}
+
+/// Returns TRUE if the owner_id decodes from base58 into exactly 256 bytes.
+/// Logs a warning and returns FALSE otherwise.
+/// TODO: this should be a shared utility function!!!
+fn validate_owner_id(owner_id: &str) -> bool {
+    match bs58::decode(owner_id).into_vec() {
+        Err(e) => {
+            warn!("Invalid owner_id: {}. Cannot decode from bs58: {}", owner_id, e);
+            false
+        }
+        Ok(v) => {
+            if v.len() == 32 {
+                true
+            } else {
+                warn!("Invalid owner_id: {}. Decoded to {} bytes", owner_id, v.len());
+                false
+            }
+        }
+    }
 }

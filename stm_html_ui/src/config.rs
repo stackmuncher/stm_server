@@ -1,4 +1,5 @@
 use regex::Regex;
+use tracing::warn;
 
 /// Add the name of the ElasticSearch index to that env var
 pub const ES_DEV_IDX_ENV: &str = "STM_HTML_ES_DEV_IDX";
@@ -16,9 +17,6 @@ pub struct Config {
     pub stats_idx: String,
     /// No-SQL field value validation regex - the value would be invalid if it's a match
     pub no_sql_string_invalidation_regex: Regex,
-    /// A compiled regex to validate a 44-char long owner id in base58 form.
-    /// E.g. 9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK
-    pub owner_id_validation_regex: Regex,
 }
 
 /// A regex formula to check for unsafe values to insert into another regex string.
@@ -43,11 +41,26 @@ impl Config {
                 .to_string(),
             no_sql_string_invalidation_regex: Regex::new(r#"[^#\-\._0-9a-zA-Z]"#)
                 .expect("Failed to compile no_sql_string_value_regex"),
-            // pre-compile owner id validation regex
-            owner_id_validation_regex: Regex::new(
-                r#"^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$"#,
-            )
-            .expect("Failed to compile owner_id_validation_regex"),
+        }
+    }
+}
+
+/// Returns TRUE if the owner_id decodes from base58 into exactly 256 bytes.
+/// Logs a warning and returns FALSE otherwise.
+/// TODO: this should be a shared utility function!!!
+pub(crate) fn validate_owner_id(owner_id: &str) -> bool {
+    match bs58::decode(owner_id).into_vec() {
+        Err(e) => {
+            warn!("Invalid owner_id: {}. Cannot decode from bs58: {}", owner_id, e);
+            false
+        }
+        Ok(v) => {
+            if v.len() == 32 {
+                true
+            } else {
+                warn!("Invalid owner_id: {}. Decoded to {} bytes", owner_id, v.len());
+                false
+            }
         }
     }
 }

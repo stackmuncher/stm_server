@@ -155,7 +155,7 @@ async fn process_devs(
 /// in async execution for logging. Returns `owner_id` in Ok or Err.
 #[instrument(skip(owner_id, config), name = "pd")]
 pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -> Result<String, FailureType<String>> {
-    let dev_s3_key = match s3::build_dev_s3_key_from_owner_id(config, &owner_id) {
+    let dev_s3_key = match s3::build_dev_s3_key_from_owner_id(&owner_id) {
         Err(()) => {
             // there is something wrong with the key - def no point retrying with the same input
             return Err(FailureType::DoNotRetry(owner_id));

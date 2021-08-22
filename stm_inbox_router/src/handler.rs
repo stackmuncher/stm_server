@@ -65,7 +65,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     info!("OwnerID: {}", owner_id);
 
     // this should already be validated, but check just in case
-    if owner_id.len() != 44 {
+    if !validate_owner_id(&owner_id) {
         return Err(Error::from(format!("Invalid owner_id length: {}", owner_id)));
     }
 
@@ -111,7 +111,9 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
 
     // validate the latest commit SHA1
     let last_contributor_commit_sha1 = report.last_contributor_commit_sha1.unwrap_or_default();
-    if last_contributor_commit_sha1.len() != 40 || !config.commit_hash_regex_full.is_match(&last_contributor_commit_sha1) {
+    if last_contributor_commit_sha1.len() != 40
+        || !config.commit_hash_regex_full.is_match(&last_contributor_commit_sha1)
+    {
         // something's off here - no point proceeding
         error!("Invalid latest report commit: {}", last_contributor_commit_sha1);
         return Ok(());
@@ -336,4 +338,24 @@ fn validate_short_commit_hash(commit_hash_with_ts: &String, config: &Config) -> 
     }
 
     None
+}
+
+/// Returns TRUE if the owner_id decodes from base58 into exactly 256 bytes.
+/// Logs a warning and returns FALSE otherwise.
+/// TODO: this should be a shared utility function!!!
+fn validate_owner_id(owner_id: &str) -> bool {
+    match bs58::decode(owner_id).into_vec() {
+        Err(e) => {
+            warn!("Invalid owner_id: {}. Cannot decode from bs58: {}", owner_id, e);
+            false
+        }
+        Ok(v) => {
+            if v.len() == 32 {
+                true
+            } else {
+                warn!("Invalid owner_id: {}. Decoded to {} bytes", owner_id, v.len());
+                false
+            }
+        }
+    }
 }
