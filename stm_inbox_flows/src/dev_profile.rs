@@ -15,9 +15,6 @@ use utils::s3;
 #[derive(Debug, Serialize)]
 pub(crate) struct DevProfile {
     pub owner_id: String,
-    pub name: Option<String>,
-    pub blog: Option<String>,
-    pub email: Option<String>,
     pub updated_at: String,
     #[serde(skip_deserializing)]
     pub report: Option<Report>,
@@ -101,10 +98,7 @@ impl DevProfile {
 
         let dev_profile = DevProfile {
             updated_at: Utc::now().to_rfc3339(),
-            name: combined_report.as_ref().unwrap().public_name.clone(),
-            blog: combined_report.as_ref().unwrap().public_contact.clone(),
             report: combined_report,
-            email: None,
             owner_id: owner_id.clone(),
         };
 
