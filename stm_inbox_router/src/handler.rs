@@ -95,6 +95,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
         })
         .collect::<HashMap<String, bool>>();
     // add the primary email, if any
+    // An empty string means NO CONTACT - see https://github.com/stackmuncher/stm_server/issues/16
     if let Some(email) = &report.primary_email {
         if let Some(email) = validate_email_address(email) {
             user_emails.insert(email, true);
@@ -263,7 +264,7 @@ pub(crate) async fn my_handler(event: Value, ctx: Context, config: &Config) -> R
     }
 
     // mark the developer record for re-processing
-    Dev::queue_up_for_update(&config.pg_client, &owner_id).await?;
+    Dev::queue_up_for_update(&config.pg_client, &owner_id, &report.gh_validation_id).await?;
 
     // drive email insertion jobs to completion
     let mut email_addition_failed = false;

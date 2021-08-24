@@ -25,23 +25,25 @@ pub(crate) struct DevProfile {
 
 impl DevProfile {
     /// Returns a serialized form of Self.
-    pub(crate) fn to_vec(&self) -> Result<Vec<u8>, FailureType<String>> {
+    /// All errors are fatal. Do not retry with the same data.
+    pub(crate) fn to_vec(&self) -> Result<Vec<u8>, ()> {
         // convert into json
         match serde_json::to_vec::<Self>(&self) {
             Err(_) => {
                 error!("Cannot serialize dev profile.");
-                Err(FailureType::DoNotRetry(self.owner_id.clone()))
+                Err(())
             }
             Ok(v) => Ok(v),
         }
     }
 
-    /// Merges all project reports from S3 into a single dev report, extracts the latest personal details and returns a complete developer profile
+    /// Merges all project reports from S3 into a single dev report, extracts the latest personal details and returns a complete developer profile.
+    /// All errors are fatal. Do Not Retry with the same data.
     pub(crate) async fn from_contributor_reports(
         report_s3_keys: Vec<String>,
         config: &Config,
         owner_id: &String,
-    ) -> Result<Self, FailureType<String>> {
+    ) -> Result<Self, ()> {
         info!("Merging {} dev reports into a profile for {}", report_s3_keys.len(), owner_id);
 
         // put all the S3 requests into one futures container
@@ -94,7 +96,7 @@ impl DevProfile {
         // it's possible there are no reports in the user struct
         if combined_report.is_none() {
             error!("No merged report was produced.");
-            return Err(FailureType::DoNotRetry(owner_id.clone()));
+            return Err(());
         }
 
         let dev_profile = DevProfile {
@@ -114,7 +116,7 @@ impl DevProfile {
         &self,
         config: &Config,
         serialized_profile: &Vec<u8>,
-    ) -> Result<(), FailureType<String>> {
+    ) -> Result<(), FailureType<()>> {
         let s3_key = [
             s3::S3_FOLDER_DEV_REPORTS,
             "/",
@@ -128,12 +130,12 @@ impl DevProfile {
         let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
         if let Err(e) = encoder.write_all(&serialized_profile) {
             error!("Cannot gzip the profile due to {}", e);
-            return Err(FailureType::DoNotRetry(self.owner_id.clone()));
+            return Err(FailureType::DoNotRetry(()));
         };
         let profile_json = match encoder.finish() {
             Err(e) => {
                 error!("Cannot finish gzipping the profile due to {}", e);
-                return Err(FailureType::DoNotRetry(self.owner_id.clone()));
+                return Err(FailureType::DoNotRetry(()));
             }
 
             Ok(v) => v,
@@ -144,7 +146,7 @@ impl DevProfile {
             .await
             .is_err()
         {
-            return Err(FailureType::Retry(self.owner_id.clone()));
+            return Err(FailureType::Retry(()));
         };
 
         info!("Upload completed");

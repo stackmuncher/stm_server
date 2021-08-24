@@ -2,6 +2,7 @@ use crate::config::Config;
 use crate::dev_profile::DevProfile;
 use crate::jobs::{wait_for_next_cycle, DevJob, FailureType};
 use crate::utils;
+use chrono::{Duration, Utc};
 use futures::stream::{FuturesUnordered, StreamExt};
 use tokio::time::Instant;
 use tokio_postgres::Client as PgClient;
@@ -15,6 +16,8 @@ const MAX_NUMBER_OF_ACTIVE_DEV_JOBS: usize = 20;
 const MIN_CYCLE_DURATION_IN_MS: u64 = 10000;
 /// Limited by the max load can be put on PG and ES
 const MAX_NUMBER_OF_DEV_JOBS_TO_QUEUE_UP: i32 = 100;
+/// Validity period for gh_login revalidation
+const GH_LOGIN_VALIDITY_PERIOD_DAYS: i64 = 30;
 
 /// Generates a combined developer report by merging all existing repo reports for that login and stores it in ES.
 /// The merge requests come from DB DevJob queue.
@@ -86,21 +89,21 @@ pub(crate) async fn merge_devs_reports(mut config: Config) {
 
 /// Processes devs from the list of jobs and returns the error counter
 async fn process_devs(
-    owner_ids: Vec<String>,
+    dev_jobs: Vec<DevJob>,
     config: &Config,
     pg_client: &PgClient,
     report_in_flight_id: &Uuid,
 ) -> usize {
     let mut err_counter = 0usize;
 
-    let mut owner_ids = owner_ids;
+    let mut dev_jobs = dev_jobs;
 
     // put the max allowed number of jobs into one container
     // use `idx` to mark the job # in the log
-    let mut dev_jobs: FuturesUnordered<_> = owner_ids
-        .drain(..MAX_NUMBER_OF_ACTIVE_DEV_JOBS.min(owner_ids.len()))
+    let mut dev_jobs_futures: FuturesUnordered<_> = dev_jobs
+        .drain(..MAX_NUMBER_OF_ACTIVE_DEV_JOBS.min(dev_jobs.len()))
         .enumerate()
-        .map(|(idx, owner_id)| process_dev(owner_id, config, idx))
+        .map(|(idx, dev_job)| process_dev(dev_job, config, idx))
         .collect();
 
     // a job counter to identify the job in the log
@@ -108,14 +111,14 @@ async fn process_devs(
 
     // loop through the active dev jobs
     loop {
-        match dev_jobs.next().await {
+        match dev_jobs_futures.next().await {
             Some(job_result) => {
                 // a job was completed
                 match job_result {
                     Err(e) => {
                         match e {
-                            FailureType::DoNotRetry(owner_id) => {
-                                let _ = DevJob::mark_failed(&pg_client, &owner_id, report_in_flight_id).await;
+                            FailureType::DoNotRetry(dev_job) => {
+                                let _ = DevJob::mark_failed(&pg_client, &dev_job.owner_id, report_in_flight_id).await;
                             }
                             FailureType::Retry(_) => {
                                 // failed - retry by requeueing it later
@@ -123,19 +126,26 @@ async fn process_devs(
                         }
                         err_counter += 1;
                     }
-                    Ok(owner_id) => {
+                    Ok(dev_job) => {
                         // the job succeeded
                         err_counter = 0;
 
                         // mark the job as completed in the DB
-                        let _ = DevJob::mark_completed(&pg_client, &owner_id, report_in_flight_id).await;
+                        let _ = DevJob::mark_completed(
+                            &pg_client,
+                            &dev_job.owner_id,
+                            report_in_flight_id,
+                            &dev_job.gh_login,
+                            &dev_job.gh_login_gist_validation,
+                        )
+                        .await;
                     }
                 }
 
                 // top up the futures queue with either a user or an org until they run out
-                if let Some(owner_id) = owner_ids.pop() {
-                    let dev_job = process_dev(owner_id, config, idx);
-                    dev_jobs.push(dev_job);
+                if let Some(dev_job) = dev_jobs.pop() {
+                    let dev_job = process_dev(dev_job, config, idx);
+                    dev_jobs_futures.push(dev_job);
                     info!("Added job {}", idx);
                     idx += 1;
                 }
@@ -152,13 +162,13 @@ async fn process_devs(
 }
 
 /// Merge all existing dev reports for the specified owner_id. Param `idx` is only used to identify the job #
-/// in async execution for logging. Returns `owner_id` in Ok or Err.
-#[instrument(skip(owner_id, config), name = "pd")]
-pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -> Result<String, FailureType<String>> {
-    let dev_s3_key = match s3::build_dev_s3_key_from_owner_id(&owner_id) {
+/// in async execution for logging. Returns an updated `DevJob` in Ok or Err.
+#[instrument(skip(dev_job, config), name = "pd")]
+pub(crate) async fn process_dev(dev_job: DevJob, config: &Config, idx: usize) -> Result<DevJob, FailureType<DevJob>> {
+    let dev_s3_key = match s3::build_dev_s3_key_from_owner_id(&dev_job.owner_id) {
         Err(()) => {
             // there is something wrong with the key - def no point retrying with the same input
-            return Err(FailureType::DoNotRetry(owner_id));
+            return Err(FailureType::DoNotRetry(dev_job));
         }
         Ok(v) => v,
     };
@@ -176,13 +186,13 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     .await
     {
         Ok(v) => v,
-        Err(_) => return Err(FailureType::Retry(owner_id)),
+        Err(_) => return Err(FailureType::Retry(dev_job)),
     };
 
     // this could not arise if there were failures in S3 - the user def has no reports
     if dev_s3_objects.len() == 0 {
         warn!("No user objects in S3.");
-        return Err(FailureType::DoNotRetry(owner_id));
+        return Err(FailureType::DoNotRetry(dev_job));
     }
 
     // collect all combined project reports in the dev's folder
@@ -190,7 +200,7 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     for s3_object in dev_s3_objects {
         debug!("Considering {}", s3_object.key);
         // is this a combined project report?
-        if s3::is_combined_project_report(&s3_object.key, &owner_id) {
+        if s3::is_combined_project_report(&s3_object.key, &dev_job.owner_id) {
             info!("{} report for merging", s3_object.key);
             project_reports.push(s3_object);
             continue;
@@ -199,8 +209,8 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
 
     // a dev may have no reports if they were deleted between the time the job was scheduled and now
     if project_reports.is_empty() {
-        info! {"Found no reports for dev {}",owner_id};
-        return Err(FailureType::DoNotRetry(owner_id));
+        info! {"Found no reports for dev {}",dev_job.owner_id};
+        return Err(FailureType::DoNotRetry(dev_job));
     }
 
     // extract the last modified date and the key and ignore any that have no or invalid last modified date
@@ -217,19 +227,61 @@ pub(crate) async fn process_dev(owner_id: String, config: &Config, idx: usize) -
     let report_s3_keys = project_reports.into_iter().map(|v| v.1).collect::<Vec<String>>();
 
     // merge multiple reports into a single dev profile
-    let dev_profile = DevProfile::from_contributor_reports(report_s3_keys, &config, &owner_id).await?;
-    let serialized_profile = dev_profile.to_vec()?;
+    let dev_profile = match DevProfile::from_contributor_reports(report_s3_keys, &config, &dev_job.owner_id).await {
+        Ok(v) => v,
+        Err(_) => {
+            return Err(FailureType::DoNotRetry(dev_job));
+        }
+    };
+    let serialized_profile = match dev_profile.to_vec() {
+        Ok(v) => v,
+        Err(_) => {
+            return Err(FailureType::DoNotRetry(dev_job));
+        }
+    };
 
     // save the profile in S3
-    dev_profile.save_in_s3(&config, &serialized_profile).await?;
+    if let Err(e) = dev_profile.save_in_s3(&config, &serialized_profile).await {
+        match e {
+            FailureType::DoNotRetry(_) => {
+                return Err(FailureType::DoNotRetry(dev_job));
+            }
+            FailureType::Retry(_) => {
+                return Err(FailureType::Retry(dev_job));
+            }
+        }
+    };
 
     // save the same serialized profile in ES
-    if utils::elastic::upload_serialized_object_to_es(config, serialized_profile, &owner_id, &config.es_idx.dev)
+    if utils::elastic::upload_serialized_object_to_es(config, serialized_profile, &dev_job.owner_id, &config.es_idx.dev)
         .await
         .is_err()
     {
-        return Err(FailureType::Retry(owner_id));
+        return Err(FailureType::Retry(dev_job));
     }
 
-    Ok(owner_id)
+    // check if gh_login needs to be discovered or re-validated
+    if dev_job.gh_login_gist_latest != dev_job.gh_login_gist_validation
+        || dev_job.gh_login_validation_ts.is_none()
+        || Utc::now()
+            - dev_job
+                .gh_login_validation_ts
+                .expect("Cannot unwrap gh_login_validation_ts. It's a bug.")
+            > Duration::days(GH_LOGIN_VALIDITY_PERIOD_DAYS)
+    {
+        let gh_login = crate::gh_login::get_validated_gist(&dev_job.gh_login_gist_latest, &dev_job.owner_id).await;
+
+        info!("gh_login revalidation. Old: {:?}, new: {:?}", dev_job.gh_login, gh_login);
+
+        // return DevJob with updated gh_login details, gh_login_validation_ts will be set by the stored procedure
+        let dev_job = DevJob {
+            gh_login,
+            gh_login_gist_validation: dev_job.gh_login_gist_latest.clone(),
+            ..dev_job
+        };
+        return Ok(dev_job);
+    }
+
+    // return an unmodified dev_job
+    Ok(dev_job)
 }

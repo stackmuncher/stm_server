@@ -1,10 +1,11 @@
 use tracing::info;
 
 mod config;
+mod dev_profile;
 mod flows;
+mod gh_login;
 mod jobs;
 mod utils;
-mod dev_profile;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {

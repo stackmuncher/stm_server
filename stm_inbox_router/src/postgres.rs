@@ -174,12 +174,12 @@ impl EmailOwnership {
 
 impl Dev {
     /// Updates the developer record to make it selectable for report update after a new submission.
-    pub(crate) async fn queue_up_for_update(pg_client: &Client, owner_id: &String) -> Result<(), Error> {
+    pub(crate) async fn queue_up_for_update(pg_client: &Client, owner_id: &String, gh_login_gist_latest: &Option<String>) -> Result<(), Error> {
         info!("Queueing up report dev {}", owner_id);
 
         // push the data to PG, log the result, nothing to return
         let rows = match pg_client
-            .execute("select stm_queue_up_dev_report($1::varchar)", &[owner_id])
+            .execute("select stm_queue_up_dev_report($1::varchar, $2::varchar)", &[owner_id, gh_login_gist_latest])
             .await
         {
             Ok(v) => v,

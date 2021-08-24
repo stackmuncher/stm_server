@@ -5,7 +5,7 @@
 CREATE OR REPLACE FUNCTION stm_get_dev_jobs(
     _report_in_flight_id uuid,
     _jobs_max integer
-  ) RETURNS SETOF varchar ROWS 100 AS $$ -- mark qualifying jobs with the the supplied UUID
+  ) RETURNS SETOF t_dev ROWS 100 AS $$ -- mark qualifying jobs with the the supplied UUID
   BEGIN --
 
 RETURN QUERY
@@ -18,7 +18,7 @@ WITH d as (select owner_id from t_dev where  (report_ts IS NULL or report_ts < l
       report_in_flight_id = _report_in_flight_id,
       report_fail_counter = report_fail_counter + 1
     FROM d WHERE t_dev.owner_id = d.owner_id
-  RETURNING t_dev.owner_id;
+  RETURNING t_dev.*;
 
 END --
 $$ COST 100 VOLATILE LANGUAGE 'plpgsql' SECURITY DEFINER;

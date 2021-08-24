@@ -68,6 +68,14 @@ CREATE TABLE t_dev (
   -- the timestamp of the latest submission
   -- it should be earlier than the report_ts, otherwise the report is stale and should be regenerated
   last_submission_ts timestamp with time zone
+  -- validated github login
+  gh_login varchar,
+  -- the gist ID used to obtain and validate the gh_login
+  gh_login_gist_validation varchar,
+  -- the timestamp when the login was validated last time
+  gh_login_validation_ts timestamp with time zone,
+  -- the gist ID from the latest private submission
+  gh_login_gist_latest varchar
 );
 
 -- find devs with different combo of report_ts, in_flight and fail counter

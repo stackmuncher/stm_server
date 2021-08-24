@@ -1,5 +1,7 @@
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use tokio::time::{interval, Duration, Instant};
-use tokio_postgres::Client;
+use tokio_postgres::{Client, Row};
 use tracing::{debug, error, info};
 use uuid::Uuid;
 
@@ -14,7 +16,37 @@ pub(crate) enum FailureType<T> {
 }
 
 /// Corresponds to `t_dev` table. All SPs and the table creation reside in stm_inbox project for consistency.
-pub(crate) struct DevJob {}
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub(crate) struct DevJob {
+    pub owner_id: String,
+    pub report_ts: Option<chrono::DateTime<Utc>>,
+    pub report_in_flight_id: Option<Uuid>,
+    pub report_in_flight_ts: Option<chrono::DateTime<Utc>>,
+    pub report_fail_counter: i32,
+    pub last_submission_ts: Option<chrono::DateTime<Utc>>,
+    pub gh_login: Option<String>,
+    pub gh_login_gist_validation: Option<String>,
+    pub gh_login_validation_ts: Option<chrono::DateTime<Utc>>,
+    pub gh_login_gist_latest: Option<String>,
+}
+
+impl From<&Row> for DevJob {
+    /// Creates a new structure from tokio_postgres::Row
+    fn from(row: &Row) -> Self {
+        Self {
+            owner_id: row.get("owner_id"),
+            report_ts: row.get("report_ts"),
+            report_in_flight_id: row.get("report_in_flight_id"),
+            report_in_flight_ts: row.get("report_in_flight_ts"),
+            report_fail_counter: row.get("report_fail_counter"),
+            last_submission_ts: row.get("last_submission_ts"),
+            gh_login: row.get("gh_login"),
+            gh_login_gist_validation: row.get("gh_login_gist_validation"),
+            gh_login_validation_ts: row.get("gh_login_validation_ts"),
+            gh_login_gist_latest: row.get("gh_login_gist_latest"),
+        }
+    }
+}
 
 impl DevJob {
     /// Marks the developer record as successfully completed and a new dev report generated.
@@ -23,12 +55,17 @@ impl DevJob {
         pg_client: &Client,
         owner_id: &String,
         report_in_flight_id: &Uuid,
+        gh_login: &Option<String>,
+        gh_login_gist_validation: &Option<String>,
     ) -> Result<(), ()> {
         info!("Marking report dev completed {}", owner_id);
 
         // push the data to PG, log the result, nothing to return
         let rows = match pg_client
-            .execute("select stm_complete_dev_job($1::varchar, $2::uuid)", &[owner_id, report_in_flight_id])
+            .execute(
+                "select stm_complete_dev_job($1::varchar, $2::uuid, $3::varchar, $4::varchar)",
+                &[owner_id, report_in_flight_id, gh_login, gh_login_gist_validation],
+            )
             .await
         {
             Ok(v) => v,
@@ -73,7 +110,7 @@ impl DevJob {
         pg_client: &Client,
         report_in_flight_id: &Uuid,
         jobs_max: i32,
-    ) -> Result<Vec<String>, ()> {
+    ) -> Result<Vec<DevJob>, ()> {
         debug!("Getting dev report jobs for {}", report_in_flight_id);
 
         // get the data from PG
@@ -92,16 +129,7 @@ impl DevJob {
         let row_count = rows.len();
         debug!("Rows: {}", row_count);
 
-        Ok(rows
-            .into_iter()
-            .filter_map(|row| match row.try_get(0) {
-                Ok(v) => Some(v),
-                Err(e) => {
-                    error!("Cannot get owner_id from stm_get_dev_jobs for {} with {}", report_in_flight_id, e);
-                    None
-                }
-            })
-            .collect::<Vec<String>>())
+        Ok(rows.iter().map(|row| DevJob::from(row)).collect::<Vec<DevJob>>())
     }
 }
 
