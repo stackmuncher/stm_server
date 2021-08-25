@@ -127,15 +127,24 @@ impl DevProfile {
             .collect();
 
         // both private and GH repo collection should be running by now
-        // we need GH ones first
+        // they need to be separate because there is no other reliable way to tell which report is private and which is from GH
+        // not until project matching is implemented
 
-        // a container for a list of reports as raw bytes retrieved from S3
-        let mut gh_s3_resp: Vec<(Vec<u8>, String)> = Vec::new();
+        // collect all GH reports retrieved from S3 as (REPORT , S3_KEY, FROM_GH(true))
+        let mut s3_resp: Vec<(Report, String, bool)> = Vec::new();
         loop {
             match gh_s3_jobs.next().await {
                 Some(result) => {
                     if let Ok((contents, s3_key)) = result {
-                        gh_s3_resp.push((contents, s3_key));
+                        let report = match serde_json::from_slice::<Report>(contents.as_slice()) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                error!("Cannot convert S3report {} into struct {}", s3_key, e);
+                                // something's wrong with the report - skip
+                                continue;
+                            }
+                        };
+                        s3_resp.push((report, s3_key, true));
                     };
                 }
                 None => {
@@ -145,38 +154,20 @@ impl DevProfile {
             }
         }
 
-        // merge all user gh reports into one
-        let mut combined_report: Option<Report> = None;
-        for (report, _) in gh_s3_resp {
-            match serde_json::from_slice::<Report>(report.as_slice()) {
-                Ok(other_report) => {
-                    let mut other_report = other_report.abridge();
-                    // gh user and repo name should uniquely identify the project
-                    other_report.owner_id = Some(owner_id.clone());
-                    other_report.project_id = None;
-
-                    info!(
-                        "Project ID: {:?}/{:?}, epoch: {:?}",
-                        other_report.github_user_name,
-                        other_report.github_repo_name,
-                        other_report.last_contributor_commit_date_epoch
-                    );
-                    combined_report = Report::merge(combined_report, other_report);
-                }
-                Err(e) => {
-                    error!("Cannot convert S3report into struct {}", e);
-                    // it would be good to know which report that is, but it's too big to log
-                }
-            }
-        }
-
-        // complete collection of private repos
-        let mut private_s3_resp: Vec<(Vec<u8>, String)> = Vec::new();
+        // collect all private reports into the same container as GH
         loop {
             match private_s3_jobs.next().await {
                 Some(result) => {
                     if let Ok((contents, s3_key)) = result {
-                        private_s3_resp.push((contents, s3_key));
+                        let report = match serde_json::from_slice::<Report>(contents.as_slice()) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                error!("Cannot convert S3report {} into struct {}", s3_key, e);
+                                // something's wrong with the report - skip
+                                continue;
+                            }
+                        };
+                        s3_resp.push((report, s3_key, false));
                     };
                 }
                 None => {
@@ -186,28 +177,38 @@ impl DevProfile {
             }
         }
 
-        // add private reports at the end
-        for (report, s3_key) in private_s3_resp {
-            match serde_json::from_slice::<Report>(report.as_slice()) {
-                Ok(other_report) => {
-                    let mut other_report = other_report.abridge();
-                    // add S3 key to the project overview, otherwise there is no way of telling which overview belongs to which project
-                    // there should be just one project overview in each of these reports because they are project reports
-                    other_report.owner_id = Some(owner_id.clone());
-                    other_report.project_id = Some(s3::split_key_into_parts(&s3_key).1);
-                    other_report.github_user_name = None;
-                    other_report.github_repo_name = None;
-                    info!(
-                        "Project ID: {:?}, epoch: {:?}",
-                        other_report.project_id, other_report.last_contributor_commit_date_epoch
-                    );
-                    combined_report = Report::merge(combined_report, other_report);
-                }
-                Err(e) => {
-                    error!("Cannot convert S3report into struct {}", e);
-                    // it would be good to know which report that is, but it's too big to log
-                }
+        // sort the s3 response so that the latest comes first
+        s3_resp.sort_unstable_by(|a, b| b.0.timestamp.cmp(&a.0.timestamp));
+
+        // merge all user gh reports into one
+        let mut combined_report: Option<Report> = None;
+        for (other_report, s3_key, is_gh) in s3_resp {
+            let mut other_report = other_report.abridge();
+            if is_gh {
+                // gh user and repo name should uniquely identify the project
+                other_report.owner_id = Some(owner_id.clone());
+                other_report.project_id = None;
+
+                info!(
+                    "GH report: {:?}/{:?}, epoch: {:?}",
+                    other_report.github_user_name,
+                    other_report.github_repo_name,
+                    other_report.last_contributor_commit_date_epoch
+                );
+            } else {
+                // add S3 key to the project overview, otherwise there is no way of telling which overview belongs to which project
+                // there should be just one project overview in each of these reports because they are project reports
+                other_report.owner_id = Some(owner_id.clone());
+                other_report.project_id = Some(s3::split_key_into_parts(&s3_key).1);
+                other_report.github_user_name = None;
+                other_report.github_repo_name = None;
+                info!(
+                    "Private report: {:?}, epoch: {:?}",
+                    other_report.project_id, other_report.last_contributor_commit_date_epoch
+                );
             }
+
+            combined_report = Report::merge(combined_report, other_report);
         }
 
         Ok(combined_report)

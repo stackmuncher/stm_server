@@ -327,25 +327,25 @@ pub(crate) fn is_combined_project_report(s3_key: &String, owner_id: &String) -> 
     true
 }
 
-/// Converts an rfc2822 date used by S3 into a timestamp or returns an error.
-/// The date should look like Mon, 15 Oct 2012 21:58:07 GMT.
-pub(crate) fn parse_date_header(header: &Option<String>) -> Result<i64, ()> {
-    // there is some data re. the object - check `last modified` header.
-    if let Some(last_modified) = header {
-        match chrono::DateTime::parse_from_rfc3339(&last_modified) {
-            Ok(last_mod) => {
-                return Ok(last_mod.timestamp());
-            }
-            Err(e) => {
-                error!("Invalid date in last_modified header: {} / {}", last_modified, e);
-                return Err(());
-            }
-        }
-    } else {
-        error!("last_modified header is missing");
-        return Err(());
-    }
-}
+// /// Converts an rfc2822 date used by S3 into a timestamp or returns an error.
+// /// The date should look like Mon, 15 Oct 2012 21:58:07 GMT.
+// pub(crate) fn parse_date_header(header: &Option<String>) -> Result<i64, ()> {
+//     // there is some data re. the object - check `last modified` header.
+//     if let Some(last_modified) = header {
+//         match chrono::DateTime::parse_from_rfc3339(&last_modified) {
+//             Ok(last_mod) => {
+//                 return Ok(last_mod.timestamp());
+//             }
+//             Err(e) => {
+//                 error!("Invalid date in last_modified header: {} / {}", last_modified, e);
+//                 return Err(());
+//             }
+//         }
+//     } else {
+//         error!("last_modified header is missing");
+//         return Err(());
+//     }
+// }
 
 /// Splits the S3 key into _owner_ and _project_ IDs by looking at the S3 key from the end of the string.
 /// E.g. `some_prefix/9PdHabyyhf4KhHAE1SqdpnbAZEXTHhpkermwfPQcLeFK/NeYatzas1FrogKLDe2nBG8/1628730164_d6f8b0fea106c94f185ae246a2cd43fac1b1c3b0.gz`

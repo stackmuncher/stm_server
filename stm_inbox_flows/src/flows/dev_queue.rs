@@ -227,28 +227,16 @@ pub(crate) async fn process_dev(dev_job: DevJob, config: &Config, idx: usize) ->
     };
 
     // collect all combined project reports in the dev's private folder
-    let mut private_reports: Vec<s3::S3ObjectProps> = Vec::new();
+    let mut private_report_s3_keys: Vec<String> = Vec::new();
     for s3_object in dev_s3_objects {
         debug!("Considering private: {}", s3_object.key);
         // is this a combined project report?
         if s3::is_combined_project_report(&s3_object.key, &dev_job.owner_id) {
             info!("{} privae report for merging", s3_object.key);
-            private_reports.push(s3_object);
+            private_report_s3_keys.push(s3_object.key);
             continue;
         }
     }
-    // extract the last modified date and the key and ignore any that have no or invalid last modified date
-    // sort the reports by date in the scending order so that the latest report comes last and overwrites any privacy settings of the earlier reports
-    let mut private_reports = private_reports
-        .into_iter()
-        .filter_map(|report_s3_props| match s3::parse_date_header(&Some(report_s3_props.last_modified)) {
-            Err(_) => None,
-            Ok(v) => Some((v, report_s3_props.key)),
-        })
-        .collect::<Vec<(i64, String)>>();
-    // TODO: investigate if FuturesUnordered changes the sorting <<< POSSIBLE BUG!!! <<< POSSIBLE BUG!!! <<< POSSIBLE BUG!!! <<< POSSIBLE BUG!!!
-    private_reports.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-    let private_report_s3_keys = private_reports.into_iter().map(|v| v.1).collect::<Vec<String>>();
 
     // collect all combined project reports in the dev's GH folder
     let mut gh_reports: Vec<s3::S3ObjectProps> = Vec::new();
@@ -264,17 +252,8 @@ pub(crate) async fn process_dev(dev_job: DevJob, config: &Config, idx: usize) ->
             gh_user_profile_s3_key = Some(s3_object.key);
         }
     }
-    // extract the last modified date and the key and ignore any that have no or invalid last modified date
-    // sort the reports by date in the scending order so that the latest report comes last and overwrites any privacy settings of the earlier reports
-    let mut gh_reports = gh_reports
-        .into_iter()
-        .filter_map(|report_s3_props| match s3::parse_date_header(&Some(report_s3_props.last_modified)) {
-            Err(_) => None,
-            Ok(v) => Some((v, report_s3_props.key)),
-        })
-        .collect::<Vec<(i64, String)>>();
-    gh_reports.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-    let gh_report_s3_keys = gh_reports.into_iter().map(|v| v.1).collect::<Vec<String>>();
+
+    let gh_report_s3_keys = gh_reports.into_iter().map(|v| v.key).collect::<Vec<String>>();
 
     // merge multiple reports into a single dev profile
     // a dev may have no reports if they were deleted between the time the job was scheduled and now
