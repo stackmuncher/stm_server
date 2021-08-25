@@ -1,6 +1,7 @@
 use crate::utils::log_http_body;
 use hyper::{Client, Request};
 use hyper_rustls::HttpsConnector;
+use regex::Regex;
 use ring::signature;
 use serde::Deserialize;
 use serde_json::Value;
@@ -38,7 +39,11 @@ pub(crate) struct RawGist {
 ///  -H "Accept: application/vnd.github.v3+json" \
 ///  https://api.github.com/gists/GIST_ID
 /// ```
-pub(crate) async fn get_validated_gist(gist_id: &Option<String>, pub_key: &String) -> Option<String> {
+pub(crate) async fn get_validated_gist(
+    gist_id: &Option<String>,
+    pub_key: &String,
+    gh_login_invalidation_regex: &Regex,
+) -> Option<String> {
     // remove GH login info if gist_is is empty - that's because the user reset it to empty and wants GH unlinked
     let gist_id = match gist_id {
         Some(v) => v,
@@ -124,6 +129,11 @@ pub(crate) async fn get_validated_gist(gist_id: &Option<String>, pub_key: &Strin
         }
     };
     info!("Gist owner: {}", github_login);
+
+    // validate if the GH Login has any chars outside of the expected range
+    if !validate_gh_login_format(&github_login, gh_login_invalidation_regex) {
+        return None;
+    }
 
     // are there any GIST contents at all?
     // expecting something like
@@ -228,4 +238,16 @@ pub(crate) async fn get_validated_gist(gist_id: &Option<String>, pub_key: &Strin
     };
 
     Some(github_login)
+}
+
+/// Logs and error and returns false if `gh_login` is empty or has any characters outside of the allowed range.
+/// Otherwise returns true.
+pub(crate) fn validate_gh_login_format(gh_login: &String, gh_login_invalidation_regex: &Regex) -> bool {
+    // check if the login is save, even if we got it from GH
+    if gh_login.is_empty() || gh_login.len() > 150 || gh_login_invalidation_regex.is_match(gh_login) {
+        error!("Invalid GitHub Login format: {}", gh_login);
+        false
+    } else {
+        true
+    }
 }

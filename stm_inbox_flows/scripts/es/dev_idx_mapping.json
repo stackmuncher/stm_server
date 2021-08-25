@@ -189,26 +189,6 @@
             "type": "object",
             "enabled": false
           },
-          "public_contact": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256,
-                "normalizer": "lowercase"
-              }
-            }
-          },
-          "public_name": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256,
-                "normalizer": "lowercase"
-              }
-            }
-          },
           "recent_project_commits": {
             "type": "object",
             "enabled": false

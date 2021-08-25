@@ -60,8 +60,10 @@ pub(crate) struct Inventory {
 pub(crate) struct Config {
     /// Defaults to INFO
     pub log_level: LogLevel,
-    /// Must be an existing bucket.
+    /// Contains private submissions from STM App
     pub s3_bucket_private_reports: String,
+    /// Contains reports from GitHub repos
+    pub s3_bucket_gh_reports: String,
     /// S3 region defaults to US-EAST1 if no value was provided.
     pub s3_region: Region,
     /// ElastiSearch endpoint URL
@@ -82,6 +84,10 @@ pub(crate) struct Config {
     /// Doesn't need to be public. It is retrieved using a function call.
     #[serde(skip)]
     no_sql_param_invalidation_regex_inner: Option<Regex>,
+    /// GitHub Login invalidation regex - cannot contain chars outside the specified range.
+    /// Doesn't need to be public. It is retrieved using a function call.
+    #[serde(skip)]
+    gh_login_invalidation_regex_inner: Option<Regex>,
     /// A shared copy of AWS creds for reuse elsewhere.
     /// Doesn't need to be public. It is retrieved using a function call.
     #[serde(skip)]
@@ -182,6 +188,8 @@ impl Config {
         // It is stricter than no_sql_string_invalidation_regex and is to be compiled only in some cases
         config.no_sql_param_invalidation_regex_inner =
             Some(Regex::new(r#"[^#\-\._0-9a-zA-Z]"#).expect("Failed to compile no_sql_string_value_regex"));
+        config.gh_login_invalidation_regex_inner =
+            Some(Regex::new(r#"[^\w\d\-_]"#).expect("Failed to compile gh_login_invalidation_regex_inner"));
 
         // get AWS creds
         let provider = DefaultCredentialsProvider::new().expect("Cannot get default creds provider");
@@ -217,6 +225,11 @@ impl Config {
         self.aws_credentials
             .as_ref()
             .expect("Cannot unwrap aws creds after renewal");
+    }
+
+    /// Unwraps `gh_login_invalidation_regex_inner` member with the invalidation regex inside.
+    pub(crate) fn gh_login_invalidation_regex(&self) -> &Regex {
+        self.gh_login_invalidation_regex_inner.as_ref().unwrap()
     }
 
     /// Unwraps `s3_client_inner` member with an initialized S3Client.

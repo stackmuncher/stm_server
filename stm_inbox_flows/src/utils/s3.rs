@@ -1,10 +1,13 @@
 use crate::config::{validate_owner_id, Config};
+use crate::gh_login::validate_gh_login_format;
 use flate2::read::GzDecoder;
 use futures::stream::TryStreamExt;
 use hyper_rustls::HttpsConnector;
+use regex::Regex;
 use rusoto_core::credential::DefaultCredentialsProvider;
 use rusoto_core::HttpClient;
-use rusoto_s3::{GetObjectRequest, ListObjectsV2Request, PutObjectRequest, S3Client, S3};
+use rusoto_s3::{GetObjectRequest, ListObjectsV2Request, S3Client, S3};
+use stackmuncher_lib::report::Report;
 use std::io::Read;
 use std::time::Duration;
 use tracing::{error, info, warn};
@@ -12,7 +15,10 @@ use tracing::{error, info, warn};
 /// An S3 prefix for dev reports organized by owner_id/project_id
 pub(crate) const S3_FOLDER_DEV_REPORTS: &str = "reports";
 pub(crate) const S3_COMBINED_DEV_REPORT_FILE_NAME: &str = "report.gz";
-pub(crate) const S3_DEV_PROFILE_FILE_NAME: &str = "profile.gz";
+/// A cross-over to stm-gh project - a prefix for GitHub repos and their associated reports.
+pub(crate) const S3_FOLDER_GH_REPOS: &str = "repos";
+/// The name of a user profile file for GitHubUser
+pub(crate) const S3_OBJ_NAME_GH_USER: &str = "user.json";
 
 /// Contains some of the object properties returned by S3 ListObjectV2
 /// There are also size, owner and etag props that were not included
@@ -194,29 +200,29 @@ pub(crate) async fn get_text_from_s3(
     Err(())
 }
 
-/// Uploads the payload to S3.
-pub(crate) async fn upload_to_s3(
-    s3_client: &S3Client,
-    s3_bucket: &String,
-    s3_key: String,
-    payload: Vec<u8>,
-) -> Result<(), ()> {
-    info!("Uploading to S3: {}", s3_key);
-    if let Err(e) = s3_client
-        .put_object(PutObjectRequest {
-            bucket: s3_bucket.clone(),
-            key: s3_key,
-            body: Some(payload.into()),
-            ..Default::default()
-        })
-        .await
-    {
-        error!("Uploading failed: {}", e);
-        return Err(());
-    }
+// /// Uploads the payload to S3.
+// pub(crate) async fn upload_to_s3(
+//     s3_client: &S3Client,
+//     s3_bucket: &String,
+//     s3_key: String,
+//     payload: Vec<u8>,
+// ) -> Result<(), ()> {
+//     info!("Uploading to S3: {}", s3_key);
+//     if let Err(e) = s3_client
+//         .put_object(PutObjectRequest {
+//             bucket: s3_bucket.clone(),
+//             key: s3_key,
+//             body: Some(payload.into()),
+//             ..Default::default()
+//         })
+//         .await
+//     {
+//         error!("Uploading failed: {}", e);
+//         return Err(());
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }
 
 /// Generates an S3Client with custom settings to match AWS server defaults.
 /// AWS times out idle connections after 20s as per https://aws.amazon.com/premiumsupport/knowledge-center/s3-socket-connection-timeout-error/
@@ -248,6 +254,50 @@ pub(crate) fn build_dev_s3_key_from_owner_id(owner_id: &String) -> Result<String
     }
 
     Ok([S3_FOLDER_DEV_REPORTS, "/", owner_id, "/"].concat())
+}
+
+/// Returns an S3 key for the dev with the specified `gh_login` or an Err if gh_login format is invalid.
+/// The key includes a trailing `/` to make sure that the match is exact because `report/abc` will match `report/abc/` and `report/abcd/`.
+/// The validation is to enforce zero-trust with other parts of the system,
+/// but it is unlikely that the owner_id is invalid because it is validated many times elsewhere.
+pub(crate) fn build_dev_s3_key_from_gh_login(
+    gh_login: &String,
+    gh_login_invalidation_regex: &Regex,
+) -> Result<String, ()> {
+    // validate the GitHub login, which should be a base58 encoded string of 32 bytes
+    if !validate_gh_login_format(gh_login, gh_login_invalidation_regex) {
+        return Err(());
+    }
+
+    Ok([S3_FOLDER_GH_REPOS, "/", gh_login, "/"].concat())
+}
+
+/// Returns true if `name` looks like a repo report's name. Contributor reports return false.
+/// E.g. `repos/tofuadmiral/2zz3matlab.report`
+/// Any leading part is ignored. It only looks at the ending.
+/// TODO: copied from stm-gh project, must be shared
+pub(crate) fn is_gh_repo_report_name(name: &String) -> bool {
+    // check if the file name even makes sense first
+    if name.len() <= S3_FOLDER_GH_REPOS.len() + 1 {
+        return false;
+    }
+
+    // remove the prefix with the following /
+    let name = &name[S3_FOLDER_GH_REPOS.len() + 1..];
+
+    // check if there is just one slash or multiple
+    // e.g. `repos/tofuadmiral/2zz3matlab.report` is OK, but `repos/tofuadmiral/2zz3matlab/941b4a332f58e9b9285353576650327c4be45213.report` is not
+    // because it is a contributor report
+    if name.find("/") != name.rfind("/") {
+        return false;
+    }
+
+    // check if the file name ends with the right suffix
+    if name.ends_with(Report::REPORT_FILE_NAME_SUFFIX) {
+        true
+    } else {
+        false
+    }
 }
 
 /// Returns true if the key points at an object in `reports_prefix/owner_id/project_id/combined_report_name`.

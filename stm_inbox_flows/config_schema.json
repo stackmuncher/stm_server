@@ -6,6 +6,7 @@
   "type": "object",
   "required": [
     "s3_bucket_private_reports",
+    "s3_bucket_gh_reports",
     "s3_region",
     "es_url",
     "es_idx",
@@ -25,6 +26,10 @@
     "s3_bucket_private_reports": {
       "type": "string",
       "description": "Name of the S3 bucket with report submissions"
+    },
+    "s3_bucket_gh_reports": {
+      "type": "string",
+      "description": "Name of the S3 bucket with reports from GH repos"
     },
     "s3_region": {
       "type": "string",
