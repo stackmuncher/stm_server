@@ -48,9 +48,9 @@ pub(crate) async fn html(
     }
     let combined_search_terms = combined_search_terms.join(" + ");
 
-    // any page with more than one language or any number of keywords should not be indexed
-    // in other words, only search results with just one language and nothing else are indexed
-    let meta_robots = if langs.len() > 1 || !keywords.is_empty() {
+    // any page with more than one language or more than one keyword should not be indexed
+    // 1 lang + 1 kw is OK to index
+    let meta_robots = if langs.len() > 1 || keywords.len() > 1 {
         Some("noindex".to_owned())
     } else {
         None
