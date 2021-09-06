@@ -20,4 +20,5 @@ All release builds should be done for `x86_64-unknown-linux-gnu` target to deplo
 
 ```
 cargo build --release --target x86_64-unknown-linux-gnu
+cargo strip --target x86_64-unknown-linux-gnu
 ```
