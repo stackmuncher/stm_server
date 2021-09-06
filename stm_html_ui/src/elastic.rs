@@ -11,7 +11,8 @@ use std::str::FromStr;
 use std::{collections::HashMap, convert::TryInto};
 use tracing::{debug, error, info};
 
-pub const SEARCH_TOP_USERS: &str = r#"{"size":24,"query":{"match":{"hireable":{"query":"true"}}},"sort":[{"report.timestamp":{"order":"desc"}}]}"#;
+pub const SEARCH_TOP_USERS: &str =
+    r#"{"size":24,"query":{"match":{"hireable":{"query":"true"}}},"sort":[{"report.timestamp":{"order":"desc"}}]}"#;
 pub const SEARCH_ENGINEER_BY_LOGIN: &str = r#"{"query":{"term":{"login.keyword":{"value":"%"}}}}"#;
 pub const SEARCH_DEV_BY_DOC_ID: &str = r#"{"query":{"term":{"_id":"%"}}}"#;
 
@@ -96,11 +97,7 @@ struct ESAggs {
 /// * es_url: elastucsearch url
 /// * idx: ES index name
 /// * query: the query text, if any for *_search* or `None` for *_count*
-pub(crate) async fn search(
-    es_url: &String,
-    idx: &String,
-    query: Option<&str>,
-) -> Result<Value, ()> {
+pub(crate) async fn search(es_url: &String, idx: &String, query: Option<&str>) -> Result<Value, ()> {
     if query.is_some() {
         let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_search"].concat();
         return call_es_api(es_api_endpoint, Some(query.unwrap().to_string())).await;
@@ -112,11 +109,7 @@ pub(crate) async fn search(
 
 /// Inserts a single param in the ES query in place of %. The param may be repeated within the query multiple times.
 /// Panics if the param is unsafe for no-sql queries.
-pub(crate) fn add_param(
-    query: &str,
-    param: String,
-    no_sql_string_invalidation_regex: &Regex,
-) -> String {
+pub(crate) fn add_param(query: &str, param: String, no_sql_string_invalidation_regex: &Regex) -> String {
     // validate the param
     if no_sql_string_invalidation_regex.is_match(&param) {
         panic!("Unsafe param value: {}", param);
@@ -126,8 +119,7 @@ pub(crate) fn add_param(
 
     // loop through the query until there are no more % to replace
     while modded_query.contains("%") {
-        let (left, right) =
-            modded_query.split_at(modded_query.find("%").expect("Cannot split the query"));
+        let (left, right) = modded_query.split_at(modded_query.find("%").expect("Cannot split the query"));
 
         modded_query = [left, param.as_str(), &right[1..]].concat().to_string();
     }
@@ -137,10 +129,7 @@ pub(crate) fn add_param(
 
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
-pub(crate) async fn call_es_api(
-    es_api_endpoint: String,
-    payload: Option<String>,
-) -> Result<Value, ()> {
+pub(crate) async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Result<Value, ()> {
     // prepare METHOD and the payload in one step
     let (method, payload) = match payload {
         None => ("GET", None),
@@ -167,9 +156,7 @@ pub(crate) async fn call_es_api(
     // prepare the request
     let mut req = SignedRequest::new(method, "es", &region, uri.path());
     req.set_payload(payload);
-    req.set_hostname(Some(
-        uri.host().expect("Missing host in ES URL").to_string(),
-    ));
+    req.set_hostname(Some(uri.host().expect("Missing host in ES URL").to_string()));
 
     // these headers are required by ES
     req.add_header("Content-Type", "application/json");
@@ -215,14 +202,13 @@ pub(crate) async fn call_es_api(
     }
 
     // all responses should be JSON. If it's not JSON it's an error.
-    let output =
-        Ok(serde_json::from_slice::<Value>(&buf).expect("Failed to convert ES resp to JSON"));
+    let output = Ok(serde_json::from_slice::<Value>(&buf).expect("Failed to convert ES resp to JSON"));
     info!("ES query {} finished", payload_id);
     //info!("{}", output.as_ref().unwrap()); // for debugging
     output
 }
 
-/// Returns the number of ES docs that match the query. The field name is not validated or sanitized. 
+/// Returns the number of ES docs that match the query. The field name is not validated or sanitized.
 /// Returns an error if the field value contains anything other than alphanumerics and `.-_`.
 pub(crate) async fn matching_doc_count(
     es_url: &String,
@@ -301,13 +287,7 @@ pub(crate) async fn matching_doc_counts(
     let mut futures: Vec<_> = Vec::new();
 
     for field in fields {
-        futures.push(matching_doc_count(
-            es_url,
-            idx,
-            field,
-            field_value,
-            no_sql_string_invalidation_regex,
-        ));
+        futures.push(matching_doc_count(es_url, idx, field, field_value, no_sql_string_invalidation_regex));
     }
 
     // execute all searches in parallel and unwrap the results
@@ -364,12 +344,7 @@ pub(crate) async fn matching_devs(
         }
 
         // language clause is different from keywords clause
-        let clause = [
-            r#"{"match":{"report.tech.language.keyword":""#,
-            &lang,
-            r#""}}"#,
-        ]
-        .concat();
+        let clause = [r#"{"match":{"report.tech.language.keyword":""#, &lang, r#""}}"#].concat();
 
         must_clauses.push(clause);
     }
@@ -440,15 +415,7 @@ pub(crate) async fn get_doc_by_id(
         return Err(());
     }
 
-    let es_api_endpoint = [
-        es_url.as_ref(),
-        "/",
-        idx,
-        "/_doc/",
-        doc_id,
-        "?filter_path=_source",
-    ]
-    .concat();
+    let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_doc/", doc_id, "?filter_path=_source"].concat();
 
     let es_response = call_es_api(es_api_endpoint, None).await?;
 
@@ -463,11 +430,10 @@ pub(crate) async fn related_keywords(
     es_url: &String,
     idx: &String,
     keyword: &String,
+    regex_substring_invalidation: &Regex,
 ) -> Result<Vec<(String, usize)>, ()> {
     // validate field_value for possible no-sql injection
-    let rgx = Regex::new(crate::config::SAFE_REGEX_SUBSTRING)
-        .expect("Failed to compile SAFE_REGEX_SUBSTRING");
-    if rgx.is_match(&keyword) {
+    if regex_substring_invalidation.is_match(&keyword) {
         error!("Invalid keyword: {}", keyword);
         return Err(());
     }
@@ -475,6 +441,7 @@ pub(crate) async fn related_keywords(
     // some keywords may contain #,. or -, which should be escaped in regex
     let keyword_escaped = keyword
         .replace("#", r#"\\#"#)
+        .replace("#", r#"\\+"#)
         .replace(".", r#"\\."#)
         .replace("-", r#"\\-"#);
 

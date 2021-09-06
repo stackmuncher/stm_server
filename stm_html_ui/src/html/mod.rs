@@ -1,7 +1,6 @@
 use crate::config::{validate_owner_id, Config};
 use crate::elastic;
 use html_data::{HtmlData, KeywordMetadata};
-use regex::Regex;
 use tracing::{info, warn};
 
 mod dev_profile;
@@ -101,8 +100,7 @@ pub(crate) async fn html(
     // is there something in the query string?
     if url_query.len() > 1 {
         // split the query into parts using a few common separators
-        let rgx = Regex::new(r#"[#\-\._0-9a-zA-Z]+"#).expect("Wrong search terms regex!");
-        let search_terms = rgx
+        let search_terms = config.search_terms_regex
             .find_iter(&url_query)
             .map(|v| v.as_str().to_owned())
             .collect::<Vec<String>>();
@@ -123,9 +121,20 @@ pub(crate) async fn html(
         // check every search term for what type of a term it is
         for (search_term_idx, search_term) in search_terms.into_iter().enumerate() {
             // searches with a tailing or leading . should be cleaned up
-            // it may be possible to have a lead/trail _, maybe
+            // it may be possible to have a lead/trail _, in python for example
             // I havn't seen a lead/trail - anywhere
-            let search_term = search_term.trim_matches('.').trim_matches('-').to_owned();
+            // Trailing + and # are OK, e.g. C# and C++
+            let search_term = search_term
+                .trim_matches('.')
+                .trim_matches('-')
+                .trim_start_matches("+")
+                .trim_start_matches("#")
+                .to_owned();
+
+            // check if there is anything left after trimming
+            if search_term.is_empty() {
+                continue;
+            }
 
             // limit the list of valid search terms to 4
             if search_term_idx >= MAX_NUMBER_OF_SEARCH_TERMS_TO_CHECK

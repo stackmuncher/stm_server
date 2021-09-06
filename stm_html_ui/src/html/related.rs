@@ -1,7 +1,6 @@
 use super::html_data::{HtmlData, RelatedKeywords};
 use crate::config::Config;
 use crate::elastic;
-use regex::Regex;
 use tracing::{error, warn};
 
 pub(crate) async fn html(
@@ -22,15 +21,15 @@ pub(crate) async fn html(
         ..html_data
     };
 
-    let rgx = Regex::new(crate::config::SAFE_REGEX_SUBSTRING)
-        .expect("Failed to compile SAFE_REGEX_SUBSTRING");
-    if rgx.is_match(&keyword) {
+    // check if the search term has any invalid chars - the string must be safe to include into another regex
+    // inside an ES query
+    if config.no_sql_string_invalidation_regex.is_match(&keyword) {
         warn!("Invalid keyword: {}", keyword);
         return Ok(html_data);
     }
 
     // get the data from ES
-    let related = match elastic::related_keywords(&config.es_url, &config.dev_idx, &keyword).await {
+    let related = match elastic::related_keywords(&config.es_url, &config.dev_idx, &keyword, &config.no_sql_string_invalidation_regex).await {
         Err(_) => {
             // the UI shouldn't send any invalid keywords through, but the user or the bot may still try to submit
             // all sorts of values for search. Those should result in a 404 page.
