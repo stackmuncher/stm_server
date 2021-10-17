@@ -1,0 +1,88 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "lowercase": {
+          "type": "custom",
+          "tokenizer": "lowercase",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      },
+      "normalizer": {
+        "lowercase": {
+          "type": "custom",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "duration": {
+        "type": "long"
+      },
+      "gh_logins": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "ip": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "kw": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "lang": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "raw": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
+      },
+      "ts": {
+        "type": "long"
+      }
+    }
+  }
+}

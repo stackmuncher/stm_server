@@ -5,6 +5,7 @@ mod config;
 mod elastic;
 mod handler;
 mod html;
+mod search_log;
 
 pub(crate) type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 

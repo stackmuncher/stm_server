@@ -1,97 +1,16 @@
 //use elasticsearch::{http::transport::Transport, CountParts, Elasticsearch, SearchParts};
 use futures::future::{join3, join_all};
-use hyper::{Body, Client, Request, Uri};
-use hyper_rustls::HttpsConnector;
 use regex::Regex;
-use rusoto_core::credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
-use rusoto_signature::signature::SignedRequest;
-use serde::Deserialize;
 use serde_json::Value;
-use std::str::FromStr;
-use std::{collections::HashMap, convert::TryInto};
-use tracing::{debug, error, info};
+use std::collections::HashMap;
+use stm_shared::elastic::call_es_api;
+use stm_shared::elastic::types as es_types;
+use tracing::error;
 
 pub const SEARCH_TOP_USERS: &str =
     r#"{"size":24,"query":{"match":{"hireable":{"query":"true"}}},"sort":[{"report.timestamp":{"order":"desc"}}]}"#;
 pub const SEARCH_ENGINEER_BY_LOGIN: &str = r#"{"query":{"term":{"login.keyword":{"value":"%"}}}}"#;
 pub const SEARCH_DEV_BY_DOC_ID: &str = r#"{"query":{"term":{"_id":"%"}}}"#;
-
-/// Member of ESHitsCount
-#[derive(Deserialize)]
-struct ESHitsCountTotals {
-    value: usize,
-}
-
-/// Member of ESHitsCount
-#[derive(Deserialize)]
-struct ESHitsCountHits {
-    total: ESHitsCountTotals,
-}
-
-/// Corresponds to ES response metadata
-/// ```json
-/// {
-///     "took" : 652,
-///     "timed_out" : false,
-///     "_shards" : {
-///         "total" : 5,
-///         "successful" : 5,
-///         "skipped" : 0,
-///         "failed" : 0
-///     },
-///     "hits" : {
-///         "total" : {
-///         "value" : 0,
-///         "relation" : "eq"
-///         },
-///         "max_score" : null,
-///         "hits" : [ ]
-///     }
-/// }
-/// ```
-#[derive(Deserialize)]
-struct ESHitsCount {
-    hits: ESHitsCountHits,
-}
-
-/// Part of ESAggs
-#[derive(Deserialize)]
-struct ESAggsBucket {
-    pub key: String,
-    pub doc_count: usize,
-}
-
-/// Part of ESAggs
-#[derive(Deserialize)]
-struct ESAggsBuckets {
-    pub buckets: Vec<ESAggsBucket>,
-}
-
-/// Part of ESAggs
-#[derive(Deserialize)]
-struct ESAggsAgg {
-    pub agg: ESAggsBuckets,
-}
-
-/// A generic structure for ES aggregations result. Make sure the aggregation name is `aggs`.
-/// ```json
-///   {
-///     "aggregations" : {
-///       "agg" : {
-///         "buckets" : [
-///           {
-///             "key" : "twilio",
-///             "doc_count" : 597
-///           }
-///         ]
-///       }
-///     }
-///   }
-/// ```
-#[derive(Deserialize)]
-struct ESAggs {
-    pub aggregations: ESAggsAgg,
-}
 
 /// Run a search with the provided query.
 /// * es_url: elastucsearch url
@@ -125,87 +44,6 @@ pub(crate) fn add_param(query: &str, param: String, no_sql_string_invalidation_r
     }
 
     modded_query
-}
-
-/// A generic function for making signed(v4) API calls to AWS ES.
-/// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
-pub(crate) async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Result<Value, ()> {
-    // prepare METHOD and the payload in one step
-    let (method, payload) = match payload {
-        None => ("GET", None),
-        Some(v) => ("POST", Some(v.as_bytes().to_owned())),
-    };
-    let payload_id = if payload.is_none() {
-        0usize
-    } else {
-        payload.as_ref().unwrap().len()
-    };
-    info!("ES query {} started", payload_id);
-
-    // The URL will need to be split into parts to extract region, host, etc.
-    let uri = Uri::from_maybe_shared(es_api_endpoint).expect("Invalid ES URL");
-
-    // get the region from teh URL
-    let region = uri
-        .host()
-        .expect("Missing host in ES URL")
-        .trim_end_matches(".es.amazonaws.com");
-    let (_, region) = region.split_at(region.rfind(".").expect("Invalid ES URL") + 1);
-    let region = rusoto_core::Region::from_str(region).expect("Invalid region in the ES URL");
-
-    // prepare the request
-    let mut req = SignedRequest::new(method, "es", &region, uri.path());
-    req.set_payload(payload);
-    req.set_hostname(Some(uri.host().expect("Missing host in ES URL").to_string()));
-
-    // these headers are required by ES
-    req.add_header("Content-Type", "application/json");
-
-    // get AWS creds
-    let provider = DefaultCredentialsProvider::new().expect("Cannot get default creds provider");
-    let credentials = provider.credentials().await.expect("Cannot find creds");
-
-    // sign the request
-    req.sign(&credentials);
-
-    // convert the signed request into an HTTP request we can send out
-    let req: Request<Body> = req
-        .try_into()
-        .expect("Cannot convert signed request into hyper request");
-    debug!("Http rq: {:?}", req);
-
-    let res = Client::builder()
-        .build::<_, hyper::Body>(HttpsConnector::with_native_roots())
-        .request(req)
-        .await
-        .expect("ES request failed");
-
-    info!("ES query {} response arrived", payload_id);
-    let status = res.status();
-
-    // Concatenate the body stream into a single buffer...
-    let buf = hyper::body::to_bytes(res)
-        .await
-        .expect("Cannot convert response body to bytes");
-
-    // there should be at least some data returned
-    if buf.is_empty() {
-        error!("Empty body with status {}", status);
-        return Err(());
-    }
-
-    // any status other than 200 is an error
-    if !status.is_success() {
-        error!("Status {}", status);
-        log_http_body(&buf);
-        return Err(());
-    }
-
-    // all responses should be JSON. If it's not JSON it's an error.
-    let output = Ok(serde_json::from_slice::<Value>(&buf).expect("Failed to convert ES resp to JSON"));
-    info!("ES query {} finished", payload_id);
-    //info!("{}", output.as_ref().unwrap()); // for debugging
-    output
 }
 
 /// Returns the number of ES docs that match the query. The field name is not validated or sanitized.
@@ -261,7 +99,7 @@ pub(crate) async fn matching_doc_count(
     //       "hits" : [ ]
     //     }
     // }
-    let count = match serde_json::from_value::<ESHitsCount>(count) {
+    let count = match serde_json::from_value::<es_types::ESHitsCount>(count) {
         Ok(v) => v.hits.total.value,
         Err(e) => {
             error!(
@@ -304,20 +142,6 @@ pub(crate) async fn matching_doc_counts(
     }
 
     Ok(counts)
-}
-
-/// Logs the body as error!(), if possible.
-pub(crate) fn log_http_body(body_bytes: &hyper::body::Bytes) {
-    // log the body as-is if it's not too long
-    if body_bytes.len() < 5000 {
-        let s = match std::str::from_utf8(&body_bytes).to_owned() {
-            Err(_e) => "The body is not UTF-8".to_string(),
-            Ok(v) => v.to_string(),
-        };
-        error!("Response body: {}", s);
-    } else {
-        error!("Response is too long to log: {}B", body_bytes.len());
-    }
 }
 
 /// Returns up to 24 matching docs from DEV idx depending on the params. The query is built to match the list of params.
@@ -388,40 +212,6 @@ pub(crate) async fn matching_devs(
     Ok(es_response)
 }
 
-/// Reads a single document by ID.
-/// Returns `_source` as the root tag with `hits` and meta sections stripped off.
-/// ```json
-///   {
-///     "_source" : {
-///       "repo" : [
-///         {
-///           "ts" : 1615195803,
-///           "iso" : "2021-03-08T09:30:03.966075280+00:00",
-///           "c" : 1725617
-///         }
-///       ]
-///     }
-///   }
-/// ```
-pub(crate) async fn get_doc_by_id(
-    es_url: &String,
-    idx: &String,
-    doc_id: &str,
-    no_sql_string_invalidation_regex: &Regex,
-) -> Result<Value, ()> {
-    // validate field_value for possible no-sql injection
-    if no_sql_string_invalidation_regex.is_match(doc_id) {
-        error!("Invalid doc_id: {}", doc_id);
-        return Err(());
-    }
-
-    let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_doc/", doc_id, "?filter_path=_source"].concat();
-
-    let es_response = call_es_api(es_api_endpoint, None).await?;
-
-    Ok(es_response)
-}
-
 /// Search related keywords and packages by a partial keyword, up to 100 of each.
 /// Returns a combined list of keyword/populary count for refs_kw and pkgs_kw sorted alphabetically.
 /// The keyword is checked for validity ([^\-_0-9a-zA-Z]) before inserting into the regex query.
@@ -460,21 +250,21 @@ pub(crate) async fn related_keywords(
     .await;
 
     // extract the data from JSON
-    let refs = match serde_json::from_value::<ESAggs>(refs?) {
+    let refs = match serde_json::from_value::<es_types::ESAggs>(refs?) {
         Err(e) => {
             error!("Cannot deser refs with {}", e);
             return Err(());
         }
         Ok(v) => v,
     };
-    let pkgs = match serde_json::from_value::<ESAggs>(pkgs?) {
+    let pkgs = match serde_json::from_value::<es_types::ESAggs>(pkgs?) {
         Err(e) => {
             error!("Cannot pkgs refs with {}", e);
             return Err(());
         }
         Ok(v) => v,
     };
-    let langs = match serde_json::from_value::<ESAggs>(langs?) {
+    let langs = match serde_json::from_value::<es_types::ESAggs>(langs?) {
         Err(e) => {
             error!("Cannot deser langs with {}", e);
             return Err(());

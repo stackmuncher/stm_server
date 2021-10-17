@@ -1,12 +1,15 @@
 use crate::config::{validate_owner_id, Config};
-use crate::elastic;
+use crate::{elastic, search_log::SearchLog};
+use chrono::Utc;
 use html_data::{HtmlData, KeywordMetadata};
+use rusoto_core::credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
+use std::collections::HashMap;
 use tracing::{info, warn};
 
 mod dev_profile;
 mod gh_login_profile;
 mod home;
-mod html_data;
+pub(crate) mod html_data;
 mod keyword;
 mod related;
 mod stats;
@@ -20,6 +23,7 @@ pub(crate) async fn html(
     url_path: String,
     url_query: String,
     dev: Option<String>,
+    headers: HashMap<String, String>,
 ) -> Result<HtmlData, ()> {
     // prepare a common structure for feeding into Tera templates
     let html_data = HtmlData {
@@ -38,6 +42,8 @@ pub(crate) async fn html(
         login_str: None,
         owner_id_str: None,
         stats_jobs: None,
+        headers,
+        timestamp: Utc::now(),
     };
 
     // return 404 for requests that are too long or for some resource related to the static pages
@@ -100,7 +106,8 @@ pub(crate) async fn html(
     // is there something in the query string?
     if url_query.len() > 1 {
         // split the query into parts using a few common separators
-        let search_terms = config.search_terms_regex
+        let search_terms = config
+            .search_terms_regex
             .find_iter(&url_query)
             .map(|v| v.as_str().to_owned())
             .collect::<Vec<String>>();
@@ -241,8 +248,31 @@ pub(crate) async fn html(
             ..html_data
         };
 
-        // run a keyword search
-        return Ok(keyword::html(config, keywords, langs, html_data).await?);
+        // run a keyword search for devs
+        let html_data = keyword::html(config, keywords, langs, html_data).await?;
+
+        // log the search query and its results in ES
+        if !html_data.raw_search.is_empty() {
+            let provider = DefaultCredentialsProvider::new().expect("Cannot get default creds provider");
+            let aws_credentials = provider.credentials().await.expect("Cannot find creds");
+            let object_id = Utc::now().timestamp().to_string();
+            let object_to_upload = SearchLog::from_html_data(&html_data);
+            let es_url = config.es_url.clone();
+            let es_idx = config.search_log_idx.clone();
+
+            tokio::spawn(async move {
+                stm_shared::elastic::upload_object_to_es::<SearchLog>(
+                    es_url,
+                    aws_credentials,
+                    object_to_upload,
+                    object_id,
+                    es_idx,
+                )
+                .await
+            });
+        }
+
+        return Ok(html_data);
     }
 
     // return the homepage if there is nothing else

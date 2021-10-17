@@ -1,13 +1,14 @@
 use crate::config::Config;
 use crate::dev_profile::{DevProfile, GitHubUser};
 use crate::jobs::{wait_for_next_cycle, DevJob, FailureType};
-use crate::utils;
 use chrono::{Duration, Utc};
 use futures::stream::{FuturesUnordered, StreamExt};
+use stm_shared;
+use stm_shared::pgsql::get_pg_client;
+use stm_shared::s3;
 use tokio::time::Instant;
 use tokio_postgres::Client as PgClient;
 use tracing::{debug, error, info, instrument};
-use utils::{pgsql::get_pg_client, s3};
 use uuid::Uuid;
 
 /// Limited by how many S3 requests can be handled at a time
@@ -182,17 +183,13 @@ pub(crate) async fn process_dev(dev_job: DevJob, config: &Config, idx: usize) ->
 
     // get the list of all objects in the dev's folder in S3
     // the trailing "/" is needed to make it the exact path match, e.g. "repos/ddd" matches "repos/ddd-retail", but "repos/ddd/" will be the exact match
-    let dev_s3_objects = match utils::s3::list_objects_from_s3(
-        config.s3_client(),
-        &config.s3_bucket_private_reports,
-        dev_s3_key.clone(),
-        None,
-    )
-    .await
-    {
-        Ok(v) => v,
-        Err(_) => return Err(FailureType::Retry(dev_job)),
-    };
+    let dev_s3_objects =
+        match s3::list_objects_from_s3(config.s3_client(), &config.s3_bucket_private_reports, dev_s3_key.clone(), None)
+            .await
+        {
+            Ok(v) => v,
+            Err(_) => return Err(FailureType::Retry(dev_job)),
+        };
 
     // get the list of objects for GH repos/reports for dev'g GH login, if any
     let dev_gh_s3_objects = match &dev_job.gh_login {
@@ -211,7 +208,7 @@ pub(crate) async fn process_dev(dev_job: DevJob, config: &Config, idx: usize) ->
 
             // get the list of all objects in the dev's folder in S3
             // the trailing "/" is needed to make it the exact path match, e.g. "repos/ddd" matches "repos/ddd-retail", but "repos/ddd/" will be the exact match
-            match utils::s3::list_objects_from_s3(
+            match s3::list_objects_from_s3(
                 config.s3_client(),
                 &config.s3_bucket_gh_reports,
                 dev_gh_s3_key.clone(),
@@ -297,9 +294,15 @@ pub(crate) async fn process_dev(dev_job: DevJob, config: &Config, idx: usize) ->
     };
 
     // save the same serialized profile in ES
-    if utils::elastic::upload_serialized_object_to_es(config, serialized_profile, &es_object_id, &config.es_idx.dev)
-        .await
-        .is_err()
+    if stm_shared::elastic::upload_serialized_object_to_es(
+        &config.es_url,
+        config.aws_credentials(),
+        serialized_profile,
+        &es_object_id,
+        &config.es_idx.dev,
+    )
+    .await
+    .is_err()
     {
         return Err(FailureType::Retry(dev_job));
     }

@@ -5,7 +5,6 @@ mod dev_profile;
 mod flows;
 mod gh_login;
 mod jobs;
-mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {

@@ -1,10 +1,10 @@
-use crate::utils::log_http_body;
 use hyper::{Client, Request};
 use hyper_rustls::HttpsConnector;
 use regex::Regex;
 use ring::signature;
 use serde::Deserialize;
 use serde_json::Value;
+use stm_shared::log_http_body;
 use tracing::{debug, error, info};
 
 /// A "well-known" string used as the content to be signed for GH verification. The signature is uploaded to a Gist.

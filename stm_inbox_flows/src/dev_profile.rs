@@ -1,11 +1,10 @@
 use crate::config::Config;
-use crate::utils;
 use chrono::Utc;
 use futures::stream::{FuturesUnordered, StreamExt};
 use serde::{Deserialize, Serialize};
 use stackmuncher_lib::report::Report;
 use tracing::{error, info};
-use utils::s3;
+use stm_shared::s3;
 
 /// A private developer profile with the stack report and some personal info
 #[derive(Debug, Serialize)]

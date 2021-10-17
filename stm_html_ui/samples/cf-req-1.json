@@ -1,0 +1,45 @@
+{
+  "headers": {
+    "accept-encoding": "gzip",
+    "authorization": "Basic vikanSE^J%IqGiT&z48Mz6e(t",
+    "content-length": "0",
+    "from": "support@search.yandex.ru",
+    "host": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "user-agent": "Amazon CloudFront",
+    "via": "1.1 a2b4f68a89fc87406bff22c95fc07fbb.cloudfront.net (CloudFront)",
+    "x-amz-cf-id": "O9eT7b2jHlPO1Pw5b8F_CqC6Uq34ia4HvAZaPuo4XXZiBUgywm26Ww==",
+    "x-amzn-trace-id": "Root=1-61562559-36af4d5a5806379c607918d0",
+    "x-forwarded-for": "5.45.207.142, 64.252.87.15",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "proxy": ""
+  },
+  "queryStringParameters": {
+    "BlogSpot": ""
+  },
+  "rawPath": "/",
+  "rawQueryString": "BlogSpot",
+  "requestContext": {
+    "accountId": "028534811986",
+    "apiId": "eqs686m6tc",
+    "domainName": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "eqs686m6tc",
+    "http": {
+      "method": "GET",
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "5.45.207.142",
+      "userAgent": "Amazon CloudFront"
+    },
+    "requestId": "GfrGEjTHIAMEVQw=",
+    "routeKey": "ANY /{proxy+}",
+    "stage": "$default",
+    "time": "30/Sep/2021:21:00:09 +0000",
+    "timeEpoch": 1633035609876
+  },
+  "routeKey": "ANY /{proxy+}",
+  "version": "2.0"
+}

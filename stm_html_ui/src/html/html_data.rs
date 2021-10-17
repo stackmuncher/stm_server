@@ -1,6 +1,8 @@
 use crate::html::stats::Stats;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
 /// A common data format fed to Tera templates
 #[derive(Serialize)]
@@ -41,6 +43,12 @@ pub(crate) struct HtmlData {
     /// A container for job stats data populated for stats page only.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stats_jobs: Option<Stats>,
+    /// A copy of API GW request headers
+    #[serde(skip)]
+    pub headers: HashMap<String, String>,
+    /// Timestamp when the request was initiated
+    #[serde(skip)]
+    pub timestamp: DateTime<Utc>,
 }
 
 /// A view of the keyword from ElasticSearch

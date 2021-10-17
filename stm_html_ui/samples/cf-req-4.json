@@ -1,0 +1,52 @@
+{
+  "headers": {
+    "accept-encoding": "gzip",
+    "authorization": "Basic vikanSE^J%IqGiT&z48Mz6e(t",
+    "cloudfront-is-desktop-viewer": "false",
+    "cloudfront-is-mobile-viewer": "true",
+    "cloudfront-is-tablet-viewer": "false",
+    "cloudfront-viewer-country": "US",
+    "cloudfront-viewer-latitude": "37.75100",
+    "cloudfront-viewer-longitude": "-97.82200",
+    "cloudfront-viewer-time-zone": "America/Chicago",
+    "content-length": "0",
+    "from": "googlebot(at)googlebot.com",
+    "host": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "user-agent": "Amazon CloudFront",
+    "via": "1.1 a9587eaa1ec3f78d147d395dced29552.cloudfront.net (CloudFront)",
+    "x-amz-cf-id": "C5o3zzSlj2ebox7IRe4jsz3kOU3TRC8cMbq3Yk_zfKp4K_vkHRsCOg==",
+    "x-amzn-trace-id": "Root=1-61563c9e-7d0f9e6072c083c23e781394",
+    "x-forwarded-for": "66.249.75.120, 64.252.75.128",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "proxy": ""
+  },
+  "queryStringParameters": {
+    "C# SJZ.Timelines.Domain.TimelineAggregate": ""
+  },
+  "rawPath": "/",
+  "rawQueryString": "C%23%20SJZ.Timelines.Domain.TimelineAggregate",
+  "requestContext": {
+    "accountId": "028534811986",
+    "apiId": "eqs686m6tc",
+    "domainName": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "eqs686m6tc",
+    "http": {
+      "method": "GET",
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "66.249.75.120",
+      "userAgent": "Amazon CloudFront"
+    },
+    "requestId": "Gf5ouiSKIAMEM5w=",
+    "routeKey": "ANY /{proxy+}",
+    "stage": "$default",
+    "time": "30/Sep/2021:22:39:26 +0000",
+    "timeEpoch": 1633041566028
+  },
+  "routeKey": "ANY /{proxy+}",
+  "version": "2.0"
+}

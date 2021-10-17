@@ -1,0 +1,53 @@
+{
+  "headers": {
+    "accept-encoding": "gzip",
+    "authorization": "Basic vikanSE^J%IqGiT&z48Mz6e(t",
+    "cloudfront-is-desktop-viewer": "true",
+    "cloudfront-is-mobile-viewer": "false",
+    "cloudfront-is-tablet-viewer": "false",
+    "cloudfront-viewer-city": "Moscow",
+    "cloudfront-viewer-country": "RU",
+    "cloudfront-viewer-latitude": "55.74830",
+    "cloudfront-viewer-longitude": "37.61710",
+    "cloudfront-viewer-time-zone": "Europe/Moscow",
+    "content-length": "0",
+    "from": "support@search.yandex.ru",
+    "host": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "user-agent": "Amazon CloudFront",
+    "via": "1.1 eb9781eaf534229bf5ad50a1b819581b.cloudfront.net (CloudFront)",
+    "x-amz-cf-id": "JC0tqUR2g62ZDU7w5HuelRPHn_6vM48-R5D7O0pD8YpMtOiyZBEZiA==",
+    "x-amzn-trace-id": "Root=1-61563c98-043f3a1b08966bc9715477a9",
+    "x-forwarded-for": "87.250.224.177, 64.252.114.21",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "proxy": ""
+  },
+  "queryStringParameters": {
+    "gluon": ""
+  },
+  "rawPath": "/",
+  "rawQueryString": "gluon",
+  "requestContext": {
+    "accountId": "028534811986",
+    "apiId": "eqs686m6tc",
+    "domainName": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "eqs686m6tc",
+    "http": {
+      "method": "GET",
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "87.250.224.177",
+      "userAgent": "Amazon CloudFront"
+    },
+    "requestId": "Gf5n3irzoAMEMtg=",
+    "routeKey": "ANY /{proxy+}",
+    "stage": "$default",
+    "time": "30/Sep/2021:22:39:20 +0000",
+    "timeEpoch": 1633041560530
+  },
+  "routeKey": "ANY /{proxy+}",
+  "version": "2.0"
+}

@@ -5,6 +5,7 @@ use regex::Regex;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
+use stm_shared::elastic as elastic_shared;
 use tracing::{info, warn};
 
 #[derive(Deserialize, Debug)]
@@ -44,14 +45,10 @@ pub(crate) async fn html(config: &Config, html_data: HtmlData) -> Result<HtmlDat
     info!("Generating html-home");
 
     // a query to grab a bunch of latest additions and updates to dev idx
-    let devs = elastic::search(
-        &config.es_url,
-        &config.dev_idx,
-        Some(elastic::SEARCH_TOP_USERS),
-    );
+    let devs = elastic::search(&config.es_url, &config.dev_idx, Some(elastic::SEARCH_TOP_USERS));
     // a query to get latest stats
     // returns Stats struct wrapped in _source
-    let stats = elastic::get_doc_by_id(
+    let stats = elastic_shared::get_doc_by_id(
         &config.es_url,
         &config.stats_idx,
         "latest_stats.json",
@@ -83,8 +80,7 @@ fn extract_keywords(engineer_list: &Value) -> Vec<RelatedKeywords> {
     let rgx = Regex::new(r#"[^\-_0-9a-zA-Z]"#).expect("Wrong _kw regex!");
 
     // the data we need is buried 10 levels deep - keep unwrapping until we are there
-    let e_list_resp = serde_json::from_value::<EngListResp>(engineer_list.clone())
-        .expect("Cannot deser Eng List");
+    let e_list_resp = serde_json::from_value::<EngListResp>(engineer_list.clone()).expect("Cannot deser Eng List");
 
     for e_source in e_list_resp.hits.hits {
         if e_source.source.is_none() {

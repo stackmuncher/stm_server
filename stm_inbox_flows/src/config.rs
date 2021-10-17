@@ -1,4 +1,3 @@
-use bs58;
 use chrono::Utc;
 use regex::Regex;
 use rusoto_core::credential::{AwsCredentials, DefaultCredentialsProvider, ProvideAwsCredentials};
@@ -7,6 +6,7 @@ use serde::Deserialize;
 pub use stackmuncher_lib::config::Config as CoreConfig;
 use std::fs;
 use std::str::FromStr;
+use stm_shared::s3;
 use tracing::{debug, warn};
 
 mod deser;
@@ -181,7 +181,7 @@ impl Config {
         config.core_config = Some(CoreConfig::new_with_defaults(&config.log_level.0));
 
         // init a reusable S3 client
-        config.s3_client_inner = Some(crate::utils::s3::generate_s3_client(&config));
+        config.s3_client_inner = Some(s3::generate_s3_client(&config.s3_region));
 
         // pre-compile NOSQL param validation regex
         // A regex formula to check for unsafe values to insert into another regex string.
@@ -244,25 +244,5 @@ impl Config {
         }
         let err_msg = &["Invalid tracing level value: ", s].concat();
         tracing::Level::from_str(s).expect(err_msg)
-    }
-}
-
-/// Returns TRUE if the owner_id decodes from base58 into exactly 256 bytes.
-/// Logs a warning and returns FALSE otherwise.
-/// TODO: this should be a shared utility function!!!
-pub(crate) fn validate_owner_id(owner_id: &str) -> bool {
-    match bs58::decode(owner_id).into_vec() {
-        Err(e) => {
-            warn!("Invalid owner_id: {}. Cannot decode from bs58: {}", owner_id, e);
-            false
-        }
-        Ok(v) => {
-            if v.len() == 32 {
-                true
-            } else {
-                warn!("Invalid owner_id: {}. Decoded to {} bytes", owner_id, v.len());
-                false
-            }
-        }
     }
 }

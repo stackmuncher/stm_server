@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "accept-encoding": "gzip",
+    "authorization": "Basic vikanSE^J%IqGiT&z48Mz6e(t",
+    "content-length": "0",
+    "host": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "user-agent": "Amazon CloudFront",
+    "via": "1.1 425ccbcb040dd779e5f3bdc76b6d8ff9.cloudfront.net (CloudFront)",
+    "x-amz-cf-id": "rYVQIAAIsemq4uvFEeaVPe_NzA7494N-Afm9u3B1VaOBxTNUsn4UCg==",
+    "x-amzn-trace-id": "Root=1-61562559-75b3e754311798293f9aea06",
+    "x-forwarded-for": "157.90.209.78, 64.252.88.169",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "proxy": ""
+  },
+  "queryStringParameters": {
+    "ask_sdk_core.model.ui": ""
+  },
+  "rawPath": "/",
+  "rawQueryString": "ask_sdk_core.model.ui",
+  "requestContext": {
+    "accountId": "028534811986",
+    "apiId": "eqs686m6tc",
+    "domainName": "eqs686m6tc.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "eqs686m6tc",
+    "http": {
+      "method": "GET",
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "157.90.209.78",
+      "userAgent": "Amazon CloudFront"
+    },
+    "requestId": "GfrF-gaNIAMEMgg=",
+    "routeKey": "ANY /{proxy+}",
+    "stage": "$default",
+    "time": "30/Sep/2021:21:00:09 +0000",
+    "timeEpoch": 1633035609262
+  },
+  "routeKey": "ANY /{proxy+}",
+  "version": "2.0"
+}

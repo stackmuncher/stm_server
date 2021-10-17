@@ -17,9 +17,11 @@ hyper = { version = "0.14", features = ["http2"] }
 hyper-rustls = "0.22"
 regex = "1.4"
 bs58 = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 rust-embed = { version = "6", features = ["compression"] }
 rusoto_signature = "0.47"
 rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false }
 rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
 futures = "0.3"
 urlencoding = "2.1"
+stm_shared = { version = "0.1", path = "../stm_shared" }
