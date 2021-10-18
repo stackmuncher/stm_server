@@ -3,3 +3,4 @@ Cargo.lock
 *.zip
 trace*.txt
 config.json
+stmpg_prod.session.sql
