@@ -84,7 +84,7 @@
         {% if user.report.projects_included %}
         <h3 class="mt-4">Projects</h3>
         <ul class="list-inline">
-          {% for proj in user.report.projects_included | sort(attribute="date_head") | reverse %}
+          {% for proj in user.report.projects_included | filter(attribute="date_head") | sort(attribute="date_head") | reverse %}
           {% if proj.loc > 0 %}
           <li class="pe-4 mb-4 .text-nowrap list-inline-item">
             <div class="card" style="width: 20rem;">
