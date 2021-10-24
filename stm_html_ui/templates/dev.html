@@ -90,8 +90,8 @@
             <div class="card" style="width: 20rem;">
               <div class="card-body">
                 <h6 class="card-title">
-                  <a {% if user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% elif proj.github_user_name %} href="https://github.com/{{proj.github_user_name}}/{{proj.project_name}}" {% elif proj.project_id %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. View the details.">
-                    {{proj.project_name | truncate(length=50)}}
+                  <a {% if proj.github_user_name %} href="https://github.com/{{proj.github_user_name}}/{{proj.project_name}}" {% elif user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% elif proj.project_id %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. View the details.">
+                    {% if user.login and proj.github_user_name and user.login != proj.github_user_name %}{{proj.github_user_name | truncate(length=50)}}/{% endif %}{{proj.project_name | truncate(length=50)}}
                   </a>
                 </h6>
                 <div class="card-subtitle mb-2 text-muted">
@@ -99,6 +99,8 @@
                   <span title="Number of external libraries" class="libs-badge ms-3">{{proj.libs}}</span>
                   {% if proj.date_init and proj.date_head %}
                   <span title="Date of the last commit" class="calendar-badge ms-3"><small>{{proj.date_init | date(format="%b %Y")}} - {{proj.date_head | date(format="%b %Y")}}</small></span>
+                  {% elif proj.date_head %}
+                  <span title="Date of the last commit" class="calendar-badge ms-3"><small>{{proj.date_head | date(format="%b %Y")}}</small></span>
                   {% endif %}
                 </div>
                 <p class="card-text">{{proj.tech | sort(attribute="loc") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ")}}</p>
