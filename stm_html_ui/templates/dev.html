@@ -37,7 +37,20 @@
           <li class="mb-1"><strong>Email</strong>: {{user.email}}</li>
           {% endif %}
 
-          {% set init = user.report.date_init | date(format="%Y") | int() %}
+          {% if devs.hits.hits[0]._source.report.last_contributor_commit_date_iso %}
+          {% set last_active = devs.hits.hits[0]._source.report.last_contributor_commit_date_iso | date(format="%b %Y") %}
+          {% elif devs.hits.hits[0]._source.report.date_head %}
+          {% set last_active = devs.hits.hits[0]._source.report.date_head | date(format="%b %Y") %}
+          {% endif %}
+
+          {% if devs.hits.hits[0]._source.report.first_contributor_commit_date_iso %}
+          {% set init = devs.hits.hits[0]._source.report.first_contributor_commit_date_iso | date(format="%Y") | int() %}
+          {% elif devs.hits.hits[0]._source.report.date_init %}
+          {% set init = devs.hits.hits[0]._source.report.date_init | date(format="%Y") | int() %}
+          {% else %}
+          {% set init = now() | date(format="%Y") | int() %}
+          {% endif %}
+
           {% set today = now() | date(format="%Y") | int() %}
           <li class="mb-1"><strong>Code history</strong>: {% if today == init %}
             &lt; 1 year
@@ -45,6 +58,7 @@
             {{ today - init + 1 }} years
             {% endif %}
           </li>
+          {% if last_active %}<li class="mb-1"><strong>Last commit</strong>: {{ last_active }}</li>{% endif %}
           <li class="mb-1"><strong>Report updated</strong>:
             {{ user.report.timestamp | date(format="%d %b %Y") }}
           </li>
@@ -67,11 +81,24 @@
             </thead>
             <tbody>
               {% for tech in user.report.tech | sort(attribute="total_lines") | reverse %}
+
+              {% if tech.pkgs %}
+              {% set pkgs = tech.pkgs | length %}
+              {% else %}
+              {% set pkgs = 0 %}
+              {% endif %}
+              {% if tech.refs %}
+              {% set refs = tech.refs | length %}
+              {% else %}
+              {% set refs = 0 %}
+              {% endif %}
+              
+              {% set libs = pkgs + refs %}
               <tr>
                 <td scope="row"><strong>{{tech.language}}</strong></td>
                 <td class="text-end me-2">{{tech.files}}</td>
                 <td class="text-end me-2">{{tech.code_lines}}</td>
-                <td class="text-end me-2">{% if tech.pkgs and tech.pkgs | length > 0 %}{{tech.pkgs | length}}{% endif %}</td>
+                <td class="text-end me-2">{% if libs > 0 %}{{libs}}{% endif %}</td>
                 <td class="text-end me-2">{% if tech.docs_comments > 0 %}{{tech.docs_comments}}{% endif %}</td>
                 <td class="text-end me-2">{% if tech.line_comments > 0 %}{{tech.line_comments}}{% endif %}</td>
                 <td scope="col" style="width:100%"></td>
@@ -82,12 +109,13 @@
         </div>
 
         {% if user.report.projects_included %}
+        {% if user.name %}{% set dev_name = user.name %}{% elif user.login %}{% set dev_name = user.login %}{% else %}{% set dev_name = "this developer" %}{% endif %}
         <h3 class="mt-4">Projects</h3>
         <ul class="list-inline">
-          {% for proj in user.report.projects_included | filter(attribute="date_head") | sort(attribute="date_head") | reverse %}
+          {% for proj in user.report.projects_included %}
           {% if proj.loc > 0 %}
           <li class="pe-4 mb-4 .text-nowrap list-inline-item">
-            <div class="card" style="width: 20rem;">
+            <div class="card" style="width: 23rem;">
               <div class="card-body">
                 <h6 class="card-title">
                   <a {% if proj.github_user_name %} href="https://github.com/{{proj.github_user_name}}/{{proj.project_name}}" {% elif user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% elif proj.project_id %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. View the details.">
@@ -95,12 +123,26 @@
                   </a>
                 </h6>
                 <div class="card-subtitle mb-2 text-muted">
-                  <span title="Lines of code" class="loc-badge">{{proj.loc}}</span>
-                  <span title="Number of external libraries" class="libs-badge ms-3">{{proj.libs}}</span>
-                  {% if proj.date_init and proj.date_head %}
-                  <span title="Date of the last commit" class="calendar-badge ms-3"><small>{{proj.date_init | date(format="%b %Y")}} - {{proj.date_head | date(format="%b %Y")}}</small></span>
+                  <span title="{{proj.loc}} lines of code from {{dev_name}}{% if proj.loc_project %}. Project size: {{proj.loc_project}} lines{% endif %}" class="loc-badge">{{proj.loc}}</span>
+                  {% if proj.commit_count %}<span title="Commits made by {{dev_name}}" class="commits-badge ms-3">{{proj.commit_count}}</span>{% endif %}
+                  {% if proj.ppl %}<span title="Total number of committers" class="team-badge ms-3">{{proj.ppl}}</span>{% endif %}
+
+                  {% if proj.contributor_first_commit %}
+                  {% set date_init = proj.contributor_first_commit | date(format="%b %Y") %}
+                  {% elif proj.date_init %}
+                  {% set date_init = proj.date_init | date(format="%b %Y") %}
+                  {% endif %}
+
+                  {% if proj.contributor_last_commit %}
+                  {% set date_head = proj.contributor_last_commit | date(format="%b %Y") %}
                   {% elif proj.date_head %}
-                  <span title="Date of the last commit" class="calendar-badge ms-3"><small>{{proj.date_head | date(format="%b %Y")}}</small></span>
+                  {% set date_head = proj.date_head | date(format="%b %Y") %}
+                  {% endif %}
+
+                  {% if date_init and date_head and date_init != date_head %}
+                  <span title="Date range of commits from {{dev_name}}" class="calendar-badge ms-3"><small>{{date_init}} - {{date_head}}</small></span>
+                  {% elif date_head %}
+                  <span title="Date of the last commit from {{dev_name}}" class="calendar-badge ms-3"><small>{{date_head}}</small></span>
                   {% endif %}
                 </div>
                 <p class="card-text">{{proj.tech | sort(attribute="loc") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ")}}</p>

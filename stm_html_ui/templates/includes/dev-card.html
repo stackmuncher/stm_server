@@ -15,7 +15,13 @@
         </a>
       </h5>
     </div>
-    {% set init = dev._source.report.date_init | date(format="%Y") | int() %}
+    {% if devs.hits.hits[0]._source.report.first_contributor_commit_date_iso %}
+    {% set init = devs.hits.hits[0]._source.report.first_contributor_commit_date_iso | date(format="%Y") | int() %}
+    {% elif devs.hits.hits[0]._source.report.date_init %}
+    {% set init = devs.hits.hits[0]._source.report.date_init | date(format="%Y") | int() %}
+    {% else %}
+    {% set init = now() | date(format="%Y") | int() %}
+    {% endif %}
     {% set today = now() | date(format="%Y") | int() %}
 
     <p class="card-subtitle mb-2 text-muted">

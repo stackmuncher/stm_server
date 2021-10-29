@@ -8,15 +8,31 @@
   {% if keywords_str %}
   <title>{{keywords_str}} software developers and engineers</title>
   <meta name="description" content="A list of software developers and engineers with experience in {{keywords_str}}.">
+
   {% elif login_str and devs.hits.hits | length > 0 %}
   <title>{% if devs.hits.hits[0]._source.name %}{{devs.hits.hits[0]._source.name}}{% elif devs.hits.hits[0]._source.login %}{{devs.hits.hits[0]._source.login}}{% else %}Anonymous{% endif %} | Software Developer Profile</title>
+
   {% if devs.hits.hits[0]._source.report and devs.hits.hits[0]._source.report.tech %}
   {% set skills = devs.hits.hits[0]._source.report.tech | sort(attribute="total_lines") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ") %}
-  <meta name="description" content="Uses {{ skills }} and more (as of {{ devs.hits.hits[0]._source.report.date_head | date(format='%b %Y') }}). View their current technology stack and other code-related metrics since {{ devs.hits.hits[0]._source.report.date_init | date(format='%b %Y') }}.">
+
+  {% if devs.hits.hits[0]._source.report.last_contributor_commit_date_iso %}
+  {% set date_head = devs.hits.hits[0]._source.report.last_contributor_commit_date_iso | date(format='%b %Y') %}
+  {% elif devs.hits.hits[0]._source.report.date_head %}
+  {% set date_head = devs.hits.hits[0]._source.report.date_head | date(format='%b %Y') %}
+  {% endif %}
+
+  {% if devs.hits.hits[0]._source.report.first_contributor_commit_date_iso %}
+  {% set date_init = devs.hits.hits[0]._source.report.first_contributor_commit_date_iso | date(format='%b %Y') %}
+  {% elif devs.hits.hits[0]._source.report.date_init %}
+  {% set date_init = devs.hits.hits[0]._source.report.date_init | date(format='%b %Y') %}
+  {% endif %}
+
+  <meta name="description" content="Uses {{ skills }} and more {% if date_head %}(as of {{ date_head }}){% endif %}. View their current technology stack and other code-related metrics{% if date_init %} since {{ date_init }}{% endif %}.">
   <meta name="keywords" content="software engineer, {{ devs.hits.hits[0]._source.report.tech | map(attribute='language') | join(sep=', ') }}">
   {% else %}
   <meta name="description" content="We did not have any technology stack details for this developer when this page was indexed. Visit StackMuncher to check for updates or find more skilled software developers.">
   {% endif %}
+
   {% elif owner_id_str and devs.hits.hits | length > 0 %}
   <title>{% if devs.hits.hits[0]._source.name %}{{devs.hits.hits[0]._source.name}}{% else %}Anonymous{% endif %} | Software Developer Profile</title>
   {% else %}
@@ -67,6 +83,22 @@
       background-position: left;
       background-repeat: no-repeat;
       padding-left: 1.2rem;
+    }
+
+    .team-badge {
+      background-image: url("https://assets.stackmuncher.com/icons/team.svg");
+      background-clip: padding-box;
+      background-position: left;
+      background-repeat: no-repeat;
+      padding-left: 1.5rem;
+    }
+
+    .commits-badge {
+      background-image: url("https://assets.stackmuncher.com/icons/commits.svg");
+      background-clip: padding-box;
+      background-position: left;
+      background-repeat: no-repeat;
+      padding-left: 1rem;
     }
   </style>
 </head>
