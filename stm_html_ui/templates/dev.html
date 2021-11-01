@@ -64,6 +64,95 @@
           </li>
         </ul>
 
+        {% if user.report.commit_time_histo %}
+        {% if user.report.commit_time_histo.timezone_overlap_recent %}
+        {% set histo = user.report.commit_time_histo.timezone_overlap_recent %}
+        {% set histo_sum = user.report.commit_time_histo.histogram_recent_sum %}
+        {% else %}
+        {% set histo = user.report.commit_time_histo.timezone_overlap_all %}
+        {% set histo_sum = user.report.commit_time_histo.histogram_all_sum %}
+        {% endif %}
+        <h5 class="mt-3 mb-1"><small>Timezone availability</small></h5>
+        <table style="font-size: 0.8em" class="ms-3">
+          <tr title="New Zealand">
+            <th>New Zealand</th>
+            <td class="px-3 text-muted">UTC +12</td>
+            <td>{% if histo.h12 %}{{histo.h12}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Australian Eastern Time">
+            <th>Australia (East)</th>
+            <td class="px-3 text-muted">UTC +10</td>
+            <td>{% if histo.h10 %}{{histo.h10}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Japan Standard Time, Korean Standard Time">
+            <th>Japan, Korea</th>
+            <td class="px-3 text-muted">UTC +9</td>
+            <td>{% if histo.h09 %}{{histo.h09}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Australian Western Standard Time, China Standard Time, Philippine Time, Singapore Standard Time">
+            <th>Australia (West)</th>
+            <td class="px-3 text-muted">UTC +8</td>
+            <td>{% if histo.h08 %}{{histo.h08}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Indian Standard Time, Pakistan Standard Time">
+            <th>India, Pakistan</th>
+            <td class="px-3 text-muted">UTC +5</td>
+            <td>{% if histo.h05 %}{{histo.h05}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Moscow Time">
+            <th>Russia (West)</th>
+            <td class="px-3 text-muted">UTC +3</td>
+            <td>{% if histo.h03 %}{{histo.h03}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Eastern European Time, South African Standard Time">
+            <th>Europe (East)</th>
+            <td class="px-3 text-muted">UTC +2</td>
+            <td>{% if histo.h02 %}{{histo.h02}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Central European Time">
+            <th>Europe (Central)</th>
+            <td class="px-3 text-muted">UTC +1</td>
+            <td>{% if histo.h01 %}{{histo.h01}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Greenwich Mean Time">
+            <th>Europe (West)</th>
+            <td class="px-3 text-muted">UTC</td>
+            <td>{% if histo.h00 %}{{histo.h00}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Argentina Time, Brasília Time">
+            <th>Argentina, Brasil</th>
+            <td class="px-3 text-muted">UTC -3</td>
+            <td>{% if histo.h21 %}{{histo.h21}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Eastern Standard Time (North America)">
+            <th>US (East)</th>
+            <td class="px-3 text-muted">UTC -5</td>
+            <td>{% if histo.h19 %}{{histo.h19}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Central Standard Time (North America)">
+            <th>US (Central)</th>
+            <td class="px-3 text-muted">UTC -6</td>
+            <td>{% if histo.h18 %}{{histo.h18}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Mountain Standard Time (North America)">
+            <th>US (Mountain)</th>
+            <td class="px-3 text-muted">UTC -7</td>
+            <td>{% if histo.h17 %}{{histo.h17}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Pacific Standard Time (North America)">
+            <th>US (Pacific)</th>
+            <td class="px-3 text-muted">UTC -8</td>
+            <td>{% if histo.h16 %}{{histo.h16}} hrs{% endif %}</td>
+          </tr>
+          <tr title="Hawaii Standard Time">
+            <th>Hawaii</th>
+            <td class="px-3 text-muted">UTC -10</td>
+            <td>{% if histo.h14 %}{{histo.h14}} hrs{% endif %}</td>
+          </tr>
+        </table>
+        <p class="ms-3 text-muted"><small><i>Based on time of {{histo_sum}} recent commits.</i></small></p>
+        {% endif %}
+
       </div>
       <div class="col-md-9">
         <div class="table-responsive">
@@ -92,7 +181,7 @@
               {% else %}
               {% set refs = 0 %}
               {% endif %}
-              
+
               {% set libs = pkgs + refs %}
               <tr>
                 <td scope="row"><strong>{{tech.language}}</strong></td>
