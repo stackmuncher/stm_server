@@ -112,6 +112,329 @@
       },
       "report": {
         "properties": {
+          "commit_count_contributor": {
+            "type": "long"
+          },
+          "commit_count_project": {
+            "type": "long"
+          },
+          "commit_time_histo": {
+            "properties": {
+              "histogram_all": {
+                "properties": {
+                  "h00": {
+                    "type": "long"
+                  },
+                  "h01": {
+                    "type": "long"
+                  },
+                  "h02": {
+                    "type": "long"
+                  },
+                  "h03": {
+                    "type": "long"
+                  },
+                  "h04": {
+                    "type": "long"
+                  },
+                  "h05": {
+                    "type": "long"
+                  },
+                  "h06": {
+                    "type": "long"
+                  },
+                  "h07": {
+                    "type": "long"
+                  },
+                  "h08": {
+                    "type": "long"
+                  },
+                  "h09": {
+                    "type": "long"
+                  },
+                  "h10": {
+                    "type": "long"
+                  },
+                  "h11": {
+                    "type": "long"
+                  },
+                  "h12": {
+                    "type": "long"
+                  },
+                  "h13": {
+                    "type": "long"
+                  },
+                  "h14": {
+                    "type": "long"
+                  },
+                  "h15": {
+                    "type": "long"
+                  },
+                  "h16": {
+                    "type": "long"
+                  },
+                  "h17": {
+                    "type": "long"
+                  },
+                  "h18": {
+                    "type": "long"
+                  },
+                  "h19": {
+                    "type": "long"
+                  },
+                  "h20": {
+                    "type": "long"
+                  },
+                  "h21": {
+                    "type": "long"
+                  },
+                  "h22": {
+                    "type": "long"
+                  },
+                  "h23": {
+                    "type": "long"
+                  }
+                }
+              },
+              "histogram_all_std": {
+                "type": "float"
+              },
+              "histogram_all_sum": {
+                "type": "long"
+              },
+              "histogram_recent": {
+                "properties": {
+                  "h00": {
+                    "type": "long"
+                  },
+                  "h01": {
+                    "type": "long"
+                  },
+                  "h02": {
+                    "type": "long"
+                  },
+                  "h03": {
+                    "type": "long"
+                  },
+                  "h04": {
+                    "type": "long"
+                  },
+                  "h05": {
+                    "type": "long"
+                  },
+                  "h06": {
+                    "type": "long"
+                  },
+                  "h07": {
+                    "type": "long"
+                  },
+                  "h08": {
+                    "type": "long"
+                  },
+                  "h09": {
+                    "type": "long"
+                  },
+                  "h10": {
+                    "type": "long"
+                  },
+                  "h11": {
+                    "type": "long"
+                  },
+                  "h12": {
+                    "type": "long"
+                  },
+                  "h13": {
+                    "type": "long"
+                  },
+                  "h14": {
+                    "type": "long"
+                  },
+                  "h15": {
+                    "type": "long"
+                  },
+                  "h16": {
+                    "type": "long"
+                  },
+                  "h17": {
+                    "type": "long"
+                  },
+                  "h18": {
+                    "type": "long"
+                  },
+                  "h19": {
+                    "type": "long"
+                  },
+                  "h20": {
+                    "type": "long"
+                  },
+                  "h21": {
+                    "type": "long"
+                  },
+                  "h22": {
+                    "type": "long"
+                  },
+                  "h23": {
+                    "type": "long"
+                  }
+                }
+              },
+              "histogram_recent_std": {
+                "type": "float"
+              },
+              "histogram_recent_sum": {
+                "type": "long"
+              },
+              "timezone_overlap_all": {
+                "properties": {
+                  "h00": {
+                    "type": "long"
+                  },
+                  "h01": {
+                    "type": "long"
+                  },
+                  "h02": {
+                    "type": "long"
+                  },
+                  "h03": {
+                    "type": "long"
+                  },
+                  "h04": {
+                    "type": "long"
+                  },
+                  "h05": {
+                    "type": "long"
+                  },
+                  "h06": {
+                    "type": "long"
+                  },
+                  "h07": {
+                    "type": "long"
+                  },
+                  "h08": {
+                    "type": "long"
+                  },
+                  "h09": {
+                    "type": "long"
+                  },
+                  "h10": {
+                    "type": "long"
+                  },
+                  "h11": {
+                    "type": "long"
+                  },
+                  "h12": {
+                    "type": "long"
+                  },
+                  "h13": {
+                    "type": "long"
+                  },
+                  "h14": {
+                    "type": "long"
+                  },
+                  "h15": {
+                    "type": "long"
+                  },
+                  "h16": {
+                    "type": "long"
+                  },
+                  "h17": {
+                    "type": "long"
+                  },
+                  "h18": {
+                    "type": "long"
+                  },
+                  "h19": {
+                    "type": "long"
+                  },
+                  "h20": {
+                    "type": "long"
+                  },
+                  "h21": {
+                    "type": "long"
+                  },
+                  "h22": {
+                    "type": "long"
+                  }
+                }
+              },
+              "timezone_overlap_recent": {
+                "properties": {
+                  "h00": {
+                    "type": "long"
+                  },
+                  "h01": {
+                    "type": "long"
+                  },
+                  "h02": {
+                    "type": "long"
+                  },
+                  "h03": {
+                    "type": "long"
+                  },
+                  "h04": {
+                    "type": "long"
+                  },
+                  "h05": {
+                    "type": "long"
+                  },
+                  "h06": {
+                    "type": "long"
+                  },
+                  "h07": {
+                    "type": "long"
+                  },
+                  "h08": {
+                    "type": "long"
+                  },
+                  "h09": {
+                    "type": "long"
+                  },
+                  "h10": {
+                    "type": "long"
+                  },
+                  "h11": {
+                    "type": "long"
+                  },
+                  "h12": {
+                    "type": "long"
+                  },
+                  "h13": {
+                    "type": "long"
+                  },
+                  "h14": {
+                    "type": "long"
+                  },
+                  "h15": {
+                    "type": "long"
+                  },
+                  "h16": {
+                    "type": "long"
+                  },
+                  "h17": {
+                    "type": "long"
+                  },
+                  "h18": {
+                    "type": "long"
+                  },
+                  "h19": {
+                    "type": "long"
+                  },
+                  "h20": {
+                    "type": "long"
+                  },
+                  "h21": {
+                    "type": "long"
+                  },
+                  "h22": {
+                    "type": "long"
+                  }
+                }
+              }
+            }
+          },
+          "contributor_count": {
+            "type": "long"
+          },
           "contributor_git_ids": {
             "type": "text",
             "fields": {
@@ -123,11 +446,91 @@
             },
             "analyzer": "lowercase"
           },
+          "contributors": {
+            "properties": {
+              "git_id": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256,
+                    "normalizer": "lowercase"
+                  }
+                }
+              },
+              "last_commit_date": {
+                "type": "date"
+              },
+              "last_commit_epoch": {
+                "type": "long"
+              },
+              "last_commit_sha1": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                  }
+                }
+              },
+              "name_email_pairs": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256,
+                    "normalizer": "lowercase"
+                  }
+                }
+              }
+            }
+          },
           "date_head": {
             "type": "date"
           },
           "date_init": {
             "type": "date"
+          },
+          "file_types": {
+            "properties": {
+              "c": {
+                "type": "long"
+              },
+              "k": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256,
+                    "normalizer": "lowercase"
+                  }
+                }
+              }
+            }
+          },
+          "first_contributor_commit_date_epoch": {
+            "type": "long"
+          },
+          "first_contributor_commit_date_iso": {
+            "type": "date"
+          },
+          "first_contributor_commit_sha1": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "gh_validation_id": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
           },
           "git_ids_included": {
             "type": "text",
@@ -140,8 +543,38 @@
             },
             "analyzer": "lowercase"
           },
+          "github_repo_name": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            }
+          },
+          "github_user_name": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            }
+          },
           "is_single_commit": {
             "type": "boolean"
+          },
+          "last_commit_author": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            }
           },
           "last_contributor_commit_date_epoch": {
             "type": "long"
@@ -150,6 +583,21 @@
             "type": "date"
           },
           "last_contributor_commit_sha1": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "libs_project": {
+            "type": "long"
+          },
+          "loc_project": {
+            "type": "long"
+          },
+          "log_hash": {
             "type": "text",
             "fields": {
               "keyword": {
@@ -189,9 +637,38 @@
             "type": "object",
             "enabled": false
           },
+          "public_contact": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            }
+          },
+          "public_name": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            }
+          },
           "recent_project_commits": {
             "type": "object",
             "enabled": false
+          },
+          "report_commit_sha1": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
           },
           "report_id": {
             "type": "text",
@@ -199,6 +676,16 @@
               "keyword": {
                 "type": "keyword",
                 "ignore_above": 256
+              }
+            }
+          },
+          "report_s3_name": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
               }
             }
           },
@@ -374,6 +861,16 @@
           "timestamp": {
             "type": "date"
           },
+          "tree_files": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            }
+          },
           "unknown_file_types": {
             "properties": {
               "c": {
@@ -394,6 +891,16 @@
       },
       "twitter_username": {
         "type": "text"
+      },
+      "type": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        }
       },
       "updated_at": {
         "type": "date"
