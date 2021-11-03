@@ -300,10 +300,10 @@
         {% endif %}
         {% endfor %}
 
-        {% if user.report.unknown_file_types %}
-        <h3 class="mt-4">Other files</h3>
+        {% if user.report.file_types %}
+        <h3 class="mt-4">File types</h3>
         <ul class="list-inline">
-          {% for ftype in user.report.unknown_file_types | sort(attribute="c") | reverse %}
+          {% for ftype in user.report.file_types | sort(attribute="k") %}
           <li class="list-inline-item bg-light text-dark py-0 ps-1 rounded mb-2 border">{{ftype.k}}
             <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{ftype.c}}</span>
           </li>
