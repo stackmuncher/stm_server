@@ -7,7 +7,7 @@
   {% include "includes/top-nav.html" %}
   <div class="container-fluid">
     <div class="col-12">
-      <h3 class="mt-5">DEV queue metrics</h3>
+      <h3 class="mt-5">Developer processing metrics</h3>
       <div class="table-responsive">
         <table class="table mt-4">
           <thead>
@@ -31,10 +31,10 @@
               <th title="In flight with max number failed report generation attempts" scope="col" class="text-end">stuck on report</th>
               <th title="Successful reports generated" scope="col" class="text-end">OK reports, last 10m</th>
               <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed reports, last 10m</th>
-              <th title="Successful reports generated" scope="col" class="text-end">OK dev reports, last 1hr</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK reports, last 1hr</th>
               <th title="Abandoned reports (failures > max)" scope="col" class="text-end">failed reports, last 1hr</th>
               <th title="Successful reports generated" scope="col" class="text-end">OK reports, last 24hr</th>
-              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed dev reports, last 24hr</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed reports, last 24hr</th>
               <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">gen time, last 10m</th>
               <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">gen time, last 1hr</th>
               <th title="Average time for report generation from the moment the dev was sync'd, in seconds" scope="col" class="text-end">sync to report, last 10m</th>
@@ -81,7 +81,7 @@
         </table>
       </div>
 
-      <h3 class="mt-5">REPO queue metrics</h3>
+      <h3 class="mt-5">Repository processing metrics</h3>
       <div class="table-responsive">
         <table class="table mt-4">
           <thead>
@@ -143,6 +143,79 @@
               <td class="text-end">{% if stat.r_r1hr %}{{stat.r_r1hr | round(method="ceil", precision=1)}}{% endif %}</td>
               <td class="text-end">{% if stat.r_s2r10m %}{{stat.r_s2r10m | round(method="ceil")}}{% endif %}</td>
               <td class="text-end">{% if stat.r_s2r1hr %}{{stat.r_s2r1hr | round(method="ceil")}}{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+
+      <h3 class="mt-5">Contributor metrics</h3>
+      <div class="table-responsive">
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th title="" scope="col" class="text-start">Timestamp</th>
+              <th title="" scope="col" class="text-end">EPOCH</th>
+              <th title="Total number of contributor IDs that look like a legit email" scope="col" class="text-end">Contributors</th>
+              <th title="Contributors mapped to a GH account" scope="col" class="text-end">Mapped</th>
+              <th title="Contributors that didn't map to any GH a/c" scope="col" class="text-end">Orphaned</th>
+              <th title="Contributors to be mapped to a GH a/c" scope="col" class="text-end">To be mapped</th>
+
+              <th title="Contributors added in the last 10 minutes" scope="col" class="text-end">Added, last 10m</th>
+              <th title="Contributors added in the last hour" scope="col" class="text-end">Added, last 1hr</th>
+              <th title="Contributors added in the last 24 hours" scope="col" class="text-end">Added, last 24hr</th>
+
+              <th title="Contributors mapped in the last 10 minutes" scope="col" class="text-end">Mapped, last 10m</th>
+              <th title="Contributors mapped in the last hour" scope="col" class="text-end">Mapped, last 1hr</th>
+              <th title="Contributors mapped in the last 24 hours" scope="col" class="text-end">Mapped, last 24hr</th>
+
+              <th title="Contributors with at least some commits made this year" scope="col" class="text-end">This year commits</th>
+              <th title="Contributors with at least some commits made last year" scope="col" class="text-end">Last year commits</th>
+              <th title="Contributors with no commits made this or last year" scope="col" class="text-end">Older commits</th>
+
+              <th title="Contributors with at least some commits made this year, added in the last 10 minutes" scope="col" class="text-end">This year commits, last 10m</th>
+              <th title="Contributors with at least some commits made last year, added in the last 10 minutes" scope="col" class="text-end">Last year commits, last 10m</th>
+              <th title="Contributors with no commits made this or last year, added in the last 10 minutes" scope="col" class="text-end">Older commits, last 10m</th>
+
+              <th title="Contributors with at least some commits made this year, added in the last hour" scope="col" class="text-end">This year commits, last 1hr</th>
+              <th title="Contributors with at least some commits made last year, added in the last hour" scope="col" class="text-end">Last year commits, last 1hr</th>
+              <th title="Contributors with no commits made this or last year, added in the last hour" scope="col" class="text-end">Older commits, last 1hr</th>
+
+              <th title="Contributors with at least some commits made this year, added in the last 24 hours" scope="col" class="text-end">This year commits, last 24hr</th>
+              <th title="Contributors with at least some commits made last year, added in the last 24 hours" scope="col" class="text-end">Last year commits, last 24hr</th>
+              <th title="Contributors with no commits made this or last year, added in the last 24 hours" scope="col" class="text-end">Older commits, last 24hr</th>
+            </tr>
+          </thead>
+          {% if stats_jobs.stm_stats_contributor_counts.hits.hits %}
+          <tbody>
+            {% for hit in stats_jobs.stm_stats_contributor_counts.hits.hits %}
+            {% set stat = hit._source.stm_stats_contributor_counts %}
+            <tr>
+              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td class="text-end">{{stat.ts}}</td>
+              <td class="text-end">{{stat.contributors_total | default(value="")}}</td>
+              <td class="text-end">{{stat.mapped_to_gh_login | default(value="")}}</td>
+              <td class="text-end">{{stat.confirmed_no_gh_login | default(value="")}}</td>
+              <td class="text-end">{{stat.to_be_mapped | default(value="")}}</td>
+              <td class="text-end">{{stat.added_10m | default(value="")}}</td>
+              <td class="text-end">{{stat.added_1hr | default(value="")}}</td>
+              <td class="text-end">{{stat.added_24hr | default(value="")}}</td>
+              <td class="text-end">{{stat.confirmed_10m | default(value="")}}</td>
+              <td class="text-end">{{stat.confirmed_1hr | default(value="")}}</td>
+              <td class="text-end">{{stat.confirmed_24hr | default(value="")}}</td>
+              <td class="text-end">{{stat.this_year_commits | default(value="")}}</td>
+              <td class="text-end">{{stat.last_year_commits | default(value="")}}</td>
+              <td class="text-end">{{stat.older_commits | default(value="")}}</td>
+              <td class="text-end">{{stat.this_year_commits_10m | default(value="")}}</td>
+              <td class="text-end">{{stat.last_year_commits_10m | default(value="")}}</td>
+              <td class="text-end">{{stat.older_commits_10m | default(value="")}}</td>
+              <td class="text-end">{{stat.this_year_commits_1hr | default(value="")}}</td>
+              <td class="text-end">{{stat.last_year_commits_1hr | default(value="")}}</td>
+              <td class="text-end">{{stat.older_commits_1hr | default(value="")}}</td>
+              <td class="text-end">{{stat.this_year_commits_24hr | default(value="")}}</td>
+              <td class="text-end">{{stat.last_year_commits_24hr | default(value="")}}</td>
+              <td class="text-end">{{stat.older_commits_24hr | default(value="")}}</td>
             </tr>
             {% endfor %}
           </tbody>
