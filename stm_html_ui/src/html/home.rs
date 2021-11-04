@@ -142,10 +142,16 @@ fn extract_keywords(engineer_list: &Value) -> Vec<RelatedKeywords> {
         })
         .collect();
 
+    info!("Dev keywords extracted: {}", ref_kws.len());
+
+    // limit the number of keywords
+    // they arrive in random order from ES and can be truncated at this point
+    if ref_kws.len() > 500 {
+        ref_kws = ref_kws.into_iter().take(500).collect();
+    }
+
     // sort by keyword, case-insensitive
     ref_kws.sort_by(|a, b| a.k.to_lowercase().cmp(&b.k.to_lowercase()));
-
-    info!("Dev keywords extracted");
 
     ref_kws
 }
