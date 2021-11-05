@@ -4,10 +4,24 @@
 {% include "includes/head.html" %}
 
 <body>
-  {% include "includes/top-nav.html" %}
+  <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3 px-3">
+    <div class="container-fluid">
+      <a class="navbar-brand" title="Home" style="background: left/contain no-repeat url(https://stackmuncher.com/about/logo/logo-bw.svg); padding-left: 50px;" href="/">Stack Muncher</a>
+      <div class="collapse navbar-collapse show" id="navbarSupportedContent">
+        <div class="navbar-nav ms-md-5 me-auto">
+          <ul class="nav justify-content-center">
+            <li class="nav-item">
+              <a class="nav-link px-2 active" href="/_stats"><strong>Status Page</strong></a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
   <div class="container-fluid">
     <div class="col-12">
       <h3 class="mt-5">Developer processing metrics</h3>
+      <p class="text-muted"><small>Developer profiles are compiled from individual Git repo reports, including GitHub public repos and and reports submitted by <a href="https://github.com/stackmuncher/stm_app" title="A local client for generating software developer profiles from private repositories">STM app</a> running on dev's machines.</small></p>
       <div class="table-responsive">
         <table class="table mt-4">
           <thead>
@@ -47,7 +61,7 @@
             {% set stat = hit._source.stm_stats_dev_job_counts %}
 
             <tr>
-              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
               <td class="text-end">{{stat.devs_total}}</td>
               <td title="{{stat.w_report / stat.devs_total * 100 | round}}%" class="text-end">{{stat.w_report}}</td>
@@ -82,6 +96,7 @@
       </div>
 
       <h3 class="mt-5">Repository processing metrics</h3>
+      <p class="text-muted"><small>Only public repos from GitHub are directly processed by STM. Private repos are processed by <a href="https://github.com/stackmuncher/stm_app" title="A local client for generating software developer profiles from private repositories">STM app</a> on dev's machines and are not included in this table.</small></p>
       <div class="table-responsive">
         <table class="table mt-4">
           <thead>
@@ -118,7 +133,7 @@
             {% for hit in stats_jobs.stm_stats_repo_job_counts.hits.hits %}
             {% set stat = hit._source.stm_stats_repo_job_counts %}
             <tr>
-              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
               <td class="text-end">{{stat.repos_total}}</td>
               <td title="{{stat.w_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.w_report}}</td>
@@ -151,6 +166,7 @@
       </div>
 
       <h3 class="mt-5">Contributor metrics</h3>
+      <p class="text-muted"><small>A contributor is identified by name and email in Git repos. STM attempts to match them to GitHub accounts for better attribution.</small></p>
       <div class="table-responsive">
         <table class="table mt-4">
           <thead>
@@ -192,7 +208,7 @@
             {% for hit in stats_jobs.stm_stats_contributor_counts.hits.hits %}
             {% set stat = hit._source.stm_stats_contributor_counts %}
             <tr>
-              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
               <td class="text-end">{{stat.contributors_total | default(value="")}}</td>
               <td class="text-end">{{stat.mapped_to_gh_login | default(value="")}}</td>
@@ -224,6 +240,7 @@
       </div>
 
       <h3 class="mt-5">Report failures</h3>
+      <p class="text-muted"><small>STM automatically re-runs failed repo and developer profiles.</small></p>
       <div class="table-responsive">
         <table class="table mt-4">
           <thead>
@@ -240,7 +257,7 @@
             {% for hit in stats_jobs.stm_stats_report_fail_counts.hits.hits %}
             {% set stat = hit._source.stm_stats_report_fail_counts %}
             <tr>
-              <td scope="row"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
               <td class="text-end">{{stat.report_fail_counter}}</td>
               <td class="text-end">{{stat.repos}}</td>
