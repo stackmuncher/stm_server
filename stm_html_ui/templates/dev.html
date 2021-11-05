@@ -204,7 +204,7 @@
           {% for proj in user.report.projects_included %}
           {% if proj.loc > 0 %}
           <li class="pe-4 mb-4 .text-nowrap list-inline-item">
-            <div class="card" style="width: 23rem;">
+            <div class="card" style="width: 21rem;">
               <div class="card-body">
                 <h6 class="card-title">
                   <a {% if proj.github_user_name %} href="https://github.com/{{proj.github_user_name}}/{{proj.project_name}}" {% elif user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% elif proj.project_id %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. View the details.">
