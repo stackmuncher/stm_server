@@ -2,9 +2,10 @@ use crate::config::{validate_owner_id, Config};
 use crate::{elastic, search_log::SearchLog};
 use chrono::Utc;
 use html_data::{HtmlData, KeywordMetadata};
+use regex::Regex;
 use rusoto_core::credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
 use std::collections::HashMap;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 mod dev_profile;
 mod gh_login_profile;
@@ -44,6 +45,8 @@ pub(crate) async fn html(
         stats_jobs: None,
         headers,
         timestamp: Utc::now(),
+        availability_tz: None,
+        availability_tz_hrs: None,
     };
 
     // return 404 for requests that are too long or for some resource related to the static pages
@@ -105,6 +108,10 @@ pub(crate) async fn html(
 
     // is there something in the query string?
     if url_query.len() > 1 {
+        // extract the timezone part from the query
+        let (url_query, tz_hours, tz_offset) =
+            extract_timezone_part_from_query(url_query, &config.timezone_terms_regex);
+
         // split the query into parts using a few common separators
         let search_terms = config
             .search_terms_regex
@@ -239,17 +246,34 @@ pub(crate) async fn html(
             }
         }
 
+        // prepare timezone availability data
+        let (availability_tz, availability_tz_hrs) = if tz_hours > 0 {
+            if tz_offset > 14 {
+                (Some(["UTC-0", (24 - tz_offset).to_string().as_str()].concat()), Some(tz_hours))
+            } else if tz_offset > 12 {
+                (Some(["UTC-", (24 - tz_offset).to_string().as_str()].concat()), Some(tz_hours))
+            } else if tz_offset > 9 {
+                (Some(["UTC+", tz_offset.to_string().as_str()].concat()), Some(tz_hours))
+            } else {
+                (Some(["UTC+0", tz_offset.to_string().as_str()].concat()), Some(tz_hours))
+            }
+        } else {
+            (None, None)
+        };
+
         // update keyword metadata for the output
         // they should be sorted in the same order as the search terms, which were
         // sorted earlier
         // the sort order has to be enforced for URL consistency
         let html_data = HtmlData {
             keywords_meta,
+            availability_tz,
+            availability_tz_hrs,
             ..html_data
         };
 
         // run a keyword search for devs
-        let html_data = keyword::html(config, keywords, langs, html_data).await?;
+        let html_data = keyword::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?;
 
         // log the search query and its results in ES
         if !html_data.raw_search.is_empty() {
@@ -277,4 +301,165 @@ pub(crate) async fn html(
 
     // return the homepage if there is nothing else
     return Ok(home::html(config, html_data).await?);
+}
+
+/// Extracts the timezone part from the query and returns:
+/// * the query without the timezone part
+/// * hours in the timezone
+/// * hours of the timezone, +/-
+/// All values are validated and can be plugged directly into a query.
+fn extract_timezone_part_from_query(url_query: String, timezone_terms_regex: &Regex) -> (String, usize, usize) {
+    debug!("Extracting TZ part from: {}", url_query);
+    // is there any timezone info?
+    let captures = match timezone_terms_regex.captures(&url_query) {
+        Some(v) => v,
+        None => {
+            info!("No TZ part - no captures");
+            return (url_query, 0, 0);
+        }
+    };
+
+    // remove the tz info from the query
+    let full_match = match captures.get(0) {
+        Some(v) => v.as_str(),
+        None => {
+            info!("No TZ part - empty capture");
+            return (url_query, 0, 0);
+        }
+    };
+
+    debug!("Full TZ part: {}, captures: {}, new url_query: {}", full_match, captures.len(), url_query);
+
+    // get the required number of hours
+    let hours = match captures.get(1) {
+        Some(v) => v.as_str(),
+        None => {
+            info!("No TZ part - no hrs");
+            return (url_query, 0, 0);
+        }
+    };
+    // validate the hours
+    let hours = match usize::from_str_radix(hours, 10) {
+        Ok(v) if v > 0 && v <= 24 => v,
+        _ => {
+            debug!("No TZ part - invalid hrs");
+            return (url_query, 0, 0);
+        }
+    };
+
+    // remote the UTC part from the query
+    let updated_url_query = url_query.replace(full_match, " ");
+
+    // get the timezone
+    let tz = match captures.get(2) {
+        Some(v) => v.as_str(),
+        None => {
+            // no UTC offset was specified, e.g. 4UTC
+            debug!("TZ part: {}hrs, 0 offset", hours);
+            return (updated_url_query, hours, 0);
+        }
+    };
+    // validate the tz
+    let tz = match i32::from_str_radix(tz, 10) {
+        Ok(v) if v >= 0 && v <= 12 => v as usize,
+        Ok(v) if v >= -12 && v < 0 => (24 + v) as usize,
+        _ => {
+            // almost there, but the TZ offset is invalid, so the entire TZ search is ignored
+            debug!("No TZ part - invalid hrs");
+            return (url_query, 0, 0);
+        }
+    };
+
+    // all parts were collected and validated
+    info!("TZ part: {}hrs, h{} offset", hours, tz);
+    (updated_url_query, hours, tz)
+}
+
+#[test]
+fn extract_timezone_part_from_query_test() {
+    let config = Config::new();
+    let rgx = config.timezone_terms_regex;
+
+    let vals = vec![
+        // positive offset
+        ("5utc+03", 5usize, 3usize, " "),
+        ("5utc+03 ", 5, 3, " "),
+        (" 5utc+03", 5, 3, " "),
+        (" 5utc+03 ", 5, 3, " "),
+        ("rust 5utc+03", 5, 3, "rust "),
+        ("5utc+03 rust", 5, 3, " rust"),
+        ("rust 5utc+03 serde", 5, 3, "rust serde"),
+        ("5utc+03a", 0, 0, "5utc+03a"),
+        ("a5utc+03", 0, 0, "a5utc+03"),
+        ("a5utc+03a", 0, 0, "a5utc+03a"),
+        ("5utc+", 0, 0, "5utc+"),
+        ("5utc+a", 0, 0, "5utc+a"),
+        ("5utc+ ", 0, 0, "5utc+ "),
+        ("5utc- ", 0, 0, "5utc- "),
+        // negative offset
+        ("5utc-03", 5, 21, " "),
+        ("5utc-03 ", 5, 21, " "),
+        (" 5utc-03", 5, 21, " "),
+        (" 5utc-03 ", 5, 21, " "),
+        ("rust 5utc-03", 5, 21, "rust "),
+        ("5utc-03 rust", 5, 21, " rust"),
+        ("rust 5utc-03 serde", 5, 21, "rust serde"),
+        ("5utc-03a", 0, 0, "5utc-03a"),
+        ("a5utc-03", 0, 0, "a5utc-03"),
+        ("a5utc-03a", 0, 0, "a5utc-03a"),
+        // no offset
+        ("5utc", 5, 0, " "),
+        ("5utc ", 5, 0, " "),
+        (" 5utc", 5, 0, " "),
+        (" 5utc ", 5, 0, " "),
+        ("rust 5utc", 5, 0, "rust "),
+        ("5utc rust", 5, 0, " rust"),
+        ("rust 5utc serde", 5, 0, "rust serde"),
+        ("rust 5utc+0 serde", 5, 0, "rust serde"),
+        ("rust 5utc-0 serde", 5, 0, "rust serde"),
+        ("rust 5utc+00 serde", 5, 0, "rust serde"),
+        ("rust 5utc-00 serde", 5, 0, "rust serde"),
+        ("5utca", 0, 0, "5utca"),
+        ("a5utc", 0, 0, "a5utc"),
+        ("a5utca", 0, 0, "a5utca"),
+        // one tz digit
+        ("5utc+3", 5, 3, " "),
+        ("5utc+3 ", 5, 3, " "),
+        (" 5utc+3", 5, 3, " "),
+        (" 5utc+3 ", 5, 3, " "),
+        ("rust 5utc+3", 5, 3, "rust "),
+        ("5utc+3 rust", 5, 3, " rust"),
+        ("rust 5utc+3 serde", 5, 3, "rust serde"),
+        ("5utc+3a", 0, 0, "5utc+3a"),
+        ("a5utc+3", 0, 0, "a5utc+3"),
+        ("a5utc+3a", 0, 0, "a5utc+3a"),
+        // UPPER-CASE
+        ("5UTC+3", 5, 3, " "),
+        // no match
+        ("rust 5utc-x serde", 0, 0, "rust 5utc-x serde"),
+        ("rust utc-5 serde", 0, 0, "rust utc-5 serde"),
+        ("-5utc-3", 0, 0, "-5utc-3"),
+        ("100utc+03", 0, 0, "100utc+03"),
+        ("5utc-300", 0, 0, "5utc-300"),
+        // hours bounds
+        ("0utc+03", 0, 0, "0utc+03"),
+        ("5utc+03", 5, 3, " "),
+        ("20utc+03", 20, 3, " "),
+        ("24utc+03", 24, 3, " "),
+        ("25utc+03", 0, 0, "25utc+03"),
+        ("10utc-11", 10, 13, " "),
+        ("10utc-1", 10, 23, " "),
+        ("10utc-12", 10, 12, " "),
+        ("10utc-13", 0, 0, "10utc-13"),
+        ("10utc+1", 10, 1, " "),
+        ("10utc+12", 10, 12, " "),
+        ("10utc+13", 0, 0, "10utc+13"),
+    ];
+
+    for val in vals {
+        let res = extract_timezone_part_from_query(val.0.to_string(), &rgx);
+        assert_eq!(val.1, res.1, "`{}`", val.0);
+        assert_eq!(val.2, res.2, "`{}`", val.0);
+        assert_eq!(val.3, &res.0, "`{}`", val.0);
+    }
 }

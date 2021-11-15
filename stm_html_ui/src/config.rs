@@ -23,10 +23,15 @@ pub struct Config {
     pub no_sql_string_invalidation_regex: Regex,
     /// Extracts individual search terms from the raw search string
     pub search_terms_regex: Regex,
+    /// Extracts required working hours and the timezone from the search string
+    /// E.g. 5utc+00, 5utc-0, 5utc, 5utc+03, 5utc-03
+    /// * Capture group 1: hours in the timezone
+    /// * Capture group 2: timezone, can be blank for UTC
+    pub timezone_terms_regex: Regex,
 }
 
 /// A regex formula to extract search terms from the raw search string.
-/// ### MAY BE USED INSIDE ANOTHER REGEX
+/// #### The extracted string is safe to be used inside another regex
 /// The value validated by this string should not contain any chars that may be unsafe inside another regex.
 /// Any such chars should be escape when that regex is constructed.
 const SEARCH_TERM_REGEX: &str = r#"[#\-._+0-9a-zA-Z]+"#;
@@ -58,6 +63,8 @@ impl Config {
             no_sql_string_invalidation_regex: Regex::new(NO_SQL_STRING_INVALIDATION_REGEX)
                 .expect("Failed to compile no_sql_string_value_regex"),
             search_terms_regex: Regex::new(SEARCH_TERM_REGEX).expect("Failed to compile search_terms_regex"),
+            timezone_terms_regex: Regex::new(r#"(?i)(?:[[:space:]]|^)(\d{1,2})utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#)
+                .expect("Failed to compile timezone_terms_regex"),
         }
     }
 }
@@ -79,5 +86,79 @@ pub(crate) fn validate_owner_id(owner_id: &str) -> bool {
                 false
             }
         }
+    }
+}
+
+/// This test is more for debugging the regex. It didn't work as expected and does not match the results shown in
+/// https://2fd.github.io/rust-regex-playground/, probably due to different crate versions.
+#[test]
+fn timezone_terms_regex() {
+    let config = Config::new();
+    let rgx = config.timezone_terms_regex;
+
+    println!("Test");
+
+    let vals = vec![
+        ("5utc+03", "5utc+03"),
+        ("5utc+03 ", "5utc+03 "),
+        (" 5utc+03", " 5utc+03"),
+        (" 5utc+03 ", " 5utc+03 "),
+        ("rust 5utc+03", " 5utc+03"),
+        ("5utc+03 rust", "5utc+03 "),
+        ("rust 5utc+03 rust", " 5utc+03 "),
+        ("5utc+03a", ""),
+        ("a5utc+03", ""),
+        ("a5utc+03a", ""),
+        ("5utc+", ""),
+        ("5utc+a", ""),
+        ("5utc+ ", ""),
+        ("5utc- ", ""),
+        // negative
+        ("5utc-03", "5utc-03"),
+        ("5utc-03 ", "5utc-03 "),
+        (" 5utc-03", " 5utc-03"),
+        (" 5utc-03 ", " 5utc-03 "),
+        ("rust 5utc-03", " 5utc-03"),
+        ("5utc-03 rust", "5utc-03 "),
+        ("rust 5utc-03 rust", " 5utc-03 "),
+        ("5utc-03a", ""),
+        ("a5utc-03", ""),
+        ("a5utc-03a", ""),
+        // none
+        ("5utc", "5utc"),
+        ("5utc ", "5utc "),
+        (" 5utc", " 5utc"),
+        (" 5utc ", " 5utc "),
+        ("rust 5utc", " 5utc"),
+        ("5utc rust", "5utc "),
+        ("rust 5utc rust", " 5utc "),
+        ("5utca", ""),
+        ("a5utc", ""),
+        ("a5utca", ""),
+        // one
+        ("5utc+3", "5utc+3"),
+        ("5utc+3 ", "5utc+3 "),
+        (" 5utc+3", " 5utc+3"),
+        (" 5utc+3 ", " 5utc+3 "),
+        ("rust 5utc+3", " 5utc+3"),
+        ("5utc+3 rust", "5utc+3 "),
+        ("rust 5utc+3 rust", " 5utc+3 "),
+        ("5utc+3a", ""),
+        ("a5utc+3", ""),
+        ("a5utc+3a", ""),
+    ];
+
+    for val in vals {
+        println!("---------------------");
+        println!("`{}` / `{}`", val.0, val.1);
+        if let Some(captures) = rgx.captures(val.0) {
+            if let Some(full_match) = captures.get(0) {
+                println!("#{}, 0: {}", captures.len(), full_match.as_str());
+                assert_eq!(full_match.as_str(), val.1);
+                continue;
+            };
+        };
+
+        assert_eq!(val.1, "");
     }
 }

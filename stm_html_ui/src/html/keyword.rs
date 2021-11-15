@@ -3,11 +3,16 @@ use crate::config::Config;
 use crate::elastic;
 use tracing::info;
 
-/// Returns package names containing the keyword and engineers using them
+/// Returns package names containing the keyword and engineers using them.
+/// * timezone_offset: 0..23 where anything > 12 is the negative offset
+/// * timezone_hours: number of hours worked in the timezone
+/// The timezone part of the query is ignored if the hours are zero.
 pub(crate) async fn html(
     config: &Config,
     keywords: Vec<String>,
     langs: Vec<String>,
+    timezone_offset: usize,
+    timezone_hours: usize,
     html_data: HtmlData,
 ) -> Result<HtmlData, ()> {
     info!("Generating html-keyword");
@@ -35,6 +40,8 @@ pub(crate) async fn html(
         &config.dev_idx,
         keywords.clone(),
         langs.clone(),
+        timezone_offset,
+        timezone_hours,
         &config.no_sql_string_invalidation_regex,
     )
     .await?;

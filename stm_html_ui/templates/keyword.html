@@ -34,6 +34,10 @@
           </small>
         </h1>
 
+        {% if availability_tz and availability_tz_hrs %}
+        <h6 class="mt-4"><strong>Minimum <a href="https://en.wikipedia.org/wiki/{{availability_tz}}:00" title="Minimum hours developers are available in this timezone. Calculated from their recent commit time.">{{ availability_tz }}</a> availability: </strong>{{ availability_tz_hrs }}hrs</h6>
+        {% endif %}
+
         {% if unknown_terms | length > 0 or ignored_terms | length > 0 %}
         <p>We excluded some keywords from this search:</p>
         <ul class="mt-3 ps-3">

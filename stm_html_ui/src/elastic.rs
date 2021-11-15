@@ -146,11 +146,15 @@ pub(crate) async fn matching_doc_counts(
 
 /// Returns up to 24 matching docs from DEV idx depending on the params. The query is built to match the list of params.
 /// Lang and KW params are checked for No-SQL injection.
+/// * timezone_offset: 0..23 where anything > 12 is the negative offset
+/// * timezone_hours: number of hours worked in the timezone
 pub(crate) async fn matching_devs(
     es_url: &String,
     dev_idx: &String,
     keywords: Vec<String>,
     langs: Vec<String>,
+    timezone_offset: usize,
+    timezone_hours: usize,
     no_sql_string_invalidation_regex: &Regex,
 ) -> Result<Value, ()> {
     // sample query
@@ -190,6 +194,28 @@ pub(crate) async fn matching_devs(
 
         // using multimatch because different techs have keywords in different places
         let clause = [r#"{"multi_match":{"query":""#, &keyword, qual_unqual_clause].concat();
+
+        must_clauses.push(clause);
+    }
+
+    // add timezone part
+    if timezone_hours > 0 && timezone_hours <= 24 {
+        let timezone_offset = if timezone_offset > 9 {
+            ["h", &timezone_offset.to_string()].concat()
+        } else {
+            ["h0", &timezone_offset.to_string()].concat()
+        };
+
+        let clause = [
+            r#"{"range":{"report.commit_time_histo.timezone_overlap_recent."#,
+            &timezone_offset,
+            r#"": {"gte": "#,
+            &timezone_hours.to_string(),
+            "}}}",
+        ]
+        .concat();
+
+        error!("TZ clause: {}", clause);
 
         must_clauses.push(clause);
     }

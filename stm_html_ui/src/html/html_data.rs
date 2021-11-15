@@ -49,6 +49,12 @@ pub(crate) struct HtmlData {
     /// Timestamp when the request was initiated
     #[serde(skip)]
     pub timestamp: DateTime<Utc>,
+    /// Name of the timezone the availability is provided for, e.g. `UTC+08`
+    /// The value is taken from the query.
+    pub availability_tz: Option<String>,
+    /// Minimum number of hours of availability required in the specified timezone.
+    /// The value is taken from the query.
+    pub availability_tz_hrs: Option<usize>,
 }
 
 /// A view of the keyword from ElasticSearch

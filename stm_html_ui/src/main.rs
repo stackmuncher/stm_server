@@ -34,9 +34,7 @@ async fn main() -> Result<(), Error> {
 mod proxy {
     use lambda_runtime::Context;
     use rusoto_core::region::Region;
-    use rusoto_sqs::{
-        DeleteMessageRequest, ReceiveMessageRequest, SendMessageRequest, Sqs, SqsClient,
-    };
+    use rusoto_sqs::{DeleteMessageRequest, ReceiveMessageRequest, SendMessageRequest, Sqs, SqsClient};
     use serde::Deserialize;
     use serde_json::Value;
     use tracing::info;
@@ -78,10 +76,7 @@ mod proxy {
                 .receive_message(ReceiveMessageRequest {
                     max_number_of_messages: Some(1),
                     queue_url: std::env::var(REQUEST_QUEUE_URL_ENV)
-                        .expect(&format!(
-                            "Missing {} env var with the SQS request queue URL",
-                            REQUEST_QUEUE_URL_ENV
-                        ))
+                        .expect(&format!("Missing {} env var with the SQS request queue URL", REQUEST_QUEUE_URL_ENV))
                         .trim()
                         .to_string(),
                     wait_time_seconds: Some(20),
@@ -109,8 +104,7 @@ mod proxy {
 
             // convert JSON encoded body into event + ctx structures as defined by Lambda Runtime
             let body = msgs[0].body.as_ref().expect("Failed to get message body");
-            let payload: RequestPayload =
-                serde_json::from_str(body).expect("Failed to deserialize msg body");
+            let payload: RequestPayload = serde_json::from_str(body).expect("Failed to deserialize msg body");
 
             return Ok((payload, receipt_handle));
         }
@@ -120,28 +114,29 @@ mod proxy {
     async fn send_output(response: Value, receipt_handle: String) -> Result<(), Error> {
         let client = SqsClient::new(AWS_REGION);
 
-        client
-            .send_message(SendMessageRequest {
-                message_body: response.to_string(),
-                queue_url: std::env::var(RESPONSE_QUEUE_URL_ENV)
-                    .expect(&format!(
-                        "Missing {} env var with the SQS response queue URL",
-                        RESPONSE_QUEUE_URL_ENV
-                    ))
-                    .trim()
-                    .to_string(),
-                ..Default::default()
-            })
-            .await?;
+        let response = response.to_string();
+
+        // SQS messages must be shorter than 262144 bytes
+        if response.len() < 262144 {
+            client
+                .send_message(SendMessageRequest {
+                    message_body: response,
+                    queue_url: std::env::var(RESPONSE_QUEUE_URL_ENV)
+                        .expect(&format!("Missing {} env var with the SQS response queue URL", RESPONSE_QUEUE_URL_ENV))
+                        .trim()
+                        .to_string(),
+                    ..Default::default()
+                })
+                .await?;
+        } else {
+            println!("Message size: {}B, max allowed: 262144B", response.len());
+        }
 
         // delete the request msg from the queue so it cannot be replayed again
         client
             .delete_message(DeleteMessageRequest {
                 queue_url: std::env::var(REQUEST_QUEUE_URL_ENV)
-                    .expect(&format!(
-                        "Missing {} env var with the SQS request queue URL",
-                        REQUEST_QUEUE_URL_ENV
-                    ))
+                    .expect(&format!("Missing {} env var with the SQS request queue URL", REQUEST_QUEUE_URL_ENV))
                     .trim()
                     .to_string(),
                 receipt_handle,
