@@ -9,6 +9,12 @@ use tracing::error;
 pub(crate) struct SearchLog {
     /// The raw search string as entered by the user
     pub raw: String,
+    /// Same as availability_tz in html_data
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub availability_tz: Option<String>,
+    /// Same as availability_tz_hrs in html_data
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub availability_tz_hrs: Option<usize>,
     /// List of keywords extracted from the raw search
     pub kw: Vec<String>,
     /// A list of search terms matching known languages
@@ -54,6 +60,8 @@ impl SearchLog {
             ip: source_ip,
             ts: html_data.timestamp.timestamp(),
             dur: Utc::now().timestamp_millis() - html_data.timestamp.timestamp_millis(),
+            availability_tz: html_data.availability_tz.clone(),
+            availability_tz_hrs: html_data.availability_tz_hrs,
         };
 
         // get the list of dev logins from the ES response
