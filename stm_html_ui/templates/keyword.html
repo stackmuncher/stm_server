@@ -39,8 +39,8 @@
         {% endif %}
 
         {% if unknown_terms | length > 0 or ignored_terms | length > 0 %}
-        <p>We excluded some keywords from this search:</p>
-        <ul class="mt-3 ps-3">
+        <h6><strong>Excluded keywords:</strong></h6>
+        <ul class="ps-3">
           {% if unknown_terms | length > 0 %}
           <li class="mb-1">
             {% for kw in unknown_terms %}
