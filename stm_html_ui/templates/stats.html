@@ -177,6 +177,7 @@
               <th title="Contributors mapped to a GH account" scope="col" class="text-end">Mapped</th>
               <th title="Contributors that didn't map to any GH a/c" scope="col" class="text-end">Orphaned</th>
               <th title="Contributors to be mapped to a GH a/c" scope="col" class="text-end">To be mapped</th>
+              <th title="Failed, but should be manually reviewed and retried" scope="col" class="text-end">Failed</th>
 
               <th title="Contributors added in the last 10 minutes" scope="col" class="text-end">Added, last 10m</th>
               <th title="Contributors added in the last hour" scope="col" class="text-end">Added, last 1hr</th>
@@ -214,6 +215,7 @@
               <td class="text-end">{{stat.mapped_to_gh_login | default(value="")}}</td>
               <td class="text-end">{{stat.confirmed_no_gh_login | default(value="")}}</td>
               <td class="text-end">{{stat.to_be_mapped | default(value="")}}</td>
+              <td class="text-end">{{stat.retry_later | default(value="")}}</td>
               <td class="text-end">{{stat.added_10m | default(value="")}}</td>
               <td class="text-end">{{stat.added_1hr | default(value="")}}</td>
               <td class="text-end">{{stat.added_24hr | default(value="")}}</td>
