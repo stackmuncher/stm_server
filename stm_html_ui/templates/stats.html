@@ -35,6 +35,10 @@
               <th title="Tried to generate a report, failed many times, abandoned" scope="col" class="text-end">with abandoned reports</th>
               <th title="Have repos, but no report. The repos may or may not have a report." scope="col" class="text-end">with pending repo reports</th>
               <th title="All repos have reports, ready to generate dev report" scope="col" class="text-end">ready for dev report</th>
+
+              <th title="Devs with a mapped Git ID" scope="col" class="text-end">Mapped</th>
+              <th title="Devs without a mapped Git ID" scope="col" class="text-end">Unmapped</th>
+
               <th title="Not in flight and hasn't been sync'd" scope="col" class="text-end">pending sync</th>
               <th title="All unsync'd" scope="col" class="text-end">all unsynced</th>
               <th title="All in flight" scope="col" class="text-end">in flight</th>
@@ -69,7 +73,11 @@
               <td title="{{stat.synced_no_repos / stat.devs_total * 100 | round}}%" class="text-end">{{stat.synced_no_repos}}</td>
               <td title="{{stat.bad_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{stat.bad_report}}</td>
               <td title="{{stat.readying_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{stat.readying_report}}</td>
-              <td class="text-end">{% if stat.pending_report %}{{stat.pending_report}}{% endif %}</td>
+              <td title="{{stat.pending_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{% if stat.pending_report %}{{stat.pending_report}}{% endif %}</td>
+              
+              <td {% if stat.mapped %}title="{{stat.mapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{stat.mapped | default(value='')}}</td>
+              <td {% if stat.unmapped %}title="{{stat.unmapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{stat.unmapped | default(value='')}}</td>
+
               <td class="text-end">{% if stat.pending_sync %}{{stat.pending_sync}}{% endif %}</td>
               <td class="text-end">{% if stat.unsynced %}{{stat.unsynced}}{% endif %}</td>
               <td class="text-end">{% if stat.in_fl %}{{stat.in_fl}}{% endif %}</td>
