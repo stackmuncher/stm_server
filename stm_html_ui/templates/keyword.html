@@ -22,13 +22,11 @@
             Unknown keywords
             {% endif %}
             {% for kw in used_terms %}
-            <code>
-              {% if kw.es_language_count > 0 %}
-              <a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_language_count}} devs use this language. Click to explore related keywords.">{{kw.search_term}}</a>
-               {% else %}
-              <a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_keyword_count + kw.es_package_count}} devs match this keyword. Click to explore related keywords.">{{kw.search_term}}</a>
-              {% endif %}
-            </code>
+            {% if kw.es_language_count > 0 %}
+            <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_language_count}} devs use this language. Click to explore related keywords.">{{kw.search_term}}</a></code>
+            {% else %}
+            <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_keyword_count + kw.es_package_count}} devs match this keyword. Click to explore related keywords.">{{kw.search_term}}</a></code>
+            {% endif %}
             {% if not loop.last %}+{% endif %}
             {% endfor %}
           </small>
