@@ -63,7 +63,7 @@ impl Config {
             no_sql_string_invalidation_regex: Regex::new(NO_SQL_STRING_INVALIDATION_REGEX)
                 .expect("Failed to compile no_sql_string_value_regex"),
             search_terms_regex: Regex::new(SEARCH_TERM_REGEX).expect("Failed to compile search_terms_regex"),
-            timezone_terms_regex: Regex::new(r#"(?i)(?:[[:space:]]|^)(\d{1,2})utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#)
+            timezone_terms_regex: Regex::new(r#"(?i)(?:[[:space:]]|^)(\d{1,2})@?utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#)
                 .expect("Failed to compile timezone_terms_regex"),
         }
     }
@@ -113,7 +113,7 @@ fn timezone_terms_regex() {
         ("5utc+a", ""),
         ("5utc+ ", ""),
         ("5utc- ", ""),
-        // negative
+        // negative offset
         ("5utc-03", "5utc-03"),
         ("5utc-03 ", "5utc-03 "),
         (" 5utc-03", " 5utc-03"),
@@ -124,7 +124,7 @@ fn timezone_terms_regex() {
         ("5utc-03a", ""),
         ("a5utc-03", ""),
         ("a5utc-03a", ""),
-        // none
+        // no offset
         ("5utc", "5utc"),
         ("5utc ", "5utc "),
         (" 5utc", " 5utc"),
@@ -135,7 +135,7 @@ fn timezone_terms_regex() {
         ("5utca", ""),
         ("a5utc", ""),
         ("a5utca", ""),
-        // one
+        // positive offset
         ("5utc+3", "5utc+3"),
         ("5utc+3 ", "5utc+3 "),
         (" 5utc+3", " 5utc+3"),
@@ -146,6 +146,12 @@ fn timezone_terms_regex() {
         ("5utc+3a", ""),
         ("a5utc+3", ""),
         ("a5utc+3a", ""),
+        // optional @
+        ("5@utc+3", "5@utc+3"),
+        ("5@@utc+3", ""),
+        ("@5utc+3", ""),
+        // UPPER-CASE
+        ("5UTC+3", "5UTC+3"),
     ];
 
     for val in vals {
