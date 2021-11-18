@@ -19,8 +19,8 @@ pub(crate) struct HtmlData {
     pub keywords: Vec<String>,
     /// All search terms from the raw search with their counts from different fields in ES
     pub keywords_meta: Vec<KeywordMetadata>,
-    /// A list of search terms matching known languages
-    pub langs: Vec<String>,
+    /// A list of search terms matching known languages with minimum number of LoC per lang
+    pub langs: Vec<(String, usize)>,
     /// Same as `keywords` as a single string
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keywords_str: Option<String>,
@@ -62,6 +62,9 @@ pub(crate) struct HtmlData {
 pub(crate) struct KeywordMetadata {
     /// A normalized version of what the user searched for
     pub search_term: String,
+    /// Language terms can be qualified by min number of lines of code
+    /// E.g. `rust:2000`, which should be split into `rust` and `2000`
+    pub search_term_loc: usize,
     /// Number of developers using this keyword
     pub es_keyword_count: usize,
     /// Number of developers using this package

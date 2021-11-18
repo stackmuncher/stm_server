@@ -56,7 +56,7 @@ impl SearchLog {
             gh_logins: Vec::new(),
             raw: html_data.raw_search.clone(),
             kw: html_data.keywords.clone(),
-            lang: html_data.langs.clone(),
+            lang: html_data.langs.iter().map(|(l, _)| l.clone()).collect::<Vec<String>>(),
             ip: source_ip,
             ts: html_data.timestamp.timestamp(),
             dur: Utc::now().timestamp_millis() - html_data.timestamp.timestamp_millis(),

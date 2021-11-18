@@ -146,13 +146,14 @@ pub(crate) async fn matching_doc_counts(
 
 /// Returns up to 24 matching docs from DEV idx depending on the params. The query is built to match the list of params.
 /// Lang and KW params are checked for No-SQL injection.
+/// * langs: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
 /// * timezone_offset: 0..23 where anything > 12 is the negative offset
 /// * timezone_hours: number of hours worked in the timezone
 pub(crate) async fn matching_devs(
     es_url: &String,
     dev_idx: &String,
     keywords: Vec<String>,
-    langs: Vec<String>,
+    langs: Vec<(String, usize)>,
     timezone_offset: usize,
     timezone_hours: usize,
     no_sql_string_invalidation_regex: &Regex,
@@ -166,13 +167,48 @@ pub(crate) async fn matching_devs(
     // build language clause
     for lang in langs {
         // validate field_value for possible no-sql injection
-        if no_sql_string_invalidation_regex.is_match(&lang) {
-            error!("Invalid lang: {}", lang);
+        if no_sql_string_invalidation_regex.is_match(&lang.0) {
+            error!("Invalid lang: {}", lang.0);
             return Err(());
         }
 
         // language clause is different from keywords clause
-        let clause = [r#"{"match":{"report.tech.language.keyword":""#, &lang, r#""}}"#].concat();
+        let clause = if lang.1 == 0 {
+            // a simple clause with no line counts
+            [r#"{"match":{"report.tech.language.keyword":""#, &lang.0, r#""}}"#].concat()
+        } else {
+            // LoC counts included in the query
+            [
+                r#"{
+                "nested": {
+                    "path": "report.tech",
+                    "query": {
+                      "bool": {
+                        "must": [
+                          {
+                            "match": {
+                              "report.tech.language.keyword": ""#,
+                &lang.0,
+                r#""
+                            }
+                          },
+                          {
+                            "range": {
+                              "report.tech.code_lines": {
+                                "gt": "#,
+                &lang.1.to_string(),
+                r#"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }"#,
+            ]
+            .concat().replace(" ", "")
+        };
 
         must_clauses.push(clause);
     }

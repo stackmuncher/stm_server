@@ -10,7 +10,7 @@ use tracing::info;
 pub(crate) async fn html(
     config: &Config,
     keywords: Vec<String>,
-    langs: Vec<String>,
+    langs: Vec<(String, usize)>,
     timezone_offset: usize,
     timezone_hours: usize,
     html_data: HtmlData,
@@ -49,7 +49,7 @@ pub(crate) async fn html(
     // pre-build search terms as a string for simplified presentation
     // it should present them all as a list, but for now it uses a simple string
     // languages come first
-    let mut combined_search_terms = langs.clone();
+    let mut combined_search_terms = langs.iter().map(|(l,_)|l.clone()).collect::<Vec<String>>();
     for kw in &keywords {
         combined_search_terms.push(kw.clone());
     }

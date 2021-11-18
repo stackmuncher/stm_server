@@ -17,6 +17,7 @@ mod stats;
 
 const MAX_NUMBER_OF_VALID_SEARCH_TERMS: usize = 4;
 const MAX_NUMBER_OF_SEARCH_TERMS_TO_CHECK: usize = 6;
+const MAX_NUMBER_OF_LOC_PER_SEARCH_TERM: usize = 100_000;
 
 /// Routes HTML requests to processing modules. Returns HTML response and TTL value in seconds.
 pub(crate) async fn html(
@@ -126,7 +127,7 @@ pub(crate) async fn html(
         let search_terms = search_terms;
 
         // will contain values that matches language names
-        let mut langs: Vec<String> = Vec::new();
+        let mut langs: Vec<(String, usize)> = Vec::new();
         // will contain the list of keywords to search for
         let mut keywords: Vec<String> = Vec::new();
         // every search term submitted by the user with the meta of how it was understood
@@ -150,13 +151,33 @@ pub(crate) async fn html(
                 continue;
             }
 
+            // extract LoC part / split into term and LoC
+            let search_term = match extract_loc_part_from_search_term(search_term.clone()) {
+                Some(v) => v,
+                None => {
+                    // this term is invalid and will be ignored
+                    keywords_meta.push(KeywordMetadata {
+                        search_term: search_term,
+                        search_term_loc: 0,
+                        es_keyword_count: 0,
+                        es_package_count: 0,
+                        es_language_count: 0,
+                        unknown: true,
+                        too_many: false,
+                    });
+
+                    continue;
+                }
+            };
+
             // limit the list of valid search terms to 4
             if search_term_idx >= MAX_NUMBER_OF_SEARCH_TERMS_TO_CHECK
                 || keywords.len() + langs.len() >= MAX_NUMBER_OF_VALID_SEARCH_TERMS
             {
                 // this term got no results and will be ignored
                 keywords_meta.push(KeywordMetadata {
-                    search_term: search_term,
+                    search_term: search_term.0,
+                    search_term_loc: search_term.1,
                     es_keyword_count: 0,
                     es_package_count: 0,
                     es_language_count: 0,
@@ -169,7 +190,7 @@ pub(crate) async fn html(
 
             // searching for a keyword is different from searching for a fully qualified package name
             // e.g. xml vs System.XML vs SomeVendor.XML
-            let (fields, can_be_lang) = if search_term.contains(".") {
+            let (fields, can_be_lang) = if search_term.0.contains(".") {
                 // this is a fully qualified name and cannot be a language
                 (vec!["report.tech.refs.k.keyword", "report.tech.pkgs.k.keyword"], false)
             } else {
@@ -190,39 +211,44 @@ pub(crate) async fn html(
                 &config.es_url,
                 &config.dev_idx,
                 fields,
-                &search_term,
+                &search_term.0,
                 &config.no_sql_string_invalidation_regex,
             )
             .await?;
-            info!("search_term {}: {:?}", search_term, counts);
+            info!("search_term {}/{}: {:?}", search_term.0, search_term.1, counts);
 
             if can_be_lang {
-                // there are 3 search results if it can be a language
+                // there should be 3 search results if it can be a language
+
+                // keyword counts may not be there is it's just the language
+                let es_keyword_count = counts.iter().skip(1).map(|v| v).sum::<usize>();
 
                 // store the metadata for this search term
                 keywords_meta.push(KeywordMetadata {
-                    search_term: search_term.clone(),
-                    es_keyword_count: counts[1] + counts[2],
+                    search_term: search_term.0.clone(),
+                    search_term_loc: search_term.1,
+                    es_keyword_count: es_keyword_count,
                     es_package_count: 0,
                     es_language_count: counts[0],
-                    unknown: (counts[0] + counts[1] + counts[2]) == 0,
+                    unknown: (counts[0] + es_keyword_count) == 0,
                     too_many: false,
                 });
 
                 // extract useful terms to be used in the search
                 // this may be a language
                 if counts[0] > 0 {
-                    langs.push(search_term);
-                } else if counts[1] > 0 || counts[2] > 0 {
+                    langs.push((search_term.0, search_term.1));
+                } else if es_keyword_count > 0 {
                     // add it to the list of keywords if there is still room
-                    keywords.push(search_term);
+                    keywords.push(search_term.0);
                 }
             } else if counts[0] > 0 || counts[1] > 0 {
                 // only 2 results if it looks like a package
 
                 // store the metadata for this search term
                 keywords_meta.push(KeywordMetadata {
-                    search_term: search_term.clone(),
+                    search_term: search_term.0.clone(),
+                    search_term_loc: search_term.1,
                     es_keyword_count: counts[0],
                     es_package_count: counts[1],
                     es_language_count: 0,
@@ -232,11 +258,12 @@ pub(crate) async fn html(
 
                 // .-notation, so can't be a language, but can be a keyword
                 // add it to the list of keywords if there is still room
-                keywords.push(search_term);
+                keywords.push(search_term.0);
             } else {
                 // this term got no results and will be ignored
                 keywords_meta.push(KeywordMetadata {
-                    search_term: search_term,
+                    search_term: search_term.0,
+                    search_term_loc: search_term.1,
                     es_keyword_count: 0,
                     es_package_count: 0,
                     es_language_count: 0,
@@ -301,6 +328,33 @@ pub(crate) async fn html(
 
     // return the homepage if there is nothing else
     return Ok(home::html(config, html_data).await?);
+}
+
+/// Extracts and validates the min number of lines included in the search as `rust:2000`.
+/// Returns None if the value is invalid.
+fn extract_loc_part_from_search_term(term: String) -> Option<(String, usize)> {
+    // return the term as-is if no loc was provided
+    if !term.contains(":") {
+        return Some((term, 0));
+    }
+
+    // split at the first :
+    if let Some((term, loc)) = term.split_once(":") {
+        if term.is_empty() {
+            // e.g. :1000
+            return None;
+        }
+        // try to convert into a number
+        if let Ok(loc) = usize::from_str_radix(loc, 10) {
+            // limit the max value
+            let loc = loc.min(MAX_NUMBER_OF_LOC_PER_SEARCH_TERM);
+
+            return Some((term.to_owned(), loc));
+        }
+    }
+
+    // it failed validation
+    None
 }
 
 /// Extracts the timezone part from the query and returns:

@@ -34,7 +34,7 @@ pub struct Config {
 /// #### The extracted string is safe to be used inside another regex
 /// The value validated by this string should not contain any chars that may be unsafe inside another regex.
 /// Any such chars should be escape when that regex is constructed.
-const SEARCH_TERM_REGEX: &str = r#"[#\-._+0-9a-zA-Z]+"#;
+const SEARCH_TERM_REGEX: &str = r#"[#:\-._+0-9a-zA-Z]+"#;
 
 /// A regex formula inverse to `SEARCH_TERM_REGEX` to invalidate anything that has invalid chars.
 /// It is a redundant check in case an invalid value slipped past previous checks.
