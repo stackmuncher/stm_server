@@ -78,9 +78,10 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
     info!("Decoded path: {}, query: {}, dev: {:?}", url_path, url_query, dev);
 
     // send the user request downstream for processing
-    let html_data = html::html(&config, url_path, url_query, dev, api_request.headers)
-        .await
-        .expect("html() failed");
+    let html_data = match html::html(&config, url_path, url_query, dev, api_request.headers).await {
+        Ok(v) => v,
+        Err(_) => return gw_response("Server Error".to_owned(), 500, 600),
+    };
 
     // render the prepared data as HTML
     let html = tera
