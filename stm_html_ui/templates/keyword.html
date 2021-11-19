@@ -38,18 +38,18 @@
           {% endif %}
 
           {% for kw in used_terms %}
-          {% if kw.search_term_loc > 0 %}
+          {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
           <li class="mb-2"><strong>Experience level:</strong><ul>
             {% break %}
             {% endif %}
             {% endfor %}
             {% for kw in used_terms %}
-            {% if kw.search_term_loc > 0 %}
+            {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
             <li>{{kw.search_term}} {{kw.search_term_loc}} LoC</li>
             {% endif %}
             {% endfor %}
             {% for kw in used_terms %}
-            {% if kw.search_term_loc > 0 %}
+            {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
           </ul></li>
           {% break %}
           {% endif %}
@@ -89,7 +89,7 @@
         {% if devs and devs.hits.hits | length > 0 %}
         <h6 class="mt-4"><strong>Hiring a software developer?</strong></h6>
         <p>StackMuncher <a href="/about/employers/">developer search</a> is a free service to help developers find better jobs.</p>
-        <p>Click on individual profiles to see developer skills analysis and a link to their GitHub profile.</p>
+        <p>Click on individual profiles to see developer stack analysis and a link to their GitHub profile.</p>
         {% endif %}
 
       </div>
