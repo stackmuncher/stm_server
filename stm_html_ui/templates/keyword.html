@@ -32,51 +32,64 @@
           </small>
         </h1>
 
-        {% if availability_tz and availability_tz_hrs %}
-        <h6 class="mt-4"><strong>Minimum <a href="https://en.wikipedia.org/wiki/{{availability_tz}}:00" title="Minimum hours developers are available in this timezone. Calculated from their recent commit time.">{{ availability_tz }}</a> availability: </strong>{{ availability_tz_hrs }}hrs</h6>
-        {% endif %}
+        <ul class="mt-4">
+          {% if availability_tz and availability_tz_hrs %}
+          <li class="mt-1"><strong>Minimum <a href="https://en.wikipedia.org/wiki/{{availability_tz}}:00" title="Minimum hours developers are available in this timezone. Calculated from their recent commit time.">{{ availability_tz }}</a> availability: </strong>{{ availability_tz_hrs }}hrs</li>
+          {% endif %}
 
-        {% if unknown_terms | length > 0 or ignored_terms | length > 0 %}
-        <h6><strong>Excluded keywords:</strong></h6>
-        <ul class="ps-3">
-          {% if unknown_terms | length > 0 %}
-          <li class="mb-1">
+          {% for kw in used_terms %}
+          {% if kw.search_term_loc > 0 %}
+          <li class="mb-2"><strong>Experience level:</strong><ul>
+            {% break %}
+            {% endif %}
+            {% endfor %}
+            {% for kw in used_terms %}
+            {% if kw.search_term_loc > 0 %}
+            <li>{{kw.search_term}} {{kw.search_term_loc}} LoC</li>
+            {% endif %}
+            {% endfor %}
+            {% for kw in used_terms %}
+            {% if kw.search_term_loc > 0 %}
+          </ul></li>
+          {% break %}
+          {% endif %}
+          {% endfor %}
+
+          {% if unknown_terms | length > 0 or ignored_terms | length > 0 %}
+          <li class="mt-1"><strong>Excluded keywords:</strong>
+            {% if unknown_terms | length > 0 %}
             {% for kw in unknown_terms %}
-            <code><a class="text-muted" href="/_related?{{kw.search_term | urlencode }}" title="Click to search for related keywords">{{kw.search_term}}</a></code>
+            <code class="me-2"><a class="text-muted" href="/_related?{{kw.search_term | urlencode }}" title="An unknown keyword. Click to search for related keywords">{{kw.search_term}}</a></code>
             {% endfor %}
-            <span class="text_muted"> (unknown)</span>
+            {% endif %}
+
+            {% if ignored_terms | length > 0 %}
+            {% for kw in ignored_terms %}
+            <code><a class="text-muted" href="/_related?{{kw.search_term | urlencode }}" title="Too many keywords in the search. Click to search for related keywords">{{kw.search_term}}</a></code>
+            {% endfor %}
+            {% endif %}
           </li>
           {% endif %}
 
-          {% if ignored_terms | length > 0 %}
-          <li class="mb-1">
-            {% for kw in ignored_terms %}
-            <code><a class="text-muted" href="/_related?{{kw.search_term | urlencode }}" title="Click to search for related keywords">{{kw.search_term}}</a></code>
-            {% endfor %}
-            <span class="text_muted"> (too many keywords)</span>
+          <li class="mt-1"><strong>Total matches:</strong>
+            {% if devs %}
+            {% if devs.hits.total.value > 9999 %}
+            more than
+            {% endif %}
+            {{devs.hits.total.value}}
+            {% else %}
+            0
+            {% endif %}
           </li>
-          {% endif %}
 
         </ul>
-        {% endif %}
-
-        <h6 class="mt-4"><strong>Total matches:</strong>
-          {% if devs %}
-          {% if devs.hits.total.value > 9999 %}
-          more than
-          {% endif %}
-          {{devs.hits.total.value}}
-          {% else %}
-          0
-          {% endif %}
-        </h6>
 
         {% include "includes/truncated_search_msg.html" %}
 
         {% if devs and devs.hits.hits | length > 0 %}
         <h6 class="mt-4"><strong>Hiring a software developer?</strong></h6>
-        <p>Click on individual profiles to see developer skills analysis and contact details.</p>
-        <p>Some developers prefer to be contacted by registered users only and have no contact details in their public profiles. More <a href="/about/employers/">for employers ...</a></p>
+        <p>StackMuncher <a href="/about/employers/">developer search</a> is a free service to help developers find better jobs.</p>
+        <p>Click on individual profiles to see developer skills analysis and a link to their GitHub profile.</p>
         {% endif %}
 
       </div>
