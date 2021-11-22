@@ -11,6 +11,7 @@ pub const SEARCH_TOP_USERS: &str =
     r#"{"size":24,"query":{"match":{"hireable":{"query":"true"}}},"sort":[{"report.timestamp":{"order":"desc"}}]}"#;
 pub const SEARCH_ENGINEER_BY_LOGIN: &str = r#"{"query":{"term":{"login.keyword":{"value":"%"}}}}"#;
 pub const SEARCH_DEV_BY_DOC_ID: &str = r#"{"query":{"term":{"_id":"%"}}}"#;
+pub const SEARCH_ALL_LANGUAGES: &str = r#"{"size":0,"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000}}}}"#;
 
 /// Run a search with the provided query.
 /// * es_url: elastucsearch url

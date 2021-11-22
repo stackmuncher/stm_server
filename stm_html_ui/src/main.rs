@@ -7,6 +7,7 @@ mod elastic;
 mod handler;
 mod html;
 mod search_log;
+mod tera_fns;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

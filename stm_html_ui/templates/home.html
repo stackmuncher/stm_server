@@ -6,13 +6,30 @@
 <body class="pb-5">
   {% include "includes/top-nav.html" %}
   <div class="container-fluid">
-    <div class="row">
-      <div class="col-lg-2">
-        <h1><small>Open Directory of Software Developers</small></h1>
+    <div class="row justify-content-center">
+
+      <div class="col-lg-8 col-md-10 col-xs-12 col-xxl-6">
+        <h1><small>Software Developer Search Engine</small></h1>
+        <div class="d-flex mt-4">
+          <input class="form-control me-2" type="search" placeholder="Language + lib names or keywords" title="Find devs working with a particular language, library or API, e.g. C# + Twilio + Azure." value="{{raw_search}}" id="kw" minlength="1" maxlength="100" onkeydown="if (event.keyCode===13) document.getElementById('btn').click()">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="const v=document.getElementById('kw'); if (v.validity.valid) window.location.href='/?'+encodeURIComponent(v.value)">Search</button>
+        </div>
+
+        <ul class="mt-3 ps-3 list-inline">
+          {% for tech in stack_stats.aggregations.agg.buckets | sort(attribute="key") %}
+          {% if tech.doc_count > 1000 %}
+          <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border me-4"><a title="{{tech.key}} developers" style="text-decoration: none;" class="text-dark" href="/?{{tech.key | urlencode}}">
+              {{tech.key}}
+              <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=tech.doc_count)}}</span></a>
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+
         <ul class="mt-3 ps-3">
-          <li class="mb-1"><strong>Software developers</strong>: <i title="Total dev IDs: {{stats._source.dev[0].c}}">{{stats._source.dev[0].c}}</i></li>
+          <li class="mb-1"><strong>Software developers</strong>: <i title="Total dev IDs: {{stats._source.dev[0].c}}">{{pretty_num(v=stats._source.dev[0].c)}}</i></li>
           <li class="mb-1"><strong>Open to work</strong>:
-            <i>{{stats._source.hireable[0].c}}</i>
+            <i>{{pretty_num(v=stats._source.hireable[0].c)}}</i>
           </li>
           <li class="mb-1"><strong>Stack size</strong>: <i>{{stats._source.stack[0].c}}</i></li>
         </ul>
@@ -28,35 +45,6 @@
         </p>
         <p>You are welcome to get in touch with them directly if their contact details are publicly available. More <a href="/about/employers/">for employers ...</a></p>
 
-      </div>
-
-      <div class="col-lg-6">
-        <main role="main">
-          <div class="row">
-            {% for dev in devs.hits.hits %}
-            {% if dev._source.hireable %}
-            <div class="col-lg-6">
-              {% include "includes/dev-card.html" %}
-            </div>
-            {% endif %}
-            {% endfor %}
-
-            {% for dev in devs.hits.hits %}
-            {% if not dev._source.hireable %}
-            <div class="col-lg-6">
-              {% include "includes/dev-card.html" %}
-            </div>
-            {% endif %}
-            {% endfor %}
-          </div>
-        </main>
-      </div>
-
-      <div class="col-lg-4">
-        <h5>What the world is working on ...</h5>
-        {% for ref in related %}
-        <a class="card-text pe-3 me-6 my-3" title="Used {{ref.c}} times" href="/?{{ref.k}}"><small>{{ref.k}}</small></a>
-        {% endfor %}
       </div>
 
     </div>

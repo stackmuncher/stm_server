@@ -1,3 +1,4 @@
+use crate::tera_fns;
 use crate::{config::Config, html, Error};
 use lambda_runtime::Context;
 use rust_embed::RustEmbed;
@@ -127,6 +128,10 @@ fn tera_init() -> Result<Tera, Error> {
 
         tera.add_raw_template(file, content).expect("Cannot add raw template");
     }
+
+    // register custom functions implemented in a separate mod
+    tera.register_function("pretty_num", tera_fns::pretty_num());
+    tera.register_function("shorten_num", tera_fns::shorten_num());
 
     Ok(tera)
 }

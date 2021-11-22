@@ -11,6 +11,17 @@ pub(crate) struct HtmlData {
     pub stats: Option<Value>,
     /// Raw ES response with dev idx docs
     pub devs: Option<Value>,
+    /// A list of all stack technologies with their doc counts
+    /// {"aggregations" : {
+    ///     "agg" : {
+    ///     "doc_count_error_upper_bound" : 0,
+    ///     "sum_other_doc_count" : 0,
+    ///     "buckets" : [
+    ///         {
+    ///         "key" : "markdown",
+    ///         "doc_count" : 1746219
+    ///         }]}}}
+    pub stack_stats: Option<Value>,
     /// List of related libraries, fully qualified  
     pub related: Option<Vec<RelatedKeywords>>,
     /// The raw search string as entered by the user
