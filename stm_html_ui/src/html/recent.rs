@@ -5,7 +5,6 @@ use regex::Regex;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use stm_shared::elastic as elastic_shared;
 use tracing::{info, warn};
 
 #[derive(Deserialize, Debug)]
@@ -45,26 +44,12 @@ pub(crate) async fn html(config: &Config, html_data: HtmlData) -> Result<HtmlDat
     info!("Generating html-home");
 
     // a query to grab a bunch of latest additions and updates to dev idx
-    let devs = elastic::search(&config.es_url, &config.dev_idx, Some(elastic::SEARCH_TOP_USERS));
-    // a query to get latest stats
-    // returns Stats struct wrapped in _source
-    let stats = elastic_shared::get_doc_by_id(
-        &config.es_url,
-        &config.stats_idx,
-        "latest_stats.json",
-        &config.no_sql_string_invalidation_regex,
-    );
-
-    // get all the data the page needs from ES in one go with async requests
-    let (devs, stats) = futures::future::join(devs, stats).await;
-    let devs = devs?;
-    let stats = stats?;
+    let devs = elastic::search(&config.es_url, &config.dev_idx, Some(elastic::SEARCH_TOP_USERS)).await?;
 
     // combine everything together for Tera
     let html_data = HtmlData {
         related: Some(extract_keywords(&devs)),
         devs: Some(devs),
-        stats: Some(stats),
         template_name: "recent.html".to_owned(),
         ttl: 600,
         http_resp_code: 200,

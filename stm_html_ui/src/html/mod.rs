@@ -38,7 +38,6 @@ pub(crate) async fn html(
         keywords_meta: Vec::new(),
         langs: Vec::new(),
         keywords_str: None,
-        stats: None,
         template_name: "404.html".to_owned(),
         ttl: 600,
         http_resp_code: 404,

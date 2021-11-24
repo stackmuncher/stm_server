@@ -7,8 +7,6 @@ use std::collections::HashMap;
 /// A common data format fed to Tera templates
 #[derive(Serialize)]
 pub(crate) struct HtmlData {
-    /// System stats
-    pub stats: Option<Value>,
     /// Raw ES response with dev idx docs
     pub devs: Option<Value>,
     /// A list of all stack technologies with their doc counts
