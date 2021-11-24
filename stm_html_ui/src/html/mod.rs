@@ -12,7 +12,6 @@ mod gh_login_profile;
 mod home;
 pub(crate) mod html_data;
 mod keyword;
-mod recent;
 mod related;
 mod stats;
 
@@ -71,12 +70,6 @@ pub(crate) async fn html(
     if url_path.trim_end_matches("/") == "/_related" {
         // return related keywords page
         return Ok(related::html(config, url_query, html_data).await?);
-    }
-
-    // is it a related keyword search?
-    if url_path.trim_end_matches("/") == "/_recent" {
-        // return related keywords page
-        return Ok(recent::html(config, html_data).await?);
     }
 
     // check if there is a path - it can be the developer login
