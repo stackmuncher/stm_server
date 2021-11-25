@@ -156,7 +156,7 @@
         {% endif %}
 
         <h5 class="mt-3 mb-1 text-muted"><small>Disclaimer</small></h5>
-        <p class="text-muted">{{user_name}} is not a registered member of StackMuncher.<br/>The data was sourced from public GitHub repositories and is a fraction of {{user_name}}'s experience.</p>
+        <p class="text-muted">{{user_name}} is not a registered member of StackMuncher.<br />The data was sourced from public GitHub repositories and is a fraction of {{user_name}}'s experience.</p>
 
       </div>
       <div class="col-md-9">
@@ -190,11 +190,11 @@
               {% set libs = pkgs + refs %}
               <tr>
                 <td scope="row"><strong>{{tech.language}}</strong></td>
-                <td class="text-end me-2">{{tech.files}}</td>
-                <td class="text-end me-2">{{tech.code_lines}}</td>
-                <td class="text-end me-2">{% if libs > 0 %}{{libs}}{% endif %}</td>
-                <td class="text-end me-2">{% if tech.docs_comments > 0 %}{{tech.docs_comments}}{% endif %}</td>
-                <td class="text-end me-2">{% if tech.line_comments > 0 %}{{tech.line_comments}}{% endif %}</td>
+                <td class="text-end me-2">{{pretty_num(v=tech.files)}}</td>
+                <td class="text-end me-2">{{pretty_num(v=tech.code_lines)}}</td>
+                <td class="text-end me-2">{% if libs > 0 %}{{pretty_num(v=libs)}}{% endif %}</td>
+                <td class="text-end me-2">{% if tech.docs_comments > 0 %}{{pretty_num(v=tech.docs_comments)}}{% endif %}</td>
+                <td class="text-end me-2">{% if tech.line_comments > 0 %}{{pretty_num(v=tech.line_comments)}}{% endif %}</td>
                 <td scope="col" style="width:100%"></td>
               </tr>
               {% endfor %}
@@ -217,7 +217,7 @@
                   </a>
                 </h6>
                 <div class="card-subtitle mb-2 text-muted">
-                  <span title="{{proj.loc}} lines of code from {{dev_name}}{% if proj.loc_project %}. Current project size: {{proj.loc_project}} lines{% endif %}" class="loc-badge">{{proj.loc}}</span>
+                  <span title="{{pretty_num(v=proj.loc)}} lines of code from {{dev_name}}{% if proj.loc_project %}. Current project size: {{proj.loc_project}} lines{% endif %}" class="loc-badge">{{pretty_num(v=proj.loc)}}</span>
                   {% if proj.commit_count %}<span title="Commits made by {{dev_name}}" class="commits-badge ms-3">{{proj.commit_count}}</span>{% endif %}
                   {% if proj.ppl %}<span title="Total number of committers" class="team-badge ms-3">{{proj.ppl}}</span>{% endif %}
 
@@ -248,7 +248,7 @@
         </div>
         {% endif %}
 
-        {% for tech in user.report.tech %}
+        {% for tech in user.report.tech | sort(attribute="total_lines") | reverse%}
 
         {% if tech.refs and tech.refs | length > 0 %}
         {% set_global refs = tech.refs %}
@@ -277,7 +277,7 @@
                 <a href="/?{{tech.language | urlencode}} {{ref.k}}">{{ref.k}}</a>
               </dt>
               <dd class="col-2 text-end pe-3">
-                <small>{{ref.c}}</small>
+                <small>{{pretty_num(v=ref.c)}}</small>
               </dd>
               {% endfor %}
             </dl>
@@ -296,7 +296,7 @@
                 <a href="/?{{tech.language | urlencode}} {{ref.k}}">{{ref.k}}</a>
               </dt>
               <dd class="col-2 text-end pe-3">
-                <small>{{ref.c}}</small>
+                <small>{{pretty_num(v=ref.c)}}</small>
               </dd>
               {% endfor %}
             </dl>
@@ -310,7 +310,7 @@
         <ul class="list-inline">
           {% for ftype in user.report.file_types | sort(attribute="k") %}
           <li class="list-inline-item bg-light text-dark py-0 ps-1 rounded mb-2 border">{{ftype.k}}
-            <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{ftype.c}}</span>
+            <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=ftype.c)}}</span>
           </li>
           {% endfor %}
         </ul>
@@ -319,7 +319,7 @@
         {% endfor %}
       </div>
       {% else %}
-      <h1 class="mt-3 ms-3">User not found</h1>
+      <h1 class="mt-5 mb-5 text-center">No data for this software developer</h1>
       {% endif %}
     </div>
   </div>

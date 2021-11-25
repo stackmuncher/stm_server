@@ -15,7 +15,7 @@ log = "0.4"
 lambda_runtime = { git = "https://github.com/awslabs/aws-lambda-rust-runtime.git" }
 lambda-debug-proxy-client = {git = "https://github.com/rimutaka/lambda-debug-proxy.git", branch = "proxy_lib"}
 hyper = { version = "0.14", features = ["http2"] }
-hyper-rustls = "0.22"
+hyper-rustls = "0.23"
 regex = "1.5"
 bs58 = "0.4"
 chrono = { version = "0.4", features = ["serde"] }
@@ -25,4 +25,5 @@ rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false
 rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
 futures = "0.3"
 urlencoding = "2.1"
+minify = "1.2.0"
 stm_shared = { version = "0.1", path = "../stm_shared" }

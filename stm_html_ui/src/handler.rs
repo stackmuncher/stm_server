@@ -94,6 +94,10 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
         .expect("Cannot render");
     info!("Rendered");
 
+    info!("HTML full: {}B",  html.len());
+    let html = minify::html::minify(&html);
+    info!("HTML mini: {}B",  html.len());
+
     // return back the result
     gw_response(html, html_data.http_resp_code, html_data.ttl)
 }

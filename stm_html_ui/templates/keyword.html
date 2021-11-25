@@ -76,7 +76,7 @@
             {% if devs.hits.total.value > 9999 %}
             more than
             {% endif %}
-            {{devs.hits.total.value}}
+            {{pretty_num(v=devs.hits.total.value)}}
             {% else %}
             0
             {% endif %}
@@ -87,7 +87,13 @@
         {% include "includes/truncated_search_msg.html" %}
 
         {% if devs and devs.hits.hits | length > 0 %}
+        
+        {% if langs | length > 0 %}
+        <h6 class="mt-4"><strong>Hiring a {{langs.0.0}} software developer?</strong></h6>
+        {% else %}
         <h6 class="mt-4"><strong>Hiring a software developer?</strong></h6>
+        {% endif %}
+
         <p>StackMuncher <a href="/about/employers/">developer search</a> is a free service to help developers find better jobs.</p>
         <p>Click on individual profiles to see developer stack analysis and a link to their GitHub profile.</p>
         {% endif %}

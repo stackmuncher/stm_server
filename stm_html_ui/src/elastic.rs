@@ -144,7 +144,7 @@ pub(crate) async fn matching_doc_counts(
     Ok(counts)
 }
 
-/// Returns up to 24 matching docs from DEV idx depending on the params. The query is built to match the list of params.
+/// Returns up to 100 matching docs from DEV idx depending on the params. The query is built to match the list of params.
 /// Lang and KW params are checked for No-SQL injection.
 /// * langs: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
 /// * timezone_offset: 0..23 where anything > 12 is the negative offset
@@ -262,7 +262,7 @@ pub(crate) async fn matching_devs(
 
     // combine everything into a single query
     let query = [
-        r#"{"size":24,"track_scores":true,"query":{"bool":{"must":["#,
+        r#"{"size":100,"track_scores":true,"query":{"bool":{"must":["#,
         &clauses,
         r#"]}},"sort":[{"hireable":{"order":"desc"}},{"report.timestamp":{"order":"desc"}}]}"#,
     ]

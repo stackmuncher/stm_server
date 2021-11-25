@@ -41,9 +41,10 @@
       {% endif %}
     </p>
     <ul class="list-inline">
-      {% for tech in dev._source.report.tech | sort(attribute="total_lines") | reverse %}
-      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border"><a style="text-decoration: none;" class="text-dark" href="/?{{tech.language | urlencode}}">{{tech.language}}</a>
-        <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{tech.total_lines}}</span>
+      {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
+      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border">
+        {{tech.language}}
+        <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=tech.total_lines)}}</span>
       </li>
       {% endfor %}
     </ul>
