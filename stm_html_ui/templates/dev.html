@@ -14,7 +14,7 @@
 
         {% if user.name %}{% set user_name = user.name %}{% elif user.login %}{% set user_name = user.login %}{% else %}{% set user_name = "Anonymous" %}{% endif %}
 
-        <h1><small>{{user_name}}</small></h1>
+        <h1>{{user_name}}</h1>
         <h5><small>Software Developer</small></h5>
 
         <ul class="mt-3 ps-3">

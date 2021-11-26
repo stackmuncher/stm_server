@@ -9,7 +9,7 @@
     <div class="row justify-content-center">
 
       <div class="col-lg-8 col-md-10 col-xs-12 col-xxl-6">
-        <h1 class="display-6">Open Directory of Software Developers</h1>
+        <h1>Open Directory of Software Developers</h1>
         <div class="d-flex mt-4">
           <input class="form-control me-2" type="search" title="Find devs working with a particular language, library or API, e.g. C# + Twilio + Azure." value="{{raw_search}}" id="kw" minlength="1" maxlength="100" onkeydown="if (event.keyCode===13) document.getElementById('btn').click()">
           <button class="btn btn-outline-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="const v=document.getElementById('kw'); if (v.validity.valid) window.location.href='/?'+encodeURIComponent(v.value)">Search</button>
@@ -21,14 +21,14 @@
             <li>filter by number of lines of code: <code>typescript:10000 vuejs apollo</code></li>
             <li>filter by timezone availability: <code> 4hrs@utc-5 typescript:10000 vuejs apollo</code></li>
           </ul>
-          <p class="mt-0 mx-2 mx-md-4">Learn more about the <a title="Detailed explanation and examples of effective developer search" href="/about/posts/search-syntax">search syntax</a> and <a title="Explained from the software developer's perspective" href="/about/posts/how-to-find-the-right-software-developer">how to find the right developer for your project</a>.</p>
+          <p class="mt-0 mx-2 mx-md-4">More <a title="Detailed explanation and examples of effective developer search" href="/about/posts/software-developer-search-syntax/">examples of the search syntax</a>.</p>
         </div>
 
 
         <ul class="mt-5 list-inline">
           {% for tech in stack_stats.aggregations.agg.buckets | sort(attribute="key") %}
           {% if tech.doc_count > 1000 %}
-          <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border me-4"><a title="{{tech.key}} developers" style="text-decoration: none;" class="text-dark" href="/?{{tech.key | urlencode}}">
+          <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border me-4"><a title="{{tech.key}} developers" style="text-decoration: underline #6c757d;" class="text-dark" href="/?{{tech.key | urlencode}}">
               {{tech.key}}
               <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=tech.doc_count)}}</span></a>
           </li>

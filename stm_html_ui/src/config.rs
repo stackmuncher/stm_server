@@ -63,7 +63,7 @@ impl Config {
             no_sql_string_invalidation_regex: Regex::new(NO_SQL_STRING_INVALIDATION_REGEX)
                 .expect("Failed to compile no_sql_string_value_regex"),
             search_terms_regex: Regex::new(SEARCH_TERM_REGEX).expect("Failed to compile search_terms_regex"),
-            timezone_terms_regex: Regex::new(r#"(?i)(?:[[:space:]]|^)(\d{1,2})@?utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#)
+            timezone_terms_regex: Regex::new(r#"(?i)(?:[[:space:]]|^)(\d{1,2})(?:hrs@|hr@|h@|@)?utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#)
                 .expect("Failed to compile timezone_terms_regex"),
         }
     }
@@ -146,8 +146,12 @@ fn timezone_terms_regex() {
         ("5utc+3a", ""),
         ("a5utc+3", ""),
         ("a5utc+3a", ""),
-        // optional @
+        // optional @, hr@, hrs@
         ("5@utc+3", "5@utc+3"),
+        ("5hrs@utc+3", "5hrs@utc+3"),
+        ("5hr@utc+3", "5hr@utc+3"),
+        ("5h@utc+3", "5h@utc+3"),
+        ("5hrr@utc+3", ""),
         ("5@@utc+3", ""),
         ("@5utc+3", ""),
         // UPPER-CASE

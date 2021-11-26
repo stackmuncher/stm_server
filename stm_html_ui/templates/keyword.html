@@ -15,21 +15,19 @@
           {% set ignored_terms = keywords_meta | filter(attribute="too_many", value=true) %}
           {% set unknown_terms = keywords_meta | filter(attribute="unknown", value=true) %}
 
-          <small>
-            {% if used_terms | length > 0 %}
-            Software developers using
-            {% else %}
-            Unknown keywords
-            {% endif %}
-            {% for kw in used_terms %}
-            {% if kw.es_language_count > 0 %}
-            <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_language_count}} devs use this language. Click to explore related keywords.">{{kw.search_term}}</a></code>
-            {% else %}
-            <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_keyword_count + kw.es_package_count}} devs match this keyword. Click to explore related keywords.">{{kw.search_term}}</a></code>
-            {% endif %}
-            {% if not loop.last %}+{% endif %}
-            {% endfor %}
-          </small>
+          {% if used_terms | length > 0 %}
+          Software developers using
+          {% else %}
+          Unknown keywords
+          {% endif %}
+          {% for kw in used_terms %}
+          {% if kw.es_language_count > 0 %}
+          <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_language_count}} devs use this language. Click to explore related keywords.">{{kw.search_term}}</a></code>
+          {% else %}
+          <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_keyword_count + kw.es_package_count}} devs match this keyword. Click to explore related keywords.">{{kw.search_term}}</a></code>
+          {% endif %}
+          {% if not loop.last %}+{% endif %}
+          {% endfor %}
         </h1>
 
         <ul class="mt-4">
@@ -39,18 +37,20 @@
 
           {% for kw in used_terms %}
           {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
-          <li class="mb-2"><strong>Experience level:</strong><ul>
-            {% break %}
-            {% endif %}
-            {% endfor %}
-            {% for kw in used_terms %}
-            {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
-            <li>{{kw.search_term}} {{kw.search_term_loc}} LoC</li>
-            {% endif %}
-            {% endfor %}
-            {% for kw in used_terms %}
-            {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
-          </ul></li>
+          <li class="mb-2"><strong>Experience level:</strong>
+            <ul>
+              {% break %}
+              {% endif %}
+              {% endfor %}
+              {% for kw in used_terms %}
+              {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
+              <li>{{kw.search_term}} {{pretty_num(v=kw.search_term_loc)}} LoC</li>
+              {% endif %}
+              {% endfor %}
+              {% for kw in used_terms %}
+              {% if kw.search_term_loc > 0 and kw.es_language_count > 0 %}
+            </ul>
+          </li>
           {% break %}
           {% endif %}
           {% endfor %}
@@ -84,10 +84,12 @@
 
         </ul>
 
-        {% include "includes/truncated_search_msg.html" %}
+        {% if used_terms | length > 0 %}
+        <p class="text-muted">Click on keywords in the title to explore related terms.</p>
+        {% endif %}
 
         {% if devs and devs.hits.hits | length > 0 %}
-        
+
         {% if langs | length > 0 %}
         <h6 class="mt-4"><strong>Hiring a {{langs.0.0}} software developer?</strong></h6>
         {% else %}

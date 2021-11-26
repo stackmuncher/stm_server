@@ -489,6 +489,15 @@ fn extract_timezone_part_from_query_test() {
         ("a5utc+3a", 0, 0, "a5utc+3a"),
         // UPPER-CASE
         ("5UTC+3", 5, 3, " "),
+        ("5HRS@utc+3", 5, 3, " "),
+        // optional @, hr@, hrs@
+        ("5@utc+3", 5, 3, " "),
+        ("5hrs@utc+3", 5, 3, " "),
+        ("5hr@utc+3", 5, 3, " "),
+        ("5h@utc+3", 5, 3, " "),
+        ("5hrr@utc+3", 0, 0, "5hrr@utc+3"),
+        ("5@@utc+3", 0, 0, "5@@utc+3"),
+        ("@5utc+3", 0, 0, "@5utc+3"),
         // no match
         ("rust 5utc-x serde", 0, 0, "rust 5utc-x serde"),
         ("rust utc-5 serde", 0, 0, "rust utc-5 serde"),
