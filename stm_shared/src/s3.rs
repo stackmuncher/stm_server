@@ -2,7 +2,7 @@ use super::validate_gh_login_format;
 use super::validate_owner_id;
 use flate2::read::GzDecoder;
 use futures::stream::TryStreamExt;
-use hyper_rustls::HttpsConnector;
+use hyper_rustls::HttpsConnectorBuilder;
 use regex::Regex;
 use rusoto_core::credential::DefaultCredentialsProvider;
 use rusoto_core::HttpClient;
@@ -228,7 +228,11 @@ pub async fn get_text_from_s3(
 /// AWS times out idle connections after 20s as per https://aws.amazon.com/premiumsupport/knowledge-center/s3-socket-connection-timeout-error/
 /// We need to sync the idle time of our client with that setting.
 pub fn generate_s3_client(s3_region: &rusoto_core::region::Region) -> S3Client {
-    let https_connector = HttpsConnector::with_native_roots();
+    let https_connector = HttpsConnectorBuilder::new()
+        .with_native_roots()
+        .https_only()
+        .enable_http1()
+        .build();
 
     let cred_prov = DefaultCredentialsProvider::new().expect("Cannot unwrap DefaultCredentialsProvider");
 
@@ -260,10 +264,7 @@ pub fn build_dev_s3_key_from_owner_id(owner_id: &String) -> Result<String, ()> {
 /// The key includes a trailing `/` to make sure that the match is exact because `report/abc` will match `report/abc/` and `report/abcd/`.
 /// The validation is to enforce zero-trust with other parts of the system,
 /// but it is unlikely that the owner_id is invalid because it is validated many times elsewhere.
-pub fn build_dev_s3_key_from_gh_login(
-    gh_login: &String,
-    gh_login_invalidation_regex: &Regex,
-) -> Result<String, ()> {
+pub fn build_dev_s3_key_from_gh_login(gh_login: &String, gh_login_invalidation_regex: &Regex) -> Result<String, ()> {
     // validate the GitHub login, which should be a base58 encoded string of 32 bytes
     if !validate_gh_login_format(gh_login, gh_login_invalidation_regex) {
         return Err(());

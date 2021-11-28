@@ -92,4 +92,17 @@ impl SearchLog {
             ..search_log
         }
     }
+
+    /// Converts itself into a string and sends it to the specified queue.
+    /// Logs any errors on failure.
+    pub(crate) async fn send_to_sqs(&self, sqs_queue_url: &String) {
+        match serde_json::to_string(self) {
+            Ok(payload) => {
+                let _ = stm_shared::sqs::send(payload, sqs_queue_url).await;
+            }
+            Err(e) => {
+                error!("Failed to serialize SearchLog: {}", e);
+            }
+        }
+    }
 }

@@ -2,13 +2,13 @@ use regex::Regex;
 use tracing::warn;
 
 /// Add the name of the ElasticSearch index to that env var
-pub const ES_DEV_IDX_ENV: &str = "STM_HTML_ES_DEV_IDX";
+const ES_DEV_IDX_ENV: &str = "STM_HTML_ES_DEV_IDX";
 /// Add the name of the ElasticSearch index to that env var
-pub const ES_STATS_IDX_ENV: &str = "STM_HTML_ES_STATS_IDX";
-/// Add the name of the ElasticSearch index to that env var
-pub const ES_SEARCH_LOG_IDX_ENV: &str = "STM_HTML_ES_SEARCH_LOG_IDX";
+const ES_STATS_IDX_ENV: &str = "STM_HTML_ES_STATS_IDX";
 /// Add the absolute ElasticSearch URL to that env var
-pub const ES_URL_ENV: &str = "STM_HTML_ES_URL";
+const ES_URL_ENV: &str = "STM_HTML_ES_URL";
+/// Add URL of the SQS queue for search results stats to that env var
+const SQS_SEARCH_STATS_URL: &str = "STM_HTML_SQS_SEARCH_STATS_URL";
 
 pub struct Config {
     /// Absolute ElasticSearch URL
@@ -17,8 +17,8 @@ pub struct Config {
     pub dev_idx: String,
     /// Name of `stats` index
     pub stats_idx: String,
-    /// Name of `search_log` index
-    pub search_log_idx: String,
+    /// SQS URL for logging search results
+    pub search_log_sqs_url: String,
     /// No-SQL field value validation regex - the value would be invalid if it's a match
     pub no_sql_string_invalidation_regex: Regex,
     /// Extracts individual search terms from the raw search string
@@ -56,15 +56,17 @@ impl Config {
                 .expect(&format!("Missing {} env var with ES STATS index name", ES_STATS_IDX_ENV))
                 .trim()
                 .to_string(),
-            search_log_idx: std::env::var(ES_SEARCH_LOG_IDX_ENV)
-                .expect(&format!("Missing {} env var with ES SEARCH LOG index name", ES_SEARCH_LOG_IDX_ENV))
+            search_log_sqs_url: std::env::var(SQS_SEARCH_STATS_URL)
+                .expect(&format!("Missing {} env var with SQS SEARCH_STATS URL", SQS_SEARCH_STATS_URL))
                 .trim()
                 .to_string(),
             no_sql_string_invalidation_regex: Regex::new(NO_SQL_STRING_INVALIDATION_REGEX)
                 .expect("Failed to compile no_sql_string_value_regex"),
             search_terms_regex: Regex::new(SEARCH_TERM_REGEX).expect("Failed to compile search_terms_regex"),
-            timezone_terms_regex: Regex::new(r#"(?i)(?:[[:space:]]|^)(\d{1,2})(?:hrs@|hr@|h@|@)?utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#)
-                .expect("Failed to compile timezone_terms_regex"),
+            timezone_terms_regex: Regex::new(
+                r#"(?i)(?:[[:space:]]|^)(\d{1,2})(?:hrs@|hr@|h@|@)?utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#,
+            )
+            .expect("Failed to compile timezone_terms_regex"),
         }
     }
 }

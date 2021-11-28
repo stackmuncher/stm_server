@@ -4,6 +4,7 @@ use tracing::{error, info, warn};
 pub mod elastic;
 pub mod pgsql;
 pub mod s3;
+pub mod sqs;
 
 /// Logs the body as error!(), if possible.
 pub fn log_http_body(body_bytes: &hyper::body::Bytes) {

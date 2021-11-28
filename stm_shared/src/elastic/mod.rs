@@ -1,6 +1,6 @@
 //use elasticsearch::{http::transport::Transport, CountParts, Elasticsearch, SearchParts};
 use hyper::{Body, Client, Request, Uri};
-use hyper_rustls::HttpsConnector;
+use hyper_rustls::HttpsConnectorBuilder;
 use regex::Regex;
 use rusoto_core::credential::AwsCredentials;
 use rusoto_core::credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
@@ -55,7 +55,13 @@ async fn call_es_api_put(
 
     // the response details are only useful if there was an error
     let res = match Client::builder()
-        .build::<_, hyper::Body>(HttpsConnector::with_native_roots())
+        .build::<_, hyper::Body>(
+            HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .https_only()
+                .enable_http1()
+                .build(),
+        )
         .request(req)
         .await
     {
@@ -181,18 +187,25 @@ pub async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Re
     debug!("Http rq: {:?}", req);
 
     let res = Client::builder()
-        .build::<_, hyper::Body>(HttpsConnector::with_native_roots())
+        .build::<_, hyper::Body>(
+            HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .https_only()
+                .enable_http1()
+                .build(),
+        )
         .request(req)
         .await
         .expect("ES request failed");
 
-    info!("ES query {} response arrived", payload_id);
     let status = res.status();
 
     // Concatenate the body stream into a single buffer...
     let buf = hyper::body::to_bytes(res)
         .await
         .expect("Cannot convert response body to bytes");
+
+    info!("ES query {} response: {} bytes", payload_id, buf.len());
 
     // there should be at least some data returned
     if buf.is_empty() {
@@ -209,7 +222,7 @@ pub async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Re
 
     // all responses should be JSON. If it's not JSON it's an error.
     let output = Ok(serde_json::from_slice::<Value>(&buf).expect("Failed to convert ES resp to JSON"));
-    info!("ES query {} finished", payload_id);
+    info!("ES query {} deserialized", payload_id);
     //info!("{}", output.as_ref().unwrap()); // for debugging
     output
 }

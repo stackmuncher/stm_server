@@ -3,7 +3,6 @@ use crate::{elastic, search_log::SearchLog};
 use chrono::Utc;
 use html_data::{HtmlData, KeywordMetadata};
 use regex::Regex;
-use rusoto_core::credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
@@ -302,25 +301,11 @@ pub(crate) async fn html(
         // run a keyword search for devs
         let html_data = keyword::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?;
 
-        // log the search query and its results in ES
+        // log the search query and its results in a DB via SQS
         if !html_data.raw_search.is_empty() {
-            let provider = DefaultCredentialsProvider::new().expect("Cannot get default creds provider");
-            let aws_credentials = provider.credentials().await.expect("Cannot find creds");
-            let object_id = Utc::now().timestamp().to_string();
-            let object_to_upload = SearchLog::from_html_data(&html_data);
-            let es_url = config.es_url.clone();
-            let es_idx = config.search_log_idx.clone();
-
-            tokio::spawn(async move {
-                stm_shared::elastic::upload_object_to_es::<SearchLog>(
-                    es_url,
-                    aws_credentials,
-                    object_to_upload,
-                    object_id,
-                    es_idx,
-                )
-                .await
-            });
+            SearchLog::from_html_data(&html_data)
+                .send_to_sqs(&config.search_log_sqs_url)
+                .await;
         }
 
         return Ok(html_data);
