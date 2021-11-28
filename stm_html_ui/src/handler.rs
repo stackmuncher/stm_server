@@ -5,6 +5,7 @@ use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use sysinfo::{RefreshKind, System, SystemExt};
 use tera::Tera;
 use tracing::{info, warn};
 use urlencoding::decode;
@@ -41,10 +42,15 @@ struct Asset;
 
 //pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Error> {
 pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Error> {
+    let mut sys = System::new_with_specifics(RefreshKind::with_memory(RefreshKind::new()));
     //info!("Event: {}", event);
     //info!("Context: {:?}", ctx);
 
+    log_memory_use(&mut sys, "Start");
+
     let api_request = serde_json::from_value::<ApiGatewayRequest>(event).expect("Failed to deser APIGW request");
+
+    log_memory_use(&mut sys, "API Req created");
 
     // if Authorization env var is present check if it matches Authorization header
     // this is done for basic protection against direct calls to the api bypassing CloudFront
@@ -66,7 +72,11 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
     // get ElasticSearch URL and index names from env vars
     let config = Config::new();
 
+    log_memory_use(&mut sys, "Config init");
+
     let tera = tera_init()?;
+
+    log_memory_use(&mut sys, "Tera init");
 
     // decode possible URL path and query string
     info!("Raw path: {}, Query: {}", &api_request.raw_path, &api_request.raw_query_string);
@@ -84,6 +94,8 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
         Err(_) => return gw_response("Server Error".to_owned(), 500, 600),
     };
 
+    log_memory_use(&mut sys, "HTML data returned");
+
     // render the prepared data as HTML
     let html = tera
         .render(
@@ -94,9 +106,13 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
         .expect("Cannot render");
     info!("Rendered");
 
-    info!("HTML full: {}B",  html.len());
+    log_memory_use(&mut sys, "Tera rendered");
+
+    info!("HTML full: {} bytes", html.len());
     let html = minify::html::minify(&html);
-    info!("HTML mini: {}B",  html.len());
+    info!("HTML mini: {} bytes", html.len());
+
+    log_memory_use(&mut sys, "HTML minified");
 
     // return back the result
     gw_response(html, html_data.http_resp_code, html_data.ttl)
@@ -138,4 +154,23 @@ fn tera_init() -> Result<Tera, Error> {
     tera.register_function("shorten_num", tera_fns::shorten_num());
 
     Ok(tera)
+}
+
+/// Logs current memory use and the delta from the previous sample.
+fn log_memory_use(sys: &mut System, msg: &str) {
+    let used = sys.used_memory() as i64;
+    let swap = sys.used_swap() as i64;
+
+    sys.refresh_memory();
+
+    info!(
+        "RAM total KB: {}, used {}/{}, tot swap: {}, used swap: {}/{} - {}",
+        sys.total_memory(),
+        sys.used_memory(),
+        sys.used_memory() as i64 - used,
+        sys.total_swap(),
+        sys.used_swap(),
+        sys.used_swap() as i64 - swap,
+        msg,
+    );
 }

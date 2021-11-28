@@ -26,4 +26,5 @@ rusoto_core = { version = "0.47", features = ["rustls"], default-features = fals
 futures = "0.3"
 urlencoding = "2.1"
 minify = "1.2.0"
+sysinfo = "0.21.1"
 stm_shared = { version = "0.1", path = "../stm_shared" }
