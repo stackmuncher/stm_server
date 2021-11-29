@@ -42,9 +42,18 @@
     </p>
     <ul class="list-inline">
       {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
-      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border">
+      {% set_global li_highlight_outer = "" %}
+      {% set_global li_highlight_inner = "" %}
+      {% for lang in langs %}
+      {% if lang.0 == tech.language | lower %}
+      {% set_global li_highlight_outer = "border-success" %}
+      {% set_global li_highlight_inner = "fw-normal" %}
+      {% break %}
+      {% endif %}
+      {% endfor %}
+      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border {{li_highlight_outer}}">
         {{tech.language}}
-        <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=tech.total_lines)}}</span>
+        <span class="badge bg-white text-dark ms-2 fw-light {{li_highlight_inner}}">{{pretty_num(v=tech.total_lines)}}</span>
       </li>
       {% endfor %}
     </ul>
