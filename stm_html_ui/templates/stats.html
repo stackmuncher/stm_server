@@ -74,9 +74,9 @@
               <td title="{{stat.bad_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{pretty_num(v=stat.bad_report)}}</td>
               <td title="{{stat.readying_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{pretty_num(v=stat.readying_report)}}</td>
               <td title="{{stat.pending_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{% if stat.pending_report %}{{pretty_num(v=stat.pending_report)}}{% endif %}</td>
-              
-              <td {% if stat.mapped %}title="{{stat.mapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{pretty_num(v=stat.mapped | default(value=''))}}</td>
-              <td {% if stat.unmapped %}title="{{stat.unmapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{pretty_num(v=stat.unmapped | default(value=''))}}</td>
+
+              <td {% if stat.mapped %}title="{{stat.mapped / stat.devs_total * 100 | round}}%" {% endif %} class="text-end">{{pretty_num(v=stat.mapped | default(value=''))}}</td>
+              <td {% if stat.unmapped %}title="{{stat.unmapped / stat.devs_total * 100 | round}}%" {% endif %} class="text-end">{{pretty_num(v=stat.unmapped | default(value=''))}}</td>
 
               <td class="text-end">{% if stat.pending_sync %}{{pretty_num(v=stat.pending_sync)}}{% endif %}</td>
               <td class="text-end">{% if stat.unsynced %}{{pretty_num(v=stat.unsynced)}}{% endif %}</td>

@@ -50,7 +50,7 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
 
     let api_request = serde_json::from_value::<ApiGatewayRequest>(event).expect("Failed to deser APIGW request");
 
-    log_memory_use(&mut sys, "API Req created");
+    // log_memory_use(&mut sys, "API Req created");
 
     // if Authorization env var is present check if it matches Authorization header
     // this is done for basic protection against direct calls to the api bypassing CloudFront
@@ -72,7 +72,7 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
     // get ElasticSearch URL and index names from env vars
     let config = Config::new();
 
-    log_memory_use(&mut sys, "Config init");
+    // log_memory_use(&mut sys, "Config init");
 
     let tera = tera_init()?;
 
