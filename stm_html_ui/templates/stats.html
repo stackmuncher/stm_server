@@ -47,12 +47,12 @@
               <th title="Failed to sync, remaining in flight" scope="col" class="text-end">stuck on sync</th>
               <th title="Report in progress" scope="col" class="text-end">report in flight</th>
               <th title="In flight with max number failed report generation attempts" scope="col" class="text-end">stuck on report</th>
-              <th title="Successful reports generated" scope="col" class="text-end">OK reports, last 10m</th>
-              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed reports, last 10m</th>
-              <th title="Successful reports generated" scope="col" class="text-end">OK reports, last 1hr</th>
-              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">failed reports, last 1hr</th>
-              <th title="Successful reports generated" scope="col" class="text-end">OK reports, last 24hr</th>
-              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed reports, last 24hr</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK, last 10m</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">failed, last 10m</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK, last 1hr</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">failed, last 1hr</th>
+              <th title="Successful reports generated" scope="col" class="text-end">OK, last 24hr</th>
+              <th title="Abandoned reports (failures > max)" scope="col" class="text-end">Failed, last 24hr</th>
               <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">gen time, last 10m</th>
               <th title="Average time for report generation from the moment the job was picked up, in seconds" scope="col" class="text-end">gen time, last 1hr</th>
               <th title="Average time for report generation from the moment the dev was sync'd, in seconds" scope="col" class="text-end">sync to report, last 10m</th>
@@ -67,35 +67,35 @@
             <tr>
               <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
-              <td class="text-end">{{stat.devs_total}}</td>
-              <td title="{{stat.w_report / stat.devs_total * 100 | round}}%" class="text-end">{{stat.w_report}}</td>
-              <td title="{{stat.no_report / stat.devs_total * 100 | round}}%" class="text-end">{{stat.no_report}}</td>
-              <td title="{{stat.synced_no_repos / stat.devs_total * 100 | round}}%" class="text-end">{{stat.synced_no_repos}}</td>
-              <td title="{{stat.bad_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{stat.bad_report}}</td>
-              <td title="{{stat.readying_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{stat.readying_report}}</td>
-              <td title="{{stat.pending_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{% if stat.pending_report %}{{stat.pending_report}}{% endif %}</td>
+              <td class="text-end">{{pretty_num(v=stat.devs_total)}}</td>
+              <td title="{{stat.w_report / stat.devs_total * 100 | round}}%" class="text-end">{{pretty_num(v=stat.w_report)}}</td>
+              <td title="{{stat.no_report / stat.devs_total * 100 | round}}%" class="text-end">{{pretty_num(v=stat.no_report)}}</td>
+              <td title="{{stat.synced_no_repos / stat.devs_total * 100 | round}}%" class="text-end">{{pretty_num(v=stat.synced_no_repos)}}</td>
+              <td title="{{stat.bad_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{pretty_num(v=stat.bad_report)}}</td>
+              <td title="{{stat.readying_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{{pretty_num(v=stat.readying_report)}}</td>
+              <td title="{{stat.pending_report / stat.devs_total * 100 | round(precision=2)}}%" class="text-end">{% if stat.pending_report %}{{pretty_num(v=stat.pending_report)}}{% endif %}</td>
               
-              <td {% if stat.mapped %}title="{{stat.mapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{stat.mapped | default(value='')}}</td>
-              <td {% if stat.unmapped %}title="{{stat.unmapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{stat.unmapped | default(value='')}}</td>
+              <td {% if stat.mapped %}title="{{stat.mapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{pretty_num(v=stat.mapped | default(value=''))}}</td>
+              <td {% if stat.unmapped %}title="{{stat.unmapped / stat.devs_total * 100 | round}}%"{% endif %} class="text-end">{{pretty_num(v=stat.unmapped | default(value=''))}}</td>
 
-              <td class="text-end">{% if stat.pending_sync %}{{stat.pending_sync}}{% endif %}</td>
-              <td class="text-end">{% if stat.unsynced %}{{stat.unsynced}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl %}{{stat.in_fl}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_stuck %}{{stat.in_fl_stuck}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_sync %}{{stat.in_fl_sync}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_sync_stuck %}{{stat.in_fl_sync_stuck}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_report %}{{stat.in_fl_report}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_report_stuck %}{{stat.in_fl_report_stuck}}{% endif %}</td>
-              <td class="text-end">{% if stat.d10m %}{{stat.d10m}}{% endif %}</td>
-              <td class="text-end">{% if stat.df10m %}{{stat.df10m}}{% endif %}</td>
-              <td class="text-end">{% if stat.d1hr %}{{stat.d1hr}}{% endif %}</td>
-              <td class="text-end">{% if stat.df1hr %}{{stat.df1hr}}{% endif %}</td>
-              <td class="text-end">{% if stat.d24hr %}{{stat.d24hr}}{% endif %}</td>
-              <td class="text-end">{% if stat.df24hr %}{{stat.df24hr}}{% endif %}</td>
+              <td class="text-end">{% if stat.pending_sync %}{{pretty_num(v=stat.pending_sync)}}{% endif %}</td>
+              <td class="text-end">{% if stat.unsynced %}{{pretty_num(v=stat.unsynced)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl %}{{pretty_num(v=stat.in_fl)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_stuck %}{{pretty_num(v=stat.in_fl_stuck)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_sync %}{{pretty_num(v=stat.in_fl_sync)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_sync_stuck %}{{pretty_num(v=stat.in_fl_sync_stuck)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_report %}{{pretty_num(v=stat.in_fl_report)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_report_stuck %}{{pretty_num(v=stat.in_fl_report_stuck)}}{% endif %}</td>
+              <td class="text-end">{% if stat.d10m %}{{pretty_num(v=stat.d10m)}}{% endif %}</td>
+              <td class="text-end">{% if stat.df10m %}{{pretty_num(v=stat.df10m)}}{% endif %}</td>
+              <td class="text-end">{% if stat.d1hr %}{{pretty_num(v=stat.d1hr)}}{% endif %}</td>
+              <td class="text-end">{% if stat.df1hr %}{{pretty_num(v=stat.df1hr)}}{% endif %}</td>
+              <td class="text-end">{% if stat.d24hr %}{{pretty_num(v=stat.d24hr)}}{% endif %}</td>
+              <td class="text-end">{% if stat.df24hr %}{{pretty_num(v=stat.df24hr)}}{% endif %}</td>
               <td class="text-end">{% if stat.d_r10m %}{{stat.d_r10m | round(method="ceil", precision=1)}}{% endif %}</td>
               <td class="text-end">{% if stat.d_r1hr %}{{stat.d_r1hr | round(method="ceil", precision=1)}}{% endif %}</td>
-              <td class="text-end">{% if stat.d_s2r10m %}{{stat.d_s2r10m | round(method="ceil")}}{% endif %}</td>
-              <td class="text-end">{% if stat.d_s2r1hr %}{{stat.d_s2r1hr | round(method="ceil")}}{% endif %}</td>
+              <td class="text-end">{% if stat.d_s2r10m %}{{pretty_num(v=stat.d_s2r10m | round(method="ceil"))}}{% endif %}</td>
+              <td class="text-end">{% if stat.d_s2r1hr %}{{pretty_num(v=stat.d_s2r1hr | round(method="ceil"))}}{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -116,12 +116,12 @@
               <th title="All without a report for whatever reason" scope="col" class="text-end">without report</th>
               <th title="With an abandoned report" scope="col" class="text-end">report abandoned</th>
               <th title="Sync'd, not in flight, failures < max" scope="col" class="text-end">ready to generate report</th>
-              <th title="Unsync'd, not in flight" scope="col" class="text-end">pending sync</th>
-              <th title="All unsync'd" scope="col" class="text-end">all unsynced</th>
+              <th title="Unsync'd, not in flight" scope="col" class="text-end d-none">pending sync</th>
+              <th title="All unsync'd" scope="col" class="text-end d-none">all unsynced</th>
               <th title="In-flight" scope="col" class="text-end">in-flight</th>
               <th title="In-flight, failures > max" scope="col" class="text-end">stuck in-flight</th>
-              <th title="In-fligt being sync'd" scope="col" class="text-end">sync in-flight</th>
-              <th title="Tried to sync, failures > max" scope="col" class="text-end">stuck on sync</th>
+              <th title="In-fligt being sync'd" scope="col" class="text-end d-none">sync in-flight</th>
+              <th title="Tried to sync, failures > max" scope="col" class="text-end d-none">stuck on sync</th>
               <th title="In-flight, generating report" scope="col" class="text-end">report in-flight</th>
               <th title="Tried to generate report, failures > max" scope="col" class="text-end">stuck on report</th>
               <th title="Successful reports generated" scope="col" class="text-end">OK reports, last 10m</th>
@@ -143,29 +143,29 @@
             <tr>
               <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
-              <td class="text-end">{{stat.repos_total}}</td>
-              <td title="{{stat.w_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.w_report}}</td>
-              <td title="{{stat.no_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.no_report}}</td>
-              <td title="{{stat.bad_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.bad_report}}</td>
-              <td title="{{stat.pending_report / stat.repos_total * 100 | round}}%" class="text-end">{{stat.pending_report}}</td>
-              <td class="text-end">{% if stat.pending_sync %}{{stat.pending_sync}}{% endif %}</td>
-              <td class="text-end">{% if stat.unsynced %}{{stat.unsynced}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl %}{{stat.in_fl}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_stuck %}{{stat.in_fl_stuck}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_sync %}{{stat.in_fl_sync}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_sync_stuck %}{{stat.in_fl_sync_stuck}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_report %}{{stat.in_fl_report}}{% endif %}</td>
-              <td class="text-end">{% if stat.in_fl_report_stuck %}{{stat.in_fl_report_stuck}}{% endif %}</td>
-              <td class="text-end">{% if stat.r10m %}{{stat.r10m}}{% endif %}</td>
-              <td class="text-end">{% if stat.rf10m %}{{stat.rf10m}}{% endif %}</td>
-              <td class="text-end">{% if stat.r1hr %}{{stat.r1hr}}{% endif %}</td>
-              <td class="text-end">{% if stat.rf1hr %}{{stat.rf1hr}}{% endif %}</td>
-              <td class="text-end">{% if stat.r24hr %}{{stat.r24hr}}{% endif %}</td>
-              <td class="text-end">{% if stat.rf24hr %}{{stat.rf24hr}}{% endif %}</td>
+              <td class="text-end">{{pretty_num(v=stat.repos_total)}}</td>
+              <td title="{{stat.w_report / stat.repos_total * 100 | round}}%" class="text-end">{{pretty_num(v=stat.w_report)}}</td>
+              <td title="{{stat.no_report / stat.repos_total * 100 | round}}%" class="text-end">{{pretty_num(v=stat.no_report)}}</td>
+              <td title="{{stat.bad_report / stat.repos_total * 100 | round}}%" class="text-end">{{pretty_num(v=stat.bad_report)}}</td>
+              <td title="{{stat.pending_report / stat.repos_total * 100 | round}}%" class="text-end">{{pretty_num(v=stat.pending_report)}}</td>
+              <td class="text-end d-none">{% if stat.pending_sync %}{{pretty_num(v=stat.pending_sync)}}{% endif %}</td>
+              <td class="text-end d-none">{% if stat.unsynced %}{{pretty_num(v=stat.unsynced)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl %}{{pretty_num(v=stat.in_fl)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_stuck %}{{pretty_num(v=stat.in_fl_stuck)}}{% endif %}</td>
+              <td class="text-end d-none">{% if stat.in_fl_sync %}{{pretty_num(v=stat.in_fl_sync)}}{% endif %}</td>
+              <td class="text-end d-none">{% if stat.in_fl_sync_stuck %}{{pretty_num(v=stat.in_fl_sync_stuck)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_report %}{{pretty_num(v=stat.in_fl_report)}}{% endif %}</td>
+              <td class="text-end">{% if stat.in_fl_report_stuck %}{{pretty_num(v=stat.in_fl_report_stuck)}}{% endif %}</td>
+              <td class="text-end">{% if stat.r10m %}{{pretty_num(v=stat.r10m)}}{% endif %}</td>
+              <td class="text-end">{% if stat.rf10m %}{{pretty_num(v=stat.rf10m)}}{% endif %}</td>
+              <td class="text-end">{% if stat.r1hr %}{{pretty_num(v=stat.r1hr)}}{% endif %}</td>
+              <td class="text-end">{% if stat.rf1hr %}{{pretty_num(v=stat.rf1hr)}}{% endif %}</td>
+              <td class="text-end">{% if stat.r24hr %}{{pretty_num(v=stat.r24hr)}}{% endif %}</td>
+              <td class="text-end">{% if stat.rf24hr %}{{pretty_num(v=stat.rf24hr)}}{% endif %}</td>
               <td class="text-end">{% if stat.r_r10m %}{{stat.r_r10m | round(method="ceil", precision=1)}}{% endif %}</td>
               <td class="text-end">{% if stat.r_r1hr %}{{stat.r_r1hr | round(method="ceil", precision=1)}}{% endif %}</td>
-              <td class="text-end">{% if stat.r_s2r10m %}{{stat.r_s2r10m | round(method="ceil")}}{% endif %}</td>
-              <td class="text-end">{% if stat.r_s2r1hr %}{{stat.r_s2r1hr | round(method="ceil")}}{% endif %}</td>
+              <td class="text-end">{% if stat.r_s2r10m %}{{pretty_num(v=stat.r_s2r10m | round(method="ceil"))}}{% endif %}</td>
+              <td class="text-end">{% if stat.r_s2r1hr %}{{pretty_num(v=stat.r_s2r1hr | round(method="ceil"))}}{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -220,30 +220,30 @@
             <tr>
               <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
-              <td class="text-end">{{stat.contributors_total | default(value="")}}</td>
-              <td class="text-end">{{stat.mapped_to_gh_login | default(value="")}}</td>
-              <td class="text-end">{{stat.confirmed_no_gh_login | default(value="")}}</td>
-              <td class="text-end">{{stat.to_be_mapped | default(value="")}}</td>
-              <td class="text-end">{{stat.retry_later | default(value="")}}</td>
+              <td class="text-end">{{pretty_num(v=stat.contributors_total | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.mapped_to_gh_login | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.confirmed_no_gh_login | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.to_be_mapped | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.retry_later | default(value=""))}}</td>
               <td class="text-end">{{stat.newest_unmapped | default(value="") | truncate(length=10, end="")}}</td>
-              <td class="text-end">{{stat.added_10m | default(value="")}}</td>
-              <td class="text-end">{{stat.added_1hr | default(value="")}}</td>
-              <td class="text-end">{{stat.added_24hr | default(value="")}}</td>
-              <td class="text-end">{{stat.confirmed_10m | default(value="")}}</td>
-              <td class="text-end">{{stat.confirmed_1hr | default(value="")}}</td>
-              <td class="text-end">{{stat.confirmed_24hr | default(value="")}}</td>
-              <td class="text-end">{{stat.this_year_commits | default(value="")}}</td>
-              <td class="text-end">{{stat.last_year_commits | default(value="")}}</td>
-              <td class="text-end">{{stat.older_commits | default(value="")}}</td>
-              <td class="text-end">{{stat.this_year_commits_10m | default(value="")}}</td>
-              <td class="text-end">{{stat.last_year_commits_10m | default(value="")}}</td>
-              <td class="text-end">{{stat.older_commits_10m | default(value="")}}</td>
-              <td class="text-end">{{stat.this_year_commits_1hr | default(value="")}}</td>
-              <td class="text-end">{{stat.last_year_commits_1hr | default(value="")}}</td>
-              <td class="text-end">{{stat.older_commits_1hr | default(value="")}}</td>
-              <td class="text-end">{{stat.this_year_commits_24hr | default(value="")}}</td>
-              <td class="text-end">{{stat.last_year_commits_24hr | default(value="")}}</td>
-              <td class="text-end">{{stat.older_commits_24hr | default(value="")}}</td>
+              <td class="text-end">{{pretty_num(v=stat.added_10m | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.added_1hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.added_24hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.confirmed_10m | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.confirmed_1hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.confirmed_24hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.this_year_commits | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.last_year_commits | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.older_commits | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.this_year_commits_10m | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.last_year_commits_10m | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.older_commits_10m | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.this_year_commits_1hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.last_year_commits_1hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.older_commits_1hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.this_year_commits_24hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.last_year_commits_24hr | default(value=""))}}</td>
+              <td class="text-end">{{pretty_num(v=stat.older_commits_24hr | default(value=""))}}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -272,8 +272,8 @@
               <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
               <td class="text-end">{{stat.ts}}</td>
               <td class="text-end">{{stat.report_fail_counter}}</td>
-              <td class="text-end">{{stat.repos}}</td>
-              <td class="text-end">{{stat.devs}}</td>
+              <td class="text-end">{{pretty_num(v=stat.repos)}}</td>
+              <td class="text-end">{{pretty_num(v=stat.devs)}}</td>
             </tr>
             {% endfor %}
           </tbody>
