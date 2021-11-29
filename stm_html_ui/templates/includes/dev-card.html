@@ -39,6 +39,7 @@
       {% if dev._source.email or dev._source.blog %}
       <a {% if dev._source.login %} href="/{{dev._source.login}}" {% elif dev._source.owner_id %} href="/?dev={{dev._source.owner_id}}" {% endif %} title="Contact me directly"><span class="badge bg-warning">@</span></a>
       {% endif %}
+      {% if dev._source.location %}<span class="ms-1">{{dev._source.location | truncate(length=25)}}</span>{% endif %}
     </p>
     <ul class="list-inline">
       {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
