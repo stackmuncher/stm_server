@@ -1,0 +1,96 @@
+{
+  "$id": "https://schemas.stackmuncher.com/stm-mono-service-config.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "config",
+  "description": "Describes the config file for stm-mono-service app - a monolithic collection of services running on standalone VMs.",
+  "type": "object",
+  "required": [
+    "s3_bucket_web_logs",
+    "aws_region",
+    "es_url",
+    "es_idx",
+    "sqs_endpoints",
+    "pg_con_str",
+    "flow",
+    "log_level"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL of the JSON schema. Specific to VSCode."
+    },
+    "line_endings": {
+      "const": "unix",
+      "description": "Only LF line endings are allowed for consistency."
+    },
+    "s3_bucket_web_logs": {
+      "type": "string",
+      "description": "Name of the S3 bucket with web logs from CloudFront"
+    },
+    "aws_region": {
+      "type": "string",
+      "description": "AWS Region for all services"
+    },
+    "es_url": {
+      "type": "string",
+      "description": "ElasticSearch URL"
+    },
+    "es_idx": {
+      "type": "object",
+      "description": "List of ElasticSearch index names",
+      "required": [
+        "search_log"
+      ],
+      "properties": {
+        "search_log": {
+          "type": "string",
+          "description": "Contains search queries and their results"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sqs_endpoints": {
+      "type": "object",
+      "description": "List of SQS endpoints",
+      "required": [
+        "www_logs",
+        "search_stats"
+      ],
+      "properties": {
+        "www_logs": {
+          "type": "string",
+          "description": "The URL for a queue with notifications of new log files delivered to S3."
+        },
+        "search_stats": {
+          "type": "string",
+          "description": "The URL for a queue with search queries and their results for logging in ES."
+        }
+      },
+      "additionalProperties": false
+    },
+    "pg_con_str": {
+      "type": "string",
+      "description": "A PgSQL connection string."
+    },
+    "flow": {
+      "type": "string",
+      "enum": [
+        "www_log_reader",
+        "search_stats_parser"
+      ],
+      "description": "The default value for -flow param. Can be overridden by CLI args. Values: www_log_reader, search_stats_parser."
+    },
+    "log_level": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warn",
+        "info",
+        "debug",
+        "trace"
+      ],
+      "description": "The default value for log level. Can be overridden by -l CLI arg."
+    }
+  },
+  "additionalProperties": false
+}

@@ -81,7 +81,7 @@ pub async fn list_objects_from_s3(
 }
 
 /// Returns a list of up to 1000 keys matching the specified prefix and a flag indicating if the result was truncated.
-async fn list_up_to_10000_objects_from_s3(
+pub async fn list_up_to_10000_objects_from_s3(
     s3_client: &S3Client,
     s3_bucket: &String,
     s3_key_prefix: &String,
@@ -198,6 +198,48 @@ pub async fn get_text_from_s3(
 
     error!("Failed to get object contents.");
     Err(())
+}
+
+/// Deletes the object from S3 without checking if the object exists or not.
+pub async fn delete_from_s3(s3_client: &S3Client, s3_bucket: &String, s3_keys: Vec<String>) -> Result<(), ()> {
+    if s3_keys.len() == 0 {
+        info!("Deleting S3 objects: no keys supplied");
+        return Ok(());
+    }
+
+    info!("Deleting {} S3 objects", s3_keys.len());
+
+    // prepare the request
+    let mut s3_object_ids: Vec<rusoto_s3::ObjectIdentifier> = Vec::new();
+    info!("Deleting {}", s3_keys.join(", "));
+    for key in s3_keys {
+        let obj_id = rusoto_s3::ObjectIdentifier {
+            key: key,
+            version_id: None,
+        };
+        s3_object_ids.push(obj_id);
+    }
+    let delete = rusoto_s3::Delete {
+        objects: s3_object_ids,
+        quiet: Some(true),
+    };
+
+    let _s3_resp = match s3_client
+        .delete_objects(rusoto_s3::DeleteObjectsRequest {
+            bucket: s3_bucket.clone(),
+            delete,
+            ..Default::default()
+        })
+        .await
+    {
+        Err(e) => {
+            error!("Failed to delete S3 objects. {}", e);
+            return Err(());
+        }
+        Ok(v) => v,
+    };
+
+    Ok(())
 }
 
 // /// Uploads the payload to S3.

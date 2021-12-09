@@ -1,0 +1,2 @@
+#!/bin/bash -x
+/home/ubuntu/rust/stm_mono_service 2>&1 | rotatelogs /home/ubuntu/rust/logs/trace.%Y%m%d.%H%M.txt 20M

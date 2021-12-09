@@ -84,3 +84,21 @@ CREATE INDEX idx_dev_stale_reports ON t_dev (
   owner_id
 )
 WHERE (report_ts IS NULL or report_ts < last_submission_ts)  and report_in_flight_id is NULL and last_submission_ts is NOT NULL;
+
+---------------------------------------------------------------------------------------------------------------
+
+-- contains details for some IPs of interest, e.g. bots or rate limit breakers
+DROP TABLE IF EXISTS t_ip_log CASCADE;
+CREATE TABLE t_ip_log (
+  -- IP v4 or v6
+  ip varchar PRIMARY KEY,
+  -- number of requests sent during the period
+  cnt bigint NOT NULL DEFAULT (0),
+  -- when the record was created, start of the period for the counter
+  added_ts timestamp with time zone,
+    -- when the IP was last encountered, end of the period for the counter
+  latest_ts timestamp with time zone
+);
+
+DROP INDEX IF EXISTS idx_ip_log;
+CREATE INDEX idx_ip_log ON t_ip_log (ip);

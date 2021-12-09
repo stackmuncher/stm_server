@@ -1,0 +1,30 @@
+[package]
+name = "stm_mono_service"
+version = "0.1.0"
+authors = ["rimutaka <max@onebro.me>"]
+edition = "2021"
+
+[dependencies]
+hyper = { version = "0.14", features = ["http2", "runtime"] }
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+hyper-rustls = "0.23"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = "0.3"
+tracing-futures = "0.2"
+log = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+base64 = "0.13"
+bytes = "1.1"
+tar = "0.4"
+flate2 = "1.0"
+uuid = { version = "0.8", features = ["serde", "v4"] }
+rusoto_s3 = { version = "0.47", features = ["rustls"], default-features = false }
+rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false }
+rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
+tokio-postgres = { version = "0.7", features = ["with-uuid-0_8", "with-chrono-0_4"] }
+regex = "1.4"
+# local packages
+stm_shared = { version = "0.1", path = "../stm_shared" }

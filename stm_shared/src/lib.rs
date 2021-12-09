@@ -1,10 +1,22 @@
 use regex::Regex;
 use tracing::{error, info, warn};
 
+pub mod aws_events;
 pub mod elastic;
 pub mod pgsql;
 pub mod s3;
 pub mod sqs;
+
+/// Helps decide on the best course of action for job processing.
+/// The error must include the job it relates to for the job to be marked in the queue
+/// for re-processing
+#[derive(PartialEq)]
+pub enum FailureType<T> {
+    /// Networking errors, scheduling conflicts.
+    Retry(T),
+    /// Data errors - corrupt or missing files.
+    DoNotRetry(T),
+}
 
 /// Logs the body as error!(), if possible.
 pub fn log_http_body(body_bytes: &hyper::body::Bytes) {

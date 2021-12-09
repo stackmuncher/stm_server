@@ -1,5 +1,5 @@
 [workspace]
-members = ["stm_inbox", "stm_inbox_router", "stm_inbox_flows", "stm_html_ui", "stm_shared"]
+members = ["stm_inbox", "stm_inbox_router", "stm_inbox_flows", "stm_html_ui", "stm_shared", "stm_mono_service"]
 
 [profile.release]
 lto = true
