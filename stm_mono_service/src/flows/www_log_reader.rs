@@ -445,7 +445,7 @@ async fn process_www_log(log_s3_key: String, config: &Config) -> Result<Vec<IpLo
 }
 
 /// A list of lower-cased user-agent substrings from https://github.com/monperrus/crawler-user-agents/blob/master/crawler-user-agents.json
-const BOT_AGENTS: [&str; 485] = [
+const BOT_AGENTS: [&str; 493] = [
     "ptst",
     "sentry",
     "ppingdom",
@@ -793,6 +793,7 @@ const BOT_AGENTS: [&str; 485] = [
     "seewithkids",
     "semanticbot",
     "semanticscholarbot",
+    "semrush",
     "sentibot",
     "seobilitybot",
     "seokicks",
@@ -931,4 +932,11 @@ const BOT_AGENTS: [&str; 485] = [
     "zoominfobot",
     "zumbot",
     "zuperlistbot",
+    "netsystemsresearch",
+    "postmanruntime",
+    "-",
+    "paloaltonetworks",
+    "expanseinc",
+    "neevabot",
+    "siteauditor",
 ];
