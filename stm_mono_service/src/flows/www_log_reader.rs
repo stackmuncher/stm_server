@@ -164,49 +164,50 @@ pub(crate) async fn read_www_logs(mut config: Config) {
         let receipt_handles = new_log_msgs.get_all_receipt_handles();
         let new_log_msgs_count = new_log_msgs.messages.len();
 
-        // get the list of all S3 keys from received messages
-        let s3_keys = new_log_msgs
-            .messages
-            .into_iter()
-            .map(|msg| msg.message.get_all_s3_keys())
-            .collect::<Vec<Vec<String>>>()
-            .into_iter()
-            .flatten()
-            .collect::<Vec<String>>();
+        if new_log_msgs_count > 0 {
+            // get the list of all S3 keys from received messages
+            let s3_keys = new_log_msgs
+                .messages
+                .into_iter()
+                .map(|msg| msg.message.get_all_s3_keys())
+                .collect::<Vec<Vec<String>>>()
+                .into_iter()
+                .flatten()
+                .collect::<Vec<String>>();
 
-        info!("Received {} new search log msgs with {} keys", new_log_msgs_count, s3_keys.len());
+            info!("Received {} new search log msgs with {} keys", new_log_msgs_count, s3_keys.len());
 
-        // there should be just one log per event, but the code is more elegant if we re-use multi-log processing
-        let (new_ips, new_errors) = process_www_logs(&config, &pg_client, s3_keys).await;
-        let cache_size = ip_cache.len();
+            // there should be just one log per event, but the code is more elegant if we re-use multi-log processing
+            let (new_ips, new_errors) = process_www_logs(&config, &pg_client, s3_keys).await;
+            let cache_size = ip_cache.len();
 
-        // add new IPs to the local cache
-        for ip in new_ips {
-            ip_cache.insert(ip);
+            // add new IPs to the local cache
+            for ip in new_ips {
+                ip_cache.insert(ip);
+            }
+            info!(
+                "Cache size: {}, new IPs added: {}, errors: {}/{}",
+                ip_cache.len(),
+                ip_cache.len() - cache_size,
+                err_counter,
+                new_errors
+            );
+            if new_errors == 0 {
+                err_counter = 0
+            } else {
+                err_counter += new_errors;
+                sleep(Duration::from_secs(60)).await;
+                continue;
+            }
+
+            // delete the messages from www-logs queue
+            if delete_messages(&sqs_client, &www_logs_queue_url, receipt_handles)
+                .await
+                .is_err()
+            {
+                err_counter += 1;
+            };
         }
-        info!(
-            "Cache size: {}, new IPs added: {}, errors: {}/{}",
-            ip_cache.len(),
-            ip_cache.len() - cache_size,
-            err_counter,
-            new_errors
-        );
-        if new_errors == 0 {
-            err_counter = 0
-        } else {
-            err_counter += new_errors;
-            sleep(Duration::from_secs(60)).await;
-            continue;
-        }
-
-        // delete the messages from www-logs queue
-        if delete_messages(&sqs_client, &www_logs_queue_url, receipt_handles)
-            .await
-            .is_err()
-        {
-            err_counter += 1;
-        };
-
         // process search events -------------------------------------------------------
 
         let new_search_events =
@@ -221,46 +222,55 @@ pub(crate) async fn read_www_logs(mut config: Config) {
             };
 
         let new_search_events_count = new_search_events.messages.len();
-        info!("Received {} new search event msgs", new_search_events_count);
 
-        // get the list of handles for deleting the messages from the queue
-        let receipt_handles = new_search_events.get_all_receipt_handles();
+        if new_search_events_count > 0 {
+            // get the list of handles for deleting the messages from the queue
+            let receipt_handles = new_search_events.get_all_receipt_handles();
 
-        // save events in ES if they are not from the list of known bot IPs
-        for search_event in new_search_events.messages {
-            if let Some(ip) = &search_event.message.ip {
-                if !ip_cache.contains(ip) {
-                    // push the payload into ES
-                    let object_id = search_event.message.get_hash();
-                    if upload_object_to_es::<SearchLog>(
-                        config.es_url.clone(),
-                        config.aws_credentials().clone(),
-                        search_event.message,
-                        object_id,
-                        config.es_idx.search_log.clone(),
-                    )
-                    .await
-                    .is_err()
-                    {
-                        err_counter += 1;
-                    };
+            // save events in ES if they are not from the list of known bot IPs
+            let mut saved_in_es = 0_usize;
+            for search_event in new_search_events.messages {
+                if let Some(ip) = &search_event.message.ip {
+                    if !ip_cache.contains(ip) {
+                        // push the payload into ES
+                        saved_in_es += 1;
+                        let object_id = search_event.message.get_hash();
+                        if upload_object_to_es::<SearchLog>(
+                            config.es_url.clone(),
+                            config.aws_credentials().clone(),
+                            search_event.message,
+                            object_id,
+                            config.es_idx.search_log.clone(),
+                        )
+                        .await
+                        .is_err()
+                        {
+                            err_counter += 1;
+                        };
+                    }
                 }
             }
-        }
 
-        // delete event messages from the SQS queue
-        if delete_messages(&sqs_client, &search_events_queue_url, receipt_handles)
-            .await
-            .is_err()
-        {
-            err_counter += 1;
-        };
+            if saved_in_es > 0 {
+                info!("Non-bot searches: {}", saved_in_es);
+            }
 
-        // reset the error counter if work was done and the loop completed successfully with no errors
-        if err_counter == loop_start_errors && (new_log_msgs_count > 0 || new_search_events_count > 0) {
-            err_counter = 0;
+            // delete event messages from the SQS queue
+            if delete_messages(&sqs_client, &search_events_queue_url, receipt_handles)
+                .await
+                .is_err()
+            {
+                err_counter += 1;
+            };
+
+            // reset the error counter if work was done and the loop completed successfully with no errors
+            if err_counter == loop_start_errors && (new_log_msgs_count > 0 || new_search_events_count > 0) {
+                err_counter = 0;
+            }
         }
-        info!("End of loop error count: {}", err_counter);
+        if err_counter > 0 {
+            info!("End of loop error count: {}", err_counter);
+        }
     }
 }
 

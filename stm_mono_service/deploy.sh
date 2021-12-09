@@ -1,0 +1,2 @@
+#!/bin/bash -x
+cargo build --release --target x86_64-unknown-linux-gnu --package stm_mono_service && strip ./target/x86_64-unknown-linux-gnu/release/stm_mono_service && aws s3 cp target/x86_64-unknown-linux-gnu/release/stm_mono_service s3://$STM_S3_BUCKET_PROD_BOOTSTRAP/apps/stm_mono_service
