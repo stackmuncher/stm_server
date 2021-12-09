@@ -69,7 +69,15 @@
         "type": "long"
       },
       "location": {
-        "type": "text"
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "lowercase"
+          }
+        },
+        "analyzer": "lowercase"
       },
       "login": {
         "type": "text",

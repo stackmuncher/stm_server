@@ -1,0 +1,25 @@
+# Kibana scripts for reindexing DEV ElasticSearch idx
+
+# reindex into a new idx
+POST _reindex?wait_for_completion=false
+{
+  "source": {
+    "index": "dev_20211102"
+  },
+  "dest": {
+    "index": "dev_20211210"
+  }
+}
+
+# add `dev` alias to the new idx
+PUT /dev_20211210/_aliases/dev
+
+# delete `dev` alias from the old idx
+DELETE /dev_20211102/_aliases/dev
+
+# delete the old idx
+DELETE /dev_20210819
+
+# check the details
+GET /dev_20211102/_settings
+GET /dev_20211102/_mapping

@@ -1,0 +1,23 @@
+# delete all docs for one or more IPs
+POST search_log/_delete_by_query
+{
+  "query": {
+    "terms": {
+      "ip.keyword": ["77.88.5.60","213.180.203.183"]
+    }
+  }
+}
+
+# last 100 searches
+GET search_log/_search
+{
+  "query": {
+    "match_all": {}
+  },"size": 100, "sort": [
+    {
+      "ts": {
+        "order": "desc"
+      }
+    }
+  ]
+}
