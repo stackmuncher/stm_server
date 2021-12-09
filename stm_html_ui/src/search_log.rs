@@ -1,40 +1,30 @@
 use crate::html::html_data::HtmlData;
 use chrono::Utc;
-use serde::Serialize;
+use rusoto_sqs::SqsClient;
+use std::convert::From;
+pub(crate) use stm_shared::elastic::types::SearchLog;
 use stm_shared::elastic::types::{ESSource, ESSourceDev};
 use tracing::error;
 
-/// A container for search results stats
-#[derive(Serialize)]
-pub(crate) struct SearchLog {
-    /// The raw search string as entered by the user
-    pub raw: String,
-    /// Same as availability_tz in html_data
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub availability_tz: Option<String>,
-    /// Same as availability_tz_hrs in html_data
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub availability_tz_hrs: Option<usize>,
-    /// List of keywords extracted from the raw search
-    pub kw: Vec<String>,
-    /// A list of search terms matching known languages
-    pub lang: Vec<String>,
-    /// Source IP address
-    pub ip: Option<String>,
-    /// EPOCH of the timestamp
-    pub ts: i64,
-    /// Duration of the request in ms
-    pub dur: i64,
-    /// List of GH logins found in the response
-    pub gh_logins: Vec<String>,
-}
-
 const HEADER_SOURCE_IP: &str = "x-forwarded-for";
 
-impl SearchLog {
+/// Converts itself into a string and sends it to the specified queue.
+/// Logs any errors on failure.
+pub(crate) async fn send_to_sqs(search_log: &SearchLog, sqs_client: &SqsClient, sqs_queue_url: &String) {
+    match serde_json::to_string(search_log) {
+        Ok(payload) => {
+            let _ = stm_shared::sqs::send(sqs_client, payload, sqs_queue_url).await;
+        }
+        Err(e) => {
+            error!("Failed to serialize SearchLog: {}", e);
+        }
+    }
+}
+
+impl From<&HtmlData> for SearchLog {
     /// Extracts data needed for logging from `html_data`.
     /// Logs an error and returns what it can on error.
-    pub(crate) fn from_html_data<'b>(html_data: &HtmlData) -> Self {
+    fn from<'b>(html_data: &HtmlData) -> Self {
         // prepare a no-results response
         let source_ip = match html_data.headers.get(HEADER_SOURCE_IP) {
             Some(v) => {
@@ -90,19 +80,6 @@ impl SearchLog {
         SearchLog {
             gh_logins,
             ..search_log
-        }
-    }
-
-    /// Converts itself into a string and sends it to the specified queue.
-    /// Logs any errors on failure.
-    pub(crate) async fn send_to_sqs(&self, sqs_queue_url: &String) {
-        match serde_json::to_string(self) {
-            Ok(payload) => {
-                let _ = stm_shared::sqs::send(payload, sqs_queue_url).await;
-            }
-            Err(e) => {
-                error!("Failed to serialize SearchLog: {}", e);
-            }
         }
     }
 }

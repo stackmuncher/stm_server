@@ -1,4 +1,7 @@
 use regex::Regex;
+use rusoto_core::region::Region as AwsRegion;
+use rusoto_sqs::SqsClient;
+use std::str::FromStr;
 use tracing::warn;
 
 /// Add the name of the ElasticSearch index to that env var
@@ -11,6 +14,7 @@ const ES_URL_ENV: &str = "STM_HTML_ES_URL";
 const SQS_SEARCH_STATS_URL: &str = "STM_HTML_SQS_SEARCH_STATS_URL";
 
 pub struct Config {
+    pub aws_region: AwsRegion,
     /// Absolute ElasticSearch URL
     pub es_url: String,
     /// Name of `dev` index
@@ -28,6 +32,8 @@ pub struct Config {
     /// * Capture group 1: hours in the timezone
     /// * Capture group 2: timezone, can be blank for UTC
     pub timezone_terms_regex: Regex,
+    /// SQS client for `aws_region`
+    pub sqs_client: SqsClient,
 }
 
 /// A regex formula to extract search terms from the raw search string.
@@ -42,7 +48,17 @@ const NO_SQL_STRING_INVALIDATION_REGEX: &str = r#"[^#\-._+0-9a-zA-Z]"#;
 
 impl Config {
     pub fn new() -> Self {
+        let aws_region = AwsRegion::from_str(
+            std::env::var("AWS_REGION")
+                .expect(&format!("Missing AWS_REGION env var with the AWS region, e.g. us-east-1"))
+                .trim()
+                .trim_end_matches("/"),
+        )
+        .expect("Invalid value in AWS_REGION env var. Expecting `us-east-1` format.");
+
         Config {
+            aws_region: aws_region.clone(),
+
             es_url: std::env::var(ES_URL_ENV)
                 .expect(&format!("Missing {} env var with ElasticSearch URL", ES_URL_ENV))
                 .trim()
@@ -67,6 +83,7 @@ impl Config {
                 r#"(?i)(?:[[:space:]]|^)(\d{1,2})(?:hrs@|hr@|h@|@)?utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#,
             )
             .expect("Failed to compile timezone_terms_regex"),
+            sqs_client: SqsClient::new(aws_region),
         }
     }
 }

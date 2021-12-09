@@ -1,5 +1,8 @@
 use crate::config::{validate_owner_id, Config};
-use crate::{elastic, search_log::SearchLog};
+use crate::{
+    elastic,
+    search_log::{send_to_sqs, SearchLog},
+};
 use chrono::Utc;
 use html_data::{HtmlData, KeywordMetadata};
 use regex::Regex;
@@ -303,9 +306,7 @@ pub(crate) async fn html(
 
         // log the search query and its results in a DB via SQS
         if !html_data.raw_search.is_empty() {
-            SearchLog::from_html_data(&html_data)
-                .send_to_sqs(&config.search_log_sqs_url)
-                .await;
+            send_to_sqs(&SearchLog::from(&html_data), &config.sqs_client, &config.search_log_sqs_url).await;
         }
 
         return Ok(html_data);
