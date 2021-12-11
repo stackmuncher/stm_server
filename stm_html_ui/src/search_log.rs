@@ -52,6 +52,7 @@ impl From<&HtmlData> for SearchLog {
             dur: Utc::now().timestamp_millis() - html_data.timestamp.timestamp_millis(),
             availability_tz: html_data.availability_tz.clone(),
             availability_tz_hrs: html_data.availability_tz_hrs,
+            page_num: html_data.page_number,
         };
 
         // get the list of dev logins from the ES response

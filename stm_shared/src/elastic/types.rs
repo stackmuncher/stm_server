@@ -180,6 +180,9 @@ pub struct SearchLog {
     pub kw: Vec<String>,
     /// A list of search terms matching known languages
     pub lang: Vec<String>,
+    /// Page number of the request, defaults to 1
+    #[serde(default)]
+    pub page_num: usize,
     /// Source IP address
     pub ip: Option<String>,
     /// EPOCH of the timestamp
