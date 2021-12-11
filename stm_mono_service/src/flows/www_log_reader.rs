@@ -412,7 +412,7 @@ async fn process_www_log(log_s3_key: String, config: &Config) -> Result<Vec<IpLo
             info!("Bot UA: {}", fields[10]);
         } else {
             // not a bot - nothing else to be done
-            info!("User UA: {}", fields[10]);
+            info!("User UA: {} /// IP: {}", fields[10], fields[4]);
             continue;
         };
 
