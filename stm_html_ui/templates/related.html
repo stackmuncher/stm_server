@@ -8,9 +8,9 @@
   <div class="container-fluid">
     <div class="row {% if related | length == 0 %}align-items-center{% endif %}">
       <div class="col-md-6 col-lg-4">
-        <h1><code>{{keywords_str}}</code> libraries and keywords</h1>
+        <h1><code>{{keywords_str}}</code>-related libraries</h1>
         <ul class="mt-3 ps-3">
-          <li class="mb-1"><strong>Keyword matches</strong>:
+          <li class="mb-1"><strong>Matches found</strong>:
             {% set related_len = related | length %}
             {% if related_len > 99 %}
             more than
@@ -19,7 +19,7 @@
         </ul>
 
         {% if related | length > 0 %}
-        <p class="text-muted">Keywords are taken from library names found in the code:</p>
+        <p class="text-muted">You can search for exact or partial library names to find developers using them. If you combine library names with other keywords: </p>
         <ul class="text-muted">
           {% for ref in related %}
           {% if ref.k is containing(".")%}
@@ -30,7 +30,7 @@
 
           {% for ref in related %}
           {% if ref.k is not containing(".")%}
-          <li class="mb-1">singe keywords like <code>{{ref.k}}</code> will match any library that contains that keyword</li>
+          <li class="mb-1">singe keywords like <code>{{ref.k}}</code> match multiple libraries</li>
           {% break %}
           {% endif %}
           {% endfor %}

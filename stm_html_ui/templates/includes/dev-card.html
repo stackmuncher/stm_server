@@ -41,21 +41,68 @@
       {% endif %}
       {% if dev._source.location %}<span class="ms-1">{{dev._source.location | truncate(length=25)}}</span>{% endif %}
     </p>
+    
     <ul class="list-inline">
+      {# ----- MATCHING LANGUAGES ----- #}
+      {% for lang in langs %}
       {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
-      {% set_global li_highlight_outer = "" %}
-      {% set_global li_highlight_inner = "" %}
+      {% if lang.0 == tech.language | lower %}
+      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border border-success">
+        {{tech.language}}
+        <span class="badge bg-white text-dark ms-2 fw-light fw-normal">{{pretty_num(v=tech.total_lines)}}</span>
+      </li>
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+
+      {# ----- LIBRARIES ----- #}
+      {% for kw in keywords %}
+      {% set_global kw_cnt = 0 %}
+
+      {% for tech in dev._source.report.tech %}
+
+      {% if tech.refs %}
+      {% for ref in tech.refs %}
+      {% set ref_k = ref.k | lower %}
+      {% if ref_k is containing(kw) %}
+      {% set_global kw_cnt = kw_cnt + ref.c %}
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+
+      {% if tech.pkgs %}
+      {% for ref in tech.pkgs %}
+      {% set ref_k = ref.k | lower %}
+      {% if ref_k is containing(kw) %}
+      {% set_global kw_cnt = kw_cnt + ref.c %}
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+
+      {% endfor %}
+
+      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border border-success">
+        {{kw}}
+        <span class="badge bg-white text-dark ms-2 fw-light normal">{{pretty_num(v=kw_cnt)}}</span>
+      </li>
+
+      {% endfor %}
+
+      {# ----- OTHER LANGUAGES ----- #}
+      {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
+      {% set_global incl_lang = true %}
       {% for lang in langs %}
       {% if lang.0 == tech.language | lower %}
-      {% set_global li_highlight_outer = "border-success" %}
-      {% set_global li_highlight_inner = "fw-normal" %}
+      {% set_global incl_lang = false %}
       {% break %}
       {% endif %}
       {% endfor %}
-      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border {{li_highlight_outer}}">
+      {% if incl_lang %}
+      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border">
         {{tech.language}}
-        <span class="badge bg-white text-dark ms-2 fw-light {{li_highlight_inner}}">{{pretty_num(v=tech.total_lines)}}</span>
+        <span class="badge bg-white text-dark ms-2 fw-light">{{pretty_num(v=tech.total_lines)}}</span>
       </li>
+      {% endif %}
       {% endfor %}
     </ul>
 
