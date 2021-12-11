@@ -15,9 +15,10 @@ pub(crate) async fn html(
     timezone_hours: usize,
     html_data: HtmlData,
 ) -> Result<HtmlData, ()> {
-    info!("Generating html-keyword");
-    info!("KWs: {:?}", keywords);
-    info!("Lang: {:?}", langs);
+    info!(
+        "Generating html-keyword, KWs: {:?}, lang: {:?}, from: {}",
+        keywords, langs, html_data.results_from
+    );
 
     // return a blank response if no valid keywords were extracted from the search terms
     if keywords.is_empty() && langs.is_empty() {
@@ -26,7 +27,7 @@ pub(crate) async fn html(
             keywords,
             langs,
             keywords_str: None,
-            template_name: "keyword.html".to_owned(),
+            template_name: "dev_search.html".to_owned(),
             ttl: 3600,
             http_resp_code: 404,
             meta_robots: Some("noindex".to_owned()),
@@ -42,6 +43,7 @@ pub(crate) async fn html(
         langs.clone(),
         timezone_offset,
         timezone_hours,
+        html_data.results_from,
         &config.no_sql_string_invalidation_regex,
     )
     .await?;
@@ -49,7 +51,7 @@ pub(crate) async fn html(
     // pre-build search terms as a string for simplified presentation
     // it should present them all as a list, but for now it uses a simple string
     // languages come first
-    let mut combined_search_terms = langs.iter().map(|(l,_)|l.clone()).collect::<Vec<String>>();
+    let mut combined_search_terms = langs.iter().map(|(l, _)| l.clone()).collect::<Vec<String>>();
     for kw in &keywords {
         combined_search_terms.push(kw.clone());
     }
@@ -69,7 +71,7 @@ pub(crate) async fn html(
         keywords,
         langs,
         keywords_str: Some(combined_search_terms),
-        template_name: "keyword.html".to_owned(),
+        template_name: "dev_search.html".to_owned(),
         ttl: 600,
         http_resp_code: 200,
         meta_robots,

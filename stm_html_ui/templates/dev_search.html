@@ -71,7 +71,7 @@
           </li>
           {% endif %}
 
-          <li class="mt-1"><strong>Total matches:</strong>
+          <li class="mt-1"><strong>Matches found:</strong>
             {% if devs %}
             {% if devs.hits.total.value > 9999 %}
             more than
@@ -102,9 +102,10 @@
 
       </div>
 
-      {% if devs and devs.hits.hits | length > 0 %}
+      {% if devs and devs.hits.total.value > 0 %}
       <div class="col-md-8 col-lg-9">
         <main role="main">
+          {# ----- LIST OF DEVS ----- #}
           <div class="row">
             {% for dev in devs.hits.hits %}
             <div class="col-xl-4 col-lg-6">
@@ -112,34 +113,34 @@
             </div>
             {% endfor %}
           </div>
-
-          <div class="row justify-content-center">
-            <div class="col-lg-10 col-xxl-8">
-              <h4 class="mt-5">Find more software developers by modifying your search terms</h4>
-              <ol class="mt-3">
-                <li>
-                  <h6 class="mt-2">Explore related keywords and library names for
-                    {% for kw in used_terms %}
-                    <a href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_language_count}} devs use this language.">{{kw.search_term}}</a>{% if not loop.last %},{% endif %}
-                    {% endfor %}
-                  </h6>
-                </li>
-                <li>
-                  <h6 class="mt-2">Set minimum number of lines of code per computer language, e.g. <code>typescript:10000 vuejs apollo</code></h6>
-                </li>
-                <li>
-                  <h6 class="mt-2">Filter by timezone availability: <code> 4hrs@utc-5 typescript:10000 vuejs apollo</code></h6>
-                </li>
-              </ol>
-              <p>Check more <a title="Detailed explanation and examples of effective developer search" href="/about/posts/software-developer-search-syntax/">effective search examples</a> or repeat this search in 10 minutes to see new additions.</p>
-            </div>
-          </div>
-
-
-
-
         </main>
       </div>
+
+      {# ----- PAGINATION SECTION ----- #}
+      <div class="row justify-content-center mt-4">
+        <div class="col-lg-10 col-xxl-8">
+          {# Max 20 pages per search #}
+          {% set page_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20] %}
+          {# The last page number for this result set based on how many devs found and how many per page #}
+          {% set last_page = devs.hits.total.value / devs_per_page %}
+          {% if last_page | int != last_page %}
+          {% set last_page = last_page + 1 | int %}
+          {% endif %}
+
+          {% if last_page > 1 %}
+          <ul class="list-inline text-center">
+            {% for page_link_num in page_list | slice(end=last_page) %}
+            {% if page_link_num == page_number %}
+            <li class="list-inline-item">{{page_link_num}}</li>
+            {% else %}
+            <li class="list-inline-item"><a href="/?{{raw_search | urlencode}} p:{{page_link_num}}">{{page_link_num}}</a></li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+      </div>
+
       {% else %}
       <div class="col-md-1"></div>
       <div class="col-md-6 text-center">

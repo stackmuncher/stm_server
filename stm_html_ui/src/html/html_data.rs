@@ -64,6 +64,14 @@ pub(crate) struct HtmlData {
     /// Minimum number of hours of availability required in the specified timezone.
     /// The value is taken from the query.
     pub availability_tz_hrs: Option<usize>,
+    /// Page number in paginated results, defaults to 0
+    pub page_number: usize,
+    /// Results from ... derived from the page number
+    pub results_from: usize,
+    /// The maximum number of dev listings per page of search results
+    pub devs_per_page: usize,
+    /// Max number of pages allowed in search results. There may be fewer results than this value.
+    pub max_pages: usize,
 }
 
 /// A view of the keyword from ElasticSearch

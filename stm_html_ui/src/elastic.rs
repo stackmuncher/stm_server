@@ -1,4 +1,5 @@
 //use elasticsearch::{http::transport::Transport, CountParts, Elasticsearch, SearchParts};
+use crate::config::Config;
 use futures::future::{join3, join_all};
 use regex::Regex;
 use serde_json::Value;
@@ -149,6 +150,7 @@ pub(crate) async fn matching_doc_counts(
 /// * langs: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
 /// * timezone_offset: 0..23 where anything > 12 is the negative offset
 /// * timezone_hours: number of hours worked in the timezone
+/// * results_from: a pagination value to be passed onto ES
 pub(crate) async fn matching_devs(
     es_url: &String,
     dev_idx: &String,
@@ -156,6 +158,7 @@ pub(crate) async fn matching_devs(
     langs: Vec<(String, usize)>,
     timezone_offset: usize,
     timezone_hours: usize,
+    results_from: usize,
     no_sql_string_invalidation_regex: &Regex,
 ) -> Result<Value, ()> {
     // sample query
@@ -262,7 +265,11 @@ pub(crate) async fn matching_devs(
 
     // combine everything into a single query
     let query = [
-        r#"{"size":100,"track_scores":true,"query":{"bool":{"must":["#,
+        r#"{"size":"#,
+        &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(),
+        r#","from": "#,
+        &results_from.to_string(),
+        r#","track_scores":true,"query":{"bool":{"must":["#,
         &clauses,
         r#"]}},"sort":[{"hireable":{"order":"desc"}},{"report.timestamp":{"order":"desc"}}]}"#,
     ]

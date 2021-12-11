@@ -10,10 +10,10 @@ use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
 mod dev_profile;
+mod dev_search;
 mod gh_login_profile;
 mod home;
 pub(crate) mod html_data;
-mod keyword;
 mod related;
 mod stats;
 
@@ -50,6 +50,10 @@ pub(crate) async fn html(
         timestamp: Utc::now(),
         availability_tz: None,
         availability_tz_hrs: None,
+        page_number: 1,
+        results_from: 0,
+        devs_per_page: Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT,
+        max_pages: Config::MAX_PAGES_PER_SEARCH_RESULT,
     };
 
     // return 404 for requests that are too long or for some resource related to the static pages
@@ -111,6 +115,16 @@ pub(crate) async fn html(
 
     // is there something in the query string?
     if url_query.len() > 1 {
+        // extract the page number part from the query
+        let (url_query, page_number, results_from) =
+            extract_page_num_part_from_query(url_query, &config.page_num_terms_regex);
+        let html_data = HtmlData {
+            raw_search: url_query.clone(),
+            page_number,
+            results_from,
+            ..html_data
+        };
+
         // extract the timezone part from the query
         let (url_query, tz_hours, tz_offset) =
             extract_timezone_part_from_query(url_query, &config.timezone_terms_regex);
@@ -302,7 +316,7 @@ pub(crate) async fn html(
         };
 
         // run a keyword search for devs
-        let html_data = keyword::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?;
+        let html_data = dev_search::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?;
 
         // log the search query and its results in a DB via SQS
         if !html_data.raw_search.is_empty() {
@@ -341,6 +355,102 @@ fn extract_loc_part_from_search_term(term: String) -> Option<(String, usize)> {
 
     // it failed validation
     None
+}
+
+/// Extracts the page part from the query and returns:
+/// * the query without the page part
+/// * the page number and the FROM value for ES
+/// All values are validated and can be plugged directly into a query.
+fn extract_page_num_part_from_query(url_query: String, page_num_terms_regex: &Regex) -> (String, usize, usize) {
+    debug!("Extracting page-num part from: {}", url_query);
+    // is there any page number info?
+    let captures = match page_num_terms_regex.captures(&url_query) {
+        Some(v) => v,
+        None => {
+            info!("No page-num part - no captures");
+            return (url_query, 1, 0);
+        }
+    };
+
+    // get the time part of the query, if any
+    let full_match = match captures.get(0) {
+        Some(v) => v.as_str(),
+        None => {
+            info!("No page-num part - empty capture");
+            return (url_query, 1, 0);
+        }
+    };
+
+    info!(
+        "Full page-num part: {}, captures: {}, new url_query: {}",
+        full_match,
+        captures.len(),
+        url_query
+    );
+
+    // get the page number
+    let page_number = match captures.get(1) {
+        Some(v) => v.as_str(),
+        None => {
+            info!("No page-num part - no number");
+            return (url_query, 1, 0);
+        }
+    };
+
+    // remote the page part from the query
+    let url_query = url_query.replace(full_match, " ").trim().to_string();
+
+    // validate the number
+    let page_number = match usize::from_str_radix(page_number, 10) {
+        Ok(v) if v > 0 && v <= Config::MAX_PAGES_PER_SEARCH_RESULT => v,
+        _ => {
+            debug!("No page-num part - invalid number");
+            return (url_query, 1, 0);
+        }
+    };
+
+    // this value is needed for ES
+    let results_from = (page_number - 1) * Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT;
+
+    // all parts were collected and validated
+    info!("Page-num part: {}, from: {}", page_number, results_from);
+    (url_query, page_number, results_from)
+}
+
+#[test]
+fn extract_page_num_part_from_query_test() {
+    let config = Config::new();
+    let rgx = config.page_num_terms_regex;
+
+    let vals = vec![
+        // valid values
+        ("rust p:10", 10usize, 450usize, "rust"),
+        ("p:10", 10, 450, ""),
+        (" p:10", 10, 450, ""),
+        ("p:10 ", 10, 450, ""),
+        ("p:10 rust", 10, 450, "rust"),
+        ("rust,p:10,", 10, 450, "rust"),
+        // invalid values
+        ("p:-100", 1, 0, "p:-100"),
+        ("rust,p:100,", 1, 0, "rust"),
+        ("rust,p:11114,", 1, 0, "rust"),
+        ("rustp:10", 1, 0, "rustp:10"),
+        ("p:10a", 1, 0, "p:10a"),
+        (" kap:10", 1, 0, " kap:10"),
+        ("-p:10 rust", 1, 0, "-p:10 rust"),
+        ("p:10- rust", 1, 0, "p:10- rust"),
+        ("rust.p:10", 1, 0, "rust.p:10"),
+        (":p:10", 1, 0, ":p:10"),
+        (" a:p:10", 1, 0, " a:p:10"),
+        ("p:10#rust", 1, 0, "p:10#rust"),
+    ];
+
+    for val in vals {
+        let res = extract_page_num_part_from_query(val.0.to_string(), &rgx);
+        assert_eq!(val.1, res.1, "`{}`", val.0);
+        assert_eq!(val.2, res.2, "`{}`", val.0);
+        assert_eq!(val.3, &res.0, "`{}`", val.0);
+    }
 }
 
 /// Extracts the timezone part from the query and returns:

@@ -80,8 +80,11 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
 
     // decode possible URL path and query string
     info!("Raw path: {}, Query: {}", &api_request.raw_path, &api_request.raw_query_string);
-    let url_path = decode(&api_request.raw_path).unwrap_or_default().to_string();
-    let url_query = decode(&api_request.raw_query_string).unwrap_or_default().to_string();
+    let url_path = decode(&api_request.raw_path).unwrap_or_default().trim().to_string();
+    let url_query = decode(&api_request.raw_query_string)
+        .unwrap_or_default()
+        .trim()
+        .to_string();
     let dev = match api_request.query_string_parameters {
         None => None,
         Some(v) => v.dev,

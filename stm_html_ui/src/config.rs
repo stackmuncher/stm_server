@@ -32,6 +32,8 @@ pub struct Config {
     /// * Capture group 1: hours in the timezone
     /// * Capture group 2: timezone, can be blank for UTC
     pub timezone_terms_regex: Regex,
+    /// Extracts the page part from the query, e.g. p:1 or p:15
+    pub page_num_terms_regex: Regex,
     /// SQS client for `aws_region`
     pub sqs_client: SqsClient,
 }
@@ -47,6 +49,14 @@ const SEARCH_TERM_REGEX: &str = r#"[#:\-._+0-9a-zA-Z]+"#;
 const NO_SQL_STRING_INVALIDATION_REGEX: &str = r#"[^#\-._+0-9a-zA-Z]"#;
 
 impl Config {
+    /// The maximum number of dev listings per page of search results
+    pub const MAX_DEV_LISTINGS_PER_SEARCH_RESULT: usize = 50;
+
+    /// The maximum number of pages allowed in search.
+    /// Check HTML templates if changing the limits on page numbers
+    /// 20 is hardcoded in some of the logic there
+    pub const MAX_PAGES_PER_SEARCH_RESULT: usize = 20;
+
     pub fn new() -> Self {
         let aws_region = AwsRegion::from_str(
             std::env::var("AWS_REGION")
@@ -83,6 +93,8 @@ impl Config {
                 r#"(?i)(?:[[:space:]]|^)(\d{1,2})(?:hrs@|hr@|h@|@)?utc([\+\-]\d{1,2})?(?:[[:space:]]|$)"#,
             )
             .expect("Failed to compile timezone_terms_regex"),
+            page_num_terms_regex: Regex::new(r#"(?:[ ,]|^)p:(\d+)(?:[ ,]|$)"#)
+                .expect("Failed to compile page_num_terms_regex"),
             sqs_client: SqsClient::new(aws_region),
         }
     }
