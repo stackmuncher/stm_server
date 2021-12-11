@@ -3,13 +3,10 @@ use crate::config::Config;
 use crate::elastic;
 use tracing::{error, warn};
 
-pub(crate) async fn html(
-    config: &Config,
-    keyword: String,
-    html_data: HtmlData,
-) -> Result<HtmlData, ()> {
-    // is it a valid format for related keywords search?
-    let keyword = keyword.trim().to_string();
+pub(crate) async fn html(config: &Config, keyword: String, html_data: HtmlData) -> Result<HtmlData, ()> {
+    // replace characters unusable for this search
+    // e.g. c++ -> cpp, c# -> csharp
+    let keyword = keyword.trim().replace("#", "sharp").replace("+", "p");
 
     let html_data = HtmlData {
         related: Some(Vec::new()),
@@ -29,7 +26,14 @@ pub(crate) async fn html(
     }
 
     // get the data from ES
-    let related = match elastic::related_keywords(&config.es_url, &config.dev_idx, &keyword, &config.no_sql_string_invalidation_regex).await {
+    let related = match elastic::related_keywords(
+        &config.es_url,
+        &config.dev_idx,
+        &keyword,
+        &config.no_sql_string_invalidation_regex,
+    )
+    .await
+    {
         Err(_) => {
             // the UI shouldn't send any invalid keywords through, but the user or the bot may still try to submit
             // all sorts of values for search. Those should result in a 404 page.
