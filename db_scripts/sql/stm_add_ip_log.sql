@@ -16,5 +16,6 @@ GRANT EXECUTE ON FUNCTION stm_add_ip_log(varchar[], bigint[], timestamptz[], tim
 /*** TESTING ***/
 -- select stm_add_ip_log(array['0.0.0.0']::varchar[],array[10]::bigint[], array['2021-01-01 00:00:00']::timestamptz[], array['2021-01-02 00:00:00']::timestamptz[])
 -- select stm_add_ip_log(array['0.0.0.0','0.0.0.1']::varchar[],array[10,5]::bigint[], array['2021-01-01 00:00:00','2021-01-02 00:00:00']::timestamptz[], array['2021-02-01 00:00:00','2021-03-02 00:00:00']::timestamptz[])
--- select * from t_ip_log
+-- select * from t_ip_log where ip = 'xxx'
 -- truncate table t_ip_log
+-- delete from t_ip_log where ip = 'xxx'
