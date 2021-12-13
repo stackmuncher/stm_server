@@ -79,7 +79,7 @@
             <select class="form-select form-select-sm" id="search_lang1loc" aria-label="Select expertise level for language 1">
               <option {% if langs | length==0 %}selected{% endif %}></option>
               <option value="" {% if langs | length> 0 and langs[0].1 < 5000 %}selected{% endif %}>any</option>
-              <option value="5000" {% if langs | length> 0 and langs[0].1 > 5000 and langs[0].1 < 30000 %}selected{% endif %}>medium</option>
+              <option value="5000" {% if langs | length> 0 and langs[0].1 >= 5000 and langs[0].1 < 30000 %}selected{% endif %}>medium</option>
               <option value="30000" {% if langs | length> 0 and langs[0].1 >= 30000 %}selected{% endif %}>high</option>
             </select>
           </div>
@@ -95,7 +95,7 @@
             <select class="form-select form-select-sm" id="search_lang2loc" aria-label="Select expertise level for language 2">
               <option {% if langs | length==1 %}selected{% endif %}></option>
               <option value="" {% if langs | length> 1 and langs[1].1 < 5000 %}selected{% endif %}>any</option>
-              <option value="5000" {% if langs | length> 1 and langs[1].1 > 5000 and langs[1].1 < 30000 %}selected{% endif %}>medium</option>
+              <option value="5000" {% if langs | length> 1 and langs[1].1 >= 5000 and langs[1].1 < 30000 %}selected{% endif %}>medium</option>
               <option value="30000" {% if langs | length> 1 and langs[1].1 >= 30000 %}selected{% endif %}>high</option>
             </select>
           </div>
@@ -111,7 +111,7 @@
             <select class="form-select form-select-sm" id="search_lang3loc" aria-label="Select expertise level for language 3">
               <option {% if langs | length < 3 %}selected{% endif %}></option>
               <option value="" {% if langs | length> 2 and langs[2].1 < 5000 %}selected{% endif %}>any</option>
-              <option value="5000" {% if langs | length> 2 and langs[2].1 > 5000 and langs[2].1 < 30000 %}selected{% endif %}>medium</option>
+              <option value="5000" {% if langs | length> 2 and langs[2].1 >= 5000 and langs[2].1 < 30000 %}selected{% endif %}>medium</option>
               <option value="30000" {% if langs | length> 2 and langs[2].1 >= 30000 %}selected{% endif %}>high</option>
             </select>
           </div>
