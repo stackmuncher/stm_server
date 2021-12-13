@@ -20,7 +20,7 @@ pub(crate) async fn html(config: &Config, keyword: String, html_data: HtmlData) 
 
     // check if the search term has any invalid chars - the string must be safe to include into another regex
     // inside an ES query
-    if config.no_sql_string_invalidation_regex.is_match(&keyword) {
+    if config.library_name_invalidation_regex.is_match(&keyword) {
         warn!("Invalid keyword: {}", keyword);
         return Ok(html_data);
     }

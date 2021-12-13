@@ -72,6 +72,9 @@ pub(crate) struct HtmlData {
     pub devs_per_page: usize,
     /// Max number of pages allowed in search results. There may be fewer results than this value.
     pub max_pages: usize,
+    /// List of languages for search
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub all_langs: Vec<String>,
 }
 
 /// A view of the keyword from ElasticSearch

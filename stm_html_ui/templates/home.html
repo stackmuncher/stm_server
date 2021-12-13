@@ -14,30 +14,26 @@
           <input class="form-control me-2" type="search" title="Find devs working with a particular language, library or API, e.g. C# + Twilio + Azure." value="{{raw_search}}" id="kw" minlength="1" maxlength="100" onkeydown="if (event.keyCode===13) document.getElementById('btn').click()">
           <button class="btn btn-outline-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="const v=document.getElementById('kw'); if (v.validity.valid) window.location.href='/?'+encodeURIComponent(v.value)">Search</button>
         </div>
+        <p class="mb-5 text-muted mt-2">Enter one or more languages, frameworks, libraries or APIs. E.g. <code>typescript vuejs apollo</code> or <code>c# sql cosmos</code></p>
 
-        <div class="mt-4 ps-0 mx-md-4 ps-md-2 text-muted">
-          <ul class="mb-1 ps-3 ps-md-4">
-            <li>search example: <code>typescript vuejs apollo</code></li>
-            <li>filter by number of lines of code: <code>typescript:10000 vuejs apollo</code></li>
-            <li>filter by timezone availability: <code> 4hrs@utc-5 typescript:10000 vuejs apollo</code></li>
-          </ul>
-          <p class="mt-0 mx-2 mx-md-4">More <a title="Detailed explanation and examples of effective developer search" href="/about/posts/software-developer-search-syntax/">examples of the search syntax</a>.</p>
-        </div>
-
-
-        <ul class="mt-5 list-inline">
+        <h6 class="mt-5"><strong>Developers per language</strong></h6>
+        <ul class="list-inline">
           {% for tech in stack_stats.aggregations.agg.buckets | sort(attribute="key") %}
           {% if tech.doc_count > 1000 %}
+          {% for tech_lang in all_langs %}
+          {% if tech.key == tech_lang | lower %}
           <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border me-4"><a title="{{tech.key}} developers" style="text-decoration: underline #6c757d;" class="text-dark" href="/?{{tech.key | urlencode}}">
-              {{tech.key}}
+              {{tech_lang}}
               <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=tech.doc_count)}}</span></a>
           </li>
+          {% endif %}
+          {% endfor %}
           {% endif %}
           {% endfor %}
         </ul>
 
         <h6 class="mt-4"><strong>About StackMuncher</strong></h6>
-        <p>StackMuncher analyses Git repositories to identify technology stack of software developers. The data includes analysis of private repositories via <a title="StackMuncher developer profile builder app" href="https://github.com/stackmuncher/stm_app">StackMuncher App</a> and public repositories from GitHub.</p>
+        <p>StackMuncher matches software developers to new work opportunities. It is an open source project based on data from analyses of public and private Git repositories via <a title="StackMuncher developer profile builder app" href="https://github.com/stackmuncher/stm_app">StackMuncher App</a>.</p>
 
       </div>
 

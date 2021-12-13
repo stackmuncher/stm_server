@@ -34,8 +34,13 @@ pub struct Config {
     pub timezone_terms_regex: Regex,
     /// Extracts the page part from the query, e.g. p:1 or p:15
     pub page_num_terms_regex: Regex,
+    /// A compiled regex that returns a match if the library name is invalid and should not be searched for
+    pub library_name_invalidation_regex: Regex,
     /// SQS client for `aws_region`
     pub sqs_client: SqsClient,
+    /// A fixed list of known techs/languages.
+    /// This is a temporary plug until caching is implemented.
+    pub all_langs: Vec<String>,
 }
 
 /// A regex formula to extract search terms from the raw search string.
@@ -95,7 +100,42 @@ impl Config {
             .expect("Failed to compile timezone_terms_regex"),
             page_num_terms_regex: Regex::new(r#"(?:[ ,]|^)p:(\d+)(?:[ ,]|$)"#)
                 .expect("Failed to compile page_num_terms_regex"),
+            library_name_invalidation_regex: Regex::new(r#"[^[:alnum:]\.\-_]"#)
+                .expect("Failed to compile library_name_invalidation_regex"),
             sqs_client: SqsClient::new(aws_region),
+            all_langs: vec![
+                "C#",
+                "C++",
+                "CSS",
+                "DevOps",
+                "Docker",
+                "eRuby",
+                "Go",
+                "HAML",
+                "HTML",
+                "Java",
+                "JavaScript",
+                "Jupyter",
+                "Kotlin",
+                "Makefile",
+                "Markdown",
+                "PowerShell",
+                "Puppet",
+                "Python",
+                "ReactJS",
+                "restructuredText",
+                "Ruby",
+                "Rust",
+                "SCSS",
+                "Shell",
+                "SQL",
+                "Terraform",
+                "TypeScript",
+                "VueJS",
+            ]
+            .into_iter()
+            .map(|s| s.to_owned())
+            .collect(),
         }
     }
 }

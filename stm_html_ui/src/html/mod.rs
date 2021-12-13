@@ -54,6 +54,8 @@ pub(crate) async fn html(
         results_from: 0,
         devs_per_page: Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT,
         max_pages: Config::MAX_PAGES_PER_SEARCH_RESULT,
+        // this is a temporary plug until caching is implemented
+        all_langs: config.all_langs.clone(),
     };
 
     // return 404 for requests that are too long or for some resource related to the static pages
