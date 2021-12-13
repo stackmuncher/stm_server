@@ -12,7 +12,7 @@
   {% include "includes/top-nav.html" %}
   <div class="container-fluid">
     <div class="row {% if not devs or devs.hits.hits | length == 0 %}align-items-center{% endif %}">
-      <div class="col-md-4 col-lg-3">
+      <div class="col-md-4 col-lg-3 mb-5">
 
         <h1>
           {% if used_terms | length > 0 %}
@@ -63,10 +63,10 @@
         {# ----- SEARCH FORM ----- #}
         <div class="row g-2 align-items-center mb-4">
           <div class="col-12">
-            <hr />
+            <hr style="border: 0; border-bottom: 1px dotted #ccc; background: #999;" />
           </div>
           <div class="col-6">
-            <label for="search_lang1" class="form-label fw-bold">Languages</label>
+            <label for="search_lang1" class="form-label fw-bold text-muted">Languages</label>
             <select class="form-select form-select-sm" id="search_lang1" aria-label="Select a language (1 of 3)" onchange="if (!this.value) {document.getElementById('search_lang1loc').getElementsByTagName('option')[0].selected = 'selected'}">
               <option {% if langs | length==0 %}selected{% endif %}></option>
               {% for l in all_langs %}
@@ -75,7 +75,7 @@
             </select>
           </div>
           <div class="col-6">
-            <label for="search_lang1loc" class="form-label fw-bold">Exposure</label>
+            <label for="search_lang1loc" class="form-label fw-bold text-muted">Exposure</label>
             <select class="form-select form-select-sm" id="search_lang1loc" aria-label="Select expertise level for language 1">
               <option {% if langs | length==0 %}selected{% endif %}></option>
               <option value="" {% if langs | length> 0 and langs[0].1 < 5000 %}selected{% endif %}>any</option>
@@ -117,14 +117,14 @@
           </div>
 
           <div class="col-12 mt-3">
-            <label for="search_kw" class="form-label fw-bold">Full or partial library or framework names</label>
+            <label for="search_kw" class="form-label fw-bold text-muted">Framework, package or API names</label>
             {% set_global kw_control_value = "" %}
             {% for v in keywords %}{% set_global kw_control_value = kw_control_value ~ " " ~ v %}{% endfor %}
             <input class="form-control form-control-sm me-2" type="search" title="E.g. `mongodb` will limit your search to developers interfacing with MongoDB from their code." value="{{kw_control_value}}" id="search_kw" minlength="1" maxlength="100">
           </div>
 
           <div class="col-12 mt-3">
-            <label for="search_tz" class="form-label fw-bold">Timezone availability</label>
+            <label for="search_tz" class="form-label fw-bold text-muted">Timezone availability</label>
           </div>
 
           <div class="col-8">
@@ -194,9 +194,9 @@
         {% if devs and devs.hits.hits | length > 0 %}
 
         {% if langs | length > 0 %}
-        <h6 class="mt-4"><strong>Hiring a {{langs.0.0}} software developer?</strong></h6>
+        <h6 class="mt-5"><strong>Hiring a {{langs.0.0}} software developer?</strong></h6>
         {% else %}
-        <h6 class="mt-4"><strong>Hiring a software developer?</strong></h6>
+        <h6 class="mt-5"><strong>Hiring a software developer?</strong></h6>
         {% endif %}
 
         <p>StackMuncher developer search is a free service to help developers and employers connect.</p>
