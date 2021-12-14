@@ -1,6 +1,6 @@
 //use elasticsearch::{http::transport::Transport, CountParts, Elasticsearch, SearchParts};
 use crate::config::Config;
-use futures::future::{join3, join_all};
+use futures::future::{join, join_all};
 use regex::Regex;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -310,14 +310,8 @@ pub(crate) async fn related_keywords(
     let refs = refs.replace("%", &keyword_escaped);
     let pkgs = r#"{"size":0,"aggregations":{"agg":{"terms":{"field":"report.tech.pkgs.k.keyword","size":50,"include":"(.*\\.)?%.*"}}}}"#;
     let pkgs = pkgs.replace("%", &keyword_escaped);
-    let langs = r#"{"size":0,"aggregations":{"agg":{"terms":{"field":"report.tech.language.keyword","size":50,"include":"(.*\\.)?%.*"}}}}"#;
-    let langs = langs.replace("%", &keyword_escaped);
-    let (refs, pkgs, langs) = join3(
-        search(es_url, idx, Some(&refs)),
-        search(es_url, idx, Some(&pkgs)),
-        search(es_url, idx, Some(&langs)),
-    )
-    .await;
+
+    let (refs, pkgs) = join(search(es_url, idx, Some(&refs)), search(es_url, idx, Some(&pkgs))).await;
 
     // extract the data from JSON
     let refs = match serde_json::from_value::<es_types::ESAggs>(refs?) {
@@ -334,13 +328,6 @@ pub(crate) async fn related_keywords(
         }
         Ok(v) => v,
     };
-    let langs = match serde_json::from_value::<es_types::ESAggs>(langs?) {
-        Err(e) => {
-            error!("Cannot deser langs with {}", e);
-            return Err(());
-        }
-        Ok(v) => v,
-    };
 
     // extract refs into a hashmap
     let mut related = refs
@@ -353,15 +340,6 @@ pub(crate) async fn related_keywords(
 
     // combine the refs counts with pkgs counts
     for bucket in pkgs.aggregations.agg.buckets {
-        if let Some(doc_count) = related.get_mut(&bucket.key) {
-            *doc_count += bucket.doc_count;
-        } else {
-            related.insert(bucket.key, bucket.doc_count);
-        }
-    }
-
-    // repeat the same for languages
-    for bucket in langs.aggregations.agg.buckets {
         if let Some(doc_count) = related.get_mut(&bucket.key) {
             *doc_count += bucket.doc_count;
         } else {

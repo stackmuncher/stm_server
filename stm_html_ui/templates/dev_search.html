@@ -14,20 +14,14 @@
     <div class="row {% if not devs or devs.hits.hits | length == 0 %}align-items-center{% endif %}">
       <div class="col-md-4 col-lg-3 mb-5">
 
-        <h1>
-          {% if used_terms | length > 0 %}
-          Software developers using
-          {% else %}
-          Unknown keywords
-          {% endif %}
-          {% for kw in used_terms %}
-          {% if kw.es_language_count > 0 %}
-          <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_language_count}} devs use this language. Click to explore related keywords.">{{kw.search_term}}</a></code>
-          {% else %}
-          <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="At least {{kw.es_keyword_count + kw.es_package_count}} devs match this keyword. Click to explore related keywords.">{{kw.search_term}}</a></code>
-          {% endif %}
-          {% if not loop.last %}+{% endif %}
-          {% endfor %}
+        <h1><small>
+            {% for kw in used_terms %}{% if loop.first %}{% elif loop.last %} and {% else%}, {% endif %}{% if kw.es_language_count > 0 %}{{kw.search_term_fmt}}{% else %}<code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="Click to explore related keywords.">{{kw.search_term}}</a></code>{% endif %}{% endfor %}
+            {% if used_terms | length > 0 %}
+            software developers
+            {% else %}
+            Unknown keywords
+            {% endif %}
+          </small>
         </h1>
 
         <ul class="mt-4">
@@ -118,6 +112,9 @@
 
           <div class="col-12 mt-3">
             <label for="search_kw" class="form-label fw-bold text-muted">Framework, package or API names</label>
+            <span class="badge rounded-pill bg-secondary bg-opacity-50">
+              <a class="text-light fw-bold text-decoration-none" href="/_related/" title="Click to explore different keywords for a more specific search">?</a>
+            </span>
             {% set_global kw_control_value = "" %}
             {% for v in keywords %}{% set_global kw_control_value = kw_control_value ~ " " ~ v %}{% endfor %}
             <input class="form-control form-control-sm me-2" type="search" title="E.g. `mongodb` will limit your search to developers interfacing with MongoDB from their code." value="{{kw_control_value}}" id="search_kw" minlength="1" maxlength="100">
@@ -184,10 +181,10 @@
                     q = q + h + 'hrs@utc' + v;
                   }
                 }
-                window.location.href='/?'+encodeURIComponent(q.trim());
+                window.location.href = '/?' + encodeURIComponent(q.trim());
               }
             </script>
-            <button class="btn btn-sm btn-outline-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="do_search()" title="Find developers matching the search parameters">Find developers</button>
+            <button class="btn btn-sm btn-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="do_search()" title="Find developers matching the search parameters">Find developers</button>
           </div>
         </div>
 

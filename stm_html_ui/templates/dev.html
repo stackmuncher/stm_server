@@ -14,7 +14,7 @@
 
         {% if user.name %}{% set user_name = user.name %}{% elif user.login %}{% set user_name = user.login %}{% else %}{% set user_name = "Anonymous" %}{% endif %}
 
-        <h1>{{user_name}}</h1>
+        <h1><small>{{user_name}}</small></h1>
         <h5><small>Software Developer</small></h5>
 
         <ul class="mt-3 ps-3">
@@ -167,7 +167,7 @@
                 <th scope="col">Language</th>
                 <th scope="col" class="text-end text-nowrap ps-5">File count</th>
                 <th scope="col" class="text-end text-nowrap ps-5">Lines of code</th>
-                <th scope="col" class="text-end text-nowrap ps-5">Libraries</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Packages</th>
                 <th scope="col" class="text-end text-nowrap ps-5">Doco comments</th>
                 <th scope="col" class="text-end text-nowrap ps-5">Inline comments</th>
                 <th scope="col" style="width:100%"></th>
@@ -212,7 +212,7 @@
             <div class="card">
               <div class="card-body">
                 <h6 class="card-title">
-                  <a {% if proj.github_user_name %} href="https://github.com/{{proj.github_user_name}}/{{proj.project_name}}" {% elif user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% elif proj.project_id %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, libraries: {{proj.libs}}. Click to view more details.">
+                  <a {% if proj.github_user_name %} href="https://github.com/{{proj.github_user_name}}/{{proj.project_name}}" {% elif user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% elif proj.project_id %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, packages: {{proj.libs}}. Click to view more details.">
                     {% if user.login and proj.github_user_name and user.login != proj.github_user_name %}{{proj.github_user_name | truncate(length=50)}}/{% endif %}{{proj.project_name | truncate(length=50)}}
                   </a>
                 </h6>
@@ -260,7 +260,7 @@
 
         {% if refs | length > 0 %}
         {% set col = refs | length / 2 | int() %}
-        <h3 class="mt-4">{{tech.language}} Libraries</h3>
+        <h3 class="mt-4">{{tech.language}} Packages</h3>
         <div class="row">
 
           <div class="col-lg-6">

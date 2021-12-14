@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::html::stats::Stats;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -96,6 +97,26 @@ pub(crate) struct KeywordMetadata {
     /// True if the number of allowed search terms was exceeded. Needed to simplify the front end
     /// and keen the control of the number in one place.
     pub too_many: bool,
+    /// A better formatted term, e.g. `rust` -> `Rust`
+    pub search_term_fmt: String,
+}
+
+impl KeywordMetadata {
+    /// Returns a better formatted name if found in the dictionary, otherwise returns a clone of the same value
+    pub(crate) fn format_lang(lang: &String, config: &Config) -> String {
+        // this value should already be lower-case
+        let lang_lowercase = lang.to_lowercase();
+
+        // find a matching language in the dictionary
+        for v in &config.all_langs {
+            if lang_lowercase == v.to_lowercase() {
+                return v.clone();
+            }
+        }
+
+        // no match was found
+        lang.clone()
+    }
 }
 
 /// List of related keywords extracted from ES

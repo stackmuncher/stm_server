@@ -175,6 +175,7 @@ pub(crate) async fn html(
                 None => {
                     // this term is invalid and will be ignored
                     keywords_meta.push(KeywordMetadata {
+                        search_term_fmt: KeywordMetadata::format_lang(&search_term, &config),
                         search_term: search_term,
                         search_term_loc: 0,
                         es_keyword_count: 0,
@@ -194,6 +195,7 @@ pub(crate) async fn html(
             {
                 // this term got no results and will be ignored
                 keywords_meta.push(KeywordMetadata {
+                    search_term_fmt: KeywordMetadata::format_lang(&search_term.0, &config),
                     search_term: search_term.0,
                     search_term_loc: search_term.1,
                     es_keyword_count: 0,
@@ -243,6 +245,7 @@ pub(crate) async fn html(
 
                 // store the metadata for this search term
                 keywords_meta.push(KeywordMetadata {
+                    search_term_fmt: KeywordMetadata::format_lang(&search_term.0, &config),
                     search_term: search_term.0.clone(),
                     search_term_loc: search_term.1,
                     es_keyword_count: es_keyword_count,
@@ -265,6 +268,7 @@ pub(crate) async fn html(
 
                 // store the metadata for this search term
                 keywords_meta.push(KeywordMetadata {
+                    search_term_fmt: KeywordMetadata::format_lang(&search_term.0, &config),
                     search_term: search_term.0.clone(),
                     search_term_loc: search_term.1,
                     es_keyword_count: counts[0],
@@ -280,6 +284,7 @@ pub(crate) async fn html(
             } else {
                 // this term got no results and will be ignored
                 keywords_meta.push(KeywordMetadata {
+                    search_term_fmt: KeywordMetadata::format_lang(&search_term.0, &config),
                     search_term: search_term.0,
                     search_term_loc: search_term.1,
                     es_keyword_count: 0,
