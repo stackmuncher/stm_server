@@ -299,7 +299,10 @@ pub(crate) async fn related_keywords(
     }
 
     // some keywords may contain #,. or -, which should be escaped in regex
+    // ES regex search is case sensitive, but the data is all in lower-case
+    // it is faster to make the KW lower case as well
     let keyword_escaped = keyword
+        .to_lowercase()
         .replace("#", r#"\\#"#)
         .replace("#", r#"\\+"#)
         .replace(".", r#"\\."#)
