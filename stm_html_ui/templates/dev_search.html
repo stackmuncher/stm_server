@@ -117,7 +117,8 @@
             </span>
             {% set_global kw_control_value = "" %}
             {% for v in keywords %}{% set_global kw_control_value = kw_control_value ~ " " ~ v %}{% endfor %}
-            <input class="form-control form-control-sm me-2" type="search" title="E.g. `mongodb` will limit your search to developers interfacing with MongoDB from their code." value="{{kw_control_value}}" id="search_kw" minlength="1" maxlength="100">
+            {% set_global kw_control_value = kw_control_value | trim %}
+            <input class="form-control form-control-sm me-2" type="search" title="E.g. `mongodb` will limit your search to developers interfacing with MongoDB from their code." value="{{kw_control_value}}" id="search_kw" minlength="1" maxlength="100" onkeydown="if (event.keyCode===13) document.getElementById('btn').click()">
           </div>
 
           <div class="col-12 mt-3">
@@ -135,7 +136,7 @@
               <option value="+3" {% if availability_tz and availability_tz is ending_with('+03') %}selected{% endif %}>Russia (Moscow), UTC+03</option>
               <option value="+2" {% if availability_tz and availability_tz is ending_with('+02') %}selected{% endif %}>Europe East, UTC+02</option>
               <option value="+1" {% if availability_tz and availability_tz is ending_with('+01') %}selected{% endif %}>Europe Central, UTC+01</option>
-              <option value="+0" {% if availability_tz and availability_tz is ending_with('UTC') %}selected{% endif %}>Europe West, GMT</option>
+              <option value="+0" {% if availability_tz and availability_tz is ending_with('+00') %}selected{% endif %}>Europe West, GMT</option>
               <option value="-3" {% if availability_tz and availability_tz is ending_with('-03') %}selected{% endif %}>Argentina, Brasil, UTC-03</option>
               <option value="-5" {% if availability_tz and availability_tz is ending_with('-05') %}selected{% endif %}>US East, UTC-05</option>
               <option value="-6" {% if availability_tz and availability_tz is ending_with('-06') %}selected{% endif %}>US Central, UTC-06</option>

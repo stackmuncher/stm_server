@@ -140,7 +140,10 @@ pub(crate) async fn html(
         info!("Terms: {:?}", search_terms);
 
         // normalise and dedupe the search terms
-        let mut search_terms = search_terms.iter().map(|v| v.to_lowercase()).collect::<Vec<String>>();
+        let mut search_terms = search_terms
+            .iter()
+            .map(|v| v.to_lowercase().trim().to_string())
+            .collect::<Vec<String>>();
         search_terms.dedup();
         let search_terms = search_terms;
 
@@ -162,6 +165,7 @@ pub(crate) async fn html(
                 .trim_matches('-')
                 .trim_start_matches("+")
                 .trim_start_matches("#")
+                .trim()
                 .to_owned();
 
             // check if there is anything left after trimming
