@@ -7,6 +7,7 @@
   {% include "includes/top-nav.html" %}
   <div class="container-fluid">
     <div class="row">
+      {# ----- SIDEBAR ----- #}
       {% if devs.hits.hits | length > 0 %}
       <div class="col-md-3">
         {% for hit in devs.hits.hits %}
@@ -159,14 +160,17 @@
         <p class="text-muted">{{user_name}} is not a registered member of StackMuncher.<br />The data was sourced from public GitHub repositories and is a fraction of {{user_name}}'s experience.</p>
 
       </div>
+      {# ----- STACK TABLE ----- #}
       <div class="col-md-9">
         <div class="table-responsive">
           <table class="table mt-4 table-striped">
             <thead>
               <tr>
                 <th scope="col">Language</th>
-                <th scope="col" class="text-end text-nowrap ps-5">File count</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Years</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Last used</th>
                 <th scope="col" class="text-end text-nowrap ps-5">Lines of code</th>
+                <th scope="col" class="text-end text-nowrap ps-5">File count</th>
                 <th scope="col" class="text-end text-nowrap ps-5">Packages</th>
                 <th scope="col" class="text-end text-nowrap ps-5">Doco comments</th>
                 <th scope="col" class="text-end text-nowrap ps-5">Inline comments</th>
@@ -190,8 +194,10 @@
               {% set libs = pkgs + refs %}
               <tr>
                 <td scope="row"><strong>{{tech.language}}</strong></td>
-                <td class="text-end me-2">{{pretty_num(v=tech.files)}}</td>
+                <td class="text-end me-2" {% if tech.history and tech.history.months %}title="{{tech.history.months}} months"{% endif %}>{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}{% endif %}</td>
+                <td class="text-end me-2">{% if tech.history and tech.history.to_date_iso %}{{tech.history.to_date_iso | truncate(length=4, end="") }}{% endif %}</td>
                 <td class="text-end me-2">{{pretty_num(v=tech.code_lines)}}</td>
+                <td class="text-end me-2">{{pretty_num(v=tech.files)}}</td>
                 <td class="text-end me-2">{% if libs > 0 %}{{pretty_num(v=libs)}}{% endif %}</td>
                 <td class="text-end me-2">{% if tech.docs_comments > 0 %}{{pretty_num(v=tech.docs_comments)}}{% endif %}</td>
                 <td class="text-end me-2">{% if tech.line_comments > 0 %}{{pretty_num(v=tech.line_comments)}}{% endif %}</td>

@@ -155,6 +155,7 @@ fn tera_init() -> Result<Tera, Error> {
     // register custom functions implemented in a separate mod
     tera.register_function("pretty_num", tera_fns::pretty_num());
     tera.register_function("shorten_num", tera_fns::shorten_num());
+    tera.register_function("months_to_years", tera_fns::months_to_years());
 
     Ok(tera)
 }

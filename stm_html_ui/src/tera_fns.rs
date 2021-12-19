@@ -85,3 +85,39 @@ pub(crate) fn pretty_num() -> impl Function {
         }
     })
 }
+
+/// Converts months into approximate years, e.g. 6 -> 0.5, 5 -> "", 18 -> 1.5, 28 -> 2
+/// ## Example
+/// ```no-run
+/// months_to_years(v=tech.history.months)
+/// ```
+pub(crate) fn months_to_years() -> impl Function {
+    Box::new(move |args: &HashMap<String, Value>| -> Result<Value, tera::Error> {
+        // can't be a constant because of to_string()
+        let blank_value = Value::String("-".to_string());
+
+        match args.get("v") {
+            Some(val) => match from_value::<Number>(val.clone()) {
+                Ok(v) => match v.as_u64() {
+                    Some(v) => {
+                        // calculate the remainder of months ahead of time
+                        let remainder = if v % 12 >= 6 { ".5".to_string() } else { String::new() };
+
+                        // select the right situation
+                        if v < 12 {
+                            Ok(Value::String("< 1".to_string()))
+                        } else if v < 36 {
+                            let years = [(v / 12).to_string(), remainder].concat();
+                            Ok(Value::String(years))
+                        } else {
+                            Ok(Value::String((v / 12).to_string()))
+                        }
+                    }
+                    None => Ok(val.clone()),
+                },
+                Err(_) => Ok(blank_value),
+            },
+            None => Ok(Value::Null),
+        }
+    })
+}
