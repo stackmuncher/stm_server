@@ -229,7 +229,7 @@ pub(crate) async fn matching_devs(
         let qual_unqual_clause = if keyword.contains(".") {
             r#"","fields":["report.tech.pkgs.k.keyword","report.tech.refs.k.keyword"]}}"#
         } else {
-            r#"","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}}"#
+            r#"","fields":["report.keywords.keyword"]}}"#
         };
 
         // using multimatch because different techs have keywords in different places
