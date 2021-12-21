@@ -574,6 +574,16 @@
           "is_single_commit": {
             "type": "boolean"
           },
+          "keywords": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256,
+                "normalizer": "lowercase"
+              }
+            }
+          },
           "last_commit_author": {
             "type": "text",
             "fields": {
@@ -729,6 +739,28 @@
               },
               "files": {
                 "type": "long"
+              },
+              "history": {
+                "properties": {
+                  "from_date_epoch": {
+                    "type": "long"
+                  },
+                  "from_date_iso": {
+                    "type": "date"
+                  },
+                  "months": {
+                    "type": "long"
+                  },
+                  "to_date_epoch": {
+                    "type": "long"
+                  },
+                  "to_date_iso": {
+                    "type": "date"
+                  },
+                  "years": {
+                    "type": "long"
+                  }
+                }
               },
               "inline_comments": {
                 "type": "long"
