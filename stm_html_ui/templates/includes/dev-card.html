@@ -24,8 +24,8 @@
     {% endif %}
     {% set today = now() | date(format="%Y") | int() %}
 
-    <p class="card-subtitle mb-2 text-muted">
-      <span class="me-2">
+    <p class="card-subtitle mb-2">
+      <span class="me-2 text-muted">
         {% if dev._source.public_repos %}{{dev._source.public_repos}}
         {% elif dev._source.report.projects_included %}{{dev._source.report.projects_included | length}}
         {% else %}some
@@ -33,13 +33,12 @@
         {% set years = today - init + 1 %}
         {{ years }} year{% if years > 1%}s{% endif %}
       </span>
-      {% if dev._source.hireable %}
-      <a {% if dev._source.login %} href="/{{dev._source.login}}" {% elif dev._source.owner_id %} href="/?dev={{dev._source.owner_id}}" {% endif %}><span class="badge bg-success">Hire me</span></a>
-      {% endif %}
       {% if dev._source.email or dev._source.blog %}
-      <a {% if dev._source.login %} href="/{{dev._source.login}}" {% elif dev._source.owner_id %} href="/?dev={{dev._source.owner_id}}" {% endif %} title="Contact me directly"><span class="badge bg-warning">@</span></a>
+      {% if dev._source.login %}
+      <a  href="https://github.com/{{dev._source.login}}" title="Contact details available on GitHub"><span class="badge bg-success">Contact</span></a>
       {% endif %}
-      {% if dev._source.location %}<span class="ms-1">{{dev._source.location | truncate(length=25)}}</span>{% endif %}
+      {% endif %}
+      {% if dev._source.location %}<span class="ms-1">{{dev._source.location}}</span>{% endif %}
     </p>
     
     <ul class="list-inline">

@@ -271,7 +271,7 @@ pub(crate) async fn matching_devs(
         &results_from.to_string(),
         r#","track_scores":true,"query":{"bool":{"must":["#,
         &clauses,
-        r#"]}},"sort":[{"hireable":{"order":"desc"}},{"report.timestamp":{"order":"desc"}}]}"#,
+        r#"]}},"sort":[{"report.last_contributor_commit_date_epoch":{"order":"desc"}}]}"#,
     ]
     .concat();
 
