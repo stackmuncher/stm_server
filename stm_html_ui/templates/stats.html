@@ -281,6 +281,50 @@
         </table>
       </div>
 
+      <h3 class="mt-5">Deletion queue</h3>
+      <p class="text-muted"><small>Number of S3 objects marked for deletion. A standalone process reads the queue and deletes them in batches. The numbers should hover just a bit above zero.</small></p>
+      <div class="table-responsive">
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th title="" scope="col" class="text-start">Timestamp</th>
+              <th title="" scope="col" class="text-end">EPOCH</th>
+              <th title="The total number of S3 objects in the deletion queue" scope="col" class="text-end">Objects in the queue</th>
+              <th title="The number of objects with no deletion attempts" scope="col" class="text-end">Zero deletion attempts</th>
+              <th title="The number of objects with one or more deletion attempts" scope="col" class="text-end">Failed</th>
+
+              <th title="When the oldest deletion request was added to the queue" scope="col" class="text-end">Oldest request</th>
+              <th title="When the latest deletion request was added to the queue" scope="col" class="text-end">Newest request</th>
+
+              <th title="Requests remaining the queue that were added in the last 10 minutes" scope="col" class="text-end">Added, last 10m</th>
+              <th title="Requests remaining the queue that were added in the last 1 hour" scope="col" class="text-end">Added, last 1hr</th>
+              <th title="Requests remaining the queue that were added in the last 24 hours" scope="col" class="text-end">Added, last 24hr</th>
+            </tr>
+          </thead>
+          {% if stats_jobs.stm_stats_deletion_queue_counts.hits.hits %}
+          <tbody>
+            {% for hit in stats_jobs.stm_stats_deletion_queue_counts.hits.hits %}
+            {% set stat = hit._source.stm_stats_deletion_queue_counts %}
+            <tr>
+              <td scope="row" class="text-nowrap"><strong>{{stat.iso | date(format="%m/%d %H:%M")}}</strong></td>
+              <td class="text-end">{{stat.ts}}</td>
+              <td class="text-end">{{pretty_num(v=stat.queue_total)}}</td>
+              <td class="text-end">{{pretty_num(v=stat.to_delete)}}</td>
+              <td class="text-end">{{pretty_num(v=stat.failed)}}</td>
+
+              <td class="text-end">{{stat.oldest | truncate(length=16, end="")}}</td>
+              <td class="text-end">{{stat.newest | truncate(length=16, end="")}}</td>
+
+              <td class="text-end">{{pretty_num(v=stat.added_10m)}}</td>
+              <td class="text-end">{{pretty_num(v=stat.added_1hr)}}</td>
+              <td class="text-end">{{pretty_num(v=stat.added_24hr)}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+
     </div>
   </div>
 
