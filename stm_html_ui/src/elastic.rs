@@ -4,28 +4,14 @@ use futures::future::{join, join_all};
 use regex::Regex;
 use serde_json::Value;
 use std::collections::HashMap;
-use stm_shared::elastic::call_es_api;
 use stm_shared::elastic::types as es_types;
+use stm_shared::elastic::{call_es_api, search};
 use tracing::error;
 
 pub const SEARCH_ENGINEER_BY_LOGIN: &str = r#"{"query":{"term":{"login.keyword":{"value":"%"}}}}"#;
 pub const SEARCH_DEV_BY_DOC_ID: &str = r#"{"query":{"term":{"_id":"%"}}}"#;
 pub const SEARCH_ALL_LANGUAGES: &str =
     r#"{"size":0,"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000}}}}"#;
-
-/// Run a search with the provided query.
-/// * es_url: elastucsearch url
-/// * idx: ES index name
-/// * query: the query text, if any for *_search* or `None` for *_count*
-pub(crate) async fn search(es_url: &String, idx: &String, query: Option<&str>) -> Result<Value, ()> {
-    if query.is_some() {
-        let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_search"].concat();
-        return call_es_api(es_api_endpoint, Some(query.unwrap().to_string())).await;
-    } else {
-        let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_count"].concat();
-        return call_es_api(es_api_endpoint, None).await;
-    }
-}
 
 /// Inserts a single param in the ES query in place of %. The param may be repeated within the query multiple times.
 /// Panics if the param is unsafe for no-sql queries.

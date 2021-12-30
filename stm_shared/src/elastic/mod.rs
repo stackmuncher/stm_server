@@ -260,3 +260,17 @@ pub async fn get_doc_by_id(
 
     Ok(es_response)
 }
+
+/// Run a search with the provided query.
+/// * es_url: elastucsearch url
+/// * idx: ES index name
+/// * query: the query text, if any for *_search* or `None` for *_count*
+pub async fn search(es_url: &String, idx: &String, query: Option<&str>) -> Result<Value, ()> {
+    if query.is_some() {
+        let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_search"].concat();
+        return call_es_api(es_api_endpoint, Some(query.unwrap().to_string())).await;
+    } else {
+        let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_count"].concat();
+        return call_es_api(es_api_endpoint, None).await;
+    }
+}
