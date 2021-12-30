@@ -1,2 +1,3 @@
 # paste this to `sudo crontab -e` or run `sudo crontab /home/ubuntu/rust/crontab.bak`
 5 3 * * * find /home/ubuntu/rust/logs/* -mtime +3 -exec rm {} \;
+7,37 * * * * find /home/ubuntu/rust/logs/*.txt -cmin +15 -exec gzip {} \;
