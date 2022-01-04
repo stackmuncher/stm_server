@@ -161,7 +161,15 @@ pub struct ESAggs {
 /// ```
 #[derive(Deserialize, Debug)]
 pub struct ESSourceDev {
+    /// GH login
     pub login: Option<String>,
+    /// An ISO3389 timestamp of when the gh a/c was created (from GH)
+    /// e.g. 2013-11-13T05:06:37Z
+    pub created_at: Option<String>,
+    /// Public email address from GH
+    pub email: Option<String>,
+    /// A free-text location from GH
+    pub location: Option<String>,
 }
 
 // ---------------------------------------------------------------------
