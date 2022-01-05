@@ -312,8 +312,8 @@
               <td class="text-end">{{pretty_num(v=stat.to_delete)}}</td>
               <td class="text-end">{{pretty_num(v=stat.failed)}}</td>
 
-              <td class="text-end">{{stat.oldest | truncate(length=16, end="")}}</td>
-              <td class="text-end">{{stat.newest | truncate(length=16, end="")}}</td>
+              <td class="text-end">{{stat.oldest | default(value="") | truncate(length=16, end="")}}</td>
+              <td class="text-end">{{stat.newest | default(value="") | truncate(length=16, end="")}}</td>
 
               <td class="text-end">{{pretty_num(v=stat.added_10m)}}</td>
               <td class="text-end">{{pretty_num(v=stat.added_1hr)}}</td>
