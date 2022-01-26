@@ -13,6 +13,10 @@ use tracing::{debug, error, info};
 
 pub mod types;
 
+/// This value was extracted from the URL of AWS ES, but is no longer needed after migration to a self-hosted ES.
+/// TODO: drop use of Rusoto here - no signature is needed.
+const DUMMY_AWS_REGION: &str = "us-east-1";
+
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
 async fn call_es_api_put(
@@ -22,19 +26,18 @@ async fn call_es_api_put(
 ) -> Result<(), ()> {
     // The URL will need to be split into parts to extract region, host, etc.
     let uri = Uri::from_maybe_shared(es_api_endpoint).expect("Invalid ES URL");
-
-    // get the region from teh URL
-    let region = uri
-        .host()
-        .expect("Missing host in ES URL")
-        .trim_end_matches(".es.amazonaws.com");
-    let (_, region) = region.split_at(region.rfind(".").expect("Invalid ES URL") + 1);
-    let region = rusoto_core::Region::from_str(region).expect("Invalid region in the ES URL");
+    let region = rusoto_core::Region::from_str(DUMMY_AWS_REGION).expect("Invalid DUMMY_AWS_REGION for ES. It's a bug.");
 
     // prepare the request
     let mut req = SignedRequest::new("PUT", "es", &region, uri.path());
     req.set_payload(Some(payload.to_owned()));
-    req.set_hostname(Some(uri.host().expect("Missing host in ES URL").to_string()));
+
+    // build a hostname with the port, if any
+    let uri = match uri.port_u16() {
+        Some(v) => [uri.host().expect("Missing host in ES URL"), ":", &v.to_string()].concat(),
+        None => uri.host().expect("Missing host in ES URL").to_string(),
+    };
+    req.set_hostname(Some(uri));
 
     // these headers are required by ES
     req.add_header("Content-Type", "application/json");
@@ -156,19 +159,18 @@ pub async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Re
 
     // The URL will need to be split into parts to extract region, host, etc.
     let uri = Uri::from_maybe_shared(es_api_endpoint).expect("Invalid ES URL");
-
-    // get the region from teh URL
-    let region = uri
-        .host()
-        .expect("Missing host in ES URL")
-        .trim_end_matches(".es.amazonaws.com");
-    let (_, region) = region.split_at(region.rfind(".").expect("Invalid ES URL") + 1);
-    let region = rusoto_core::Region::from_str(region).expect("Invalid region in the ES URL");
+    let region = rusoto_core::Region::from_str(DUMMY_AWS_REGION).expect("Invalid DUMMY_AWS_REGION for ES. It's a bug.");
 
     // prepare the request
     let mut req = SignedRequest::new(method, "es", &region, uri.path());
     req.set_payload(payload);
-    req.set_hostname(Some(uri.host().expect("Missing host in ES URL").to_string()));
+
+     // build a hostname with the port, if any
+    let uri = match uri.port_u16() {
+        Some(v) => [uri.host().expect("Missing host in ES URL"), ":", &v.to_string()].concat(),
+        None => uri.host().expect("Missing host in ES URL").to_string(),
+    };
+    req.set_hostname(Some(uri));
 
     // these headers are required by ES
     req.add_header("Content-Type", "application/json");
