@@ -57,22 +57,12 @@
       "type": "object",
       "description": "DB connection string, timeouts and other properties required to interact with DB-based job queues.",
       "required": [
-        "con_str",
-        "max_time_in_flight_dev",
-        "max_number_of_fails"
+        "con_str"
       ],
       "properties": {
         "con_str": {
           "type": "string",
           "description": "A PgSQL connection string to the job queues for processing dev reports and other tasks."
-        },
-        "max_time_in_flight_dev": {
-          "type": "integer",
-          "description": "Maximum duration for an active DEV job before it is returned to the queue, in seconds."
-        },
-        "max_number_of_fails": {
-          "type": "integer",
-          "description": "Maximum number of processing failures before the job stops being reprocessed. This value will be multiplied by `max_time_in_flight_*` to calculate the wait time before the job is requeued for every failure count."
         }
       },
       "additionalProperties": false

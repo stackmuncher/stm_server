@@ -237,7 +237,6 @@ pub(crate) async fn read_www_logs(mut config: Config) {
                         let object_id = search_event.message.get_hash();
                         if upload_object_to_es::<SearchLog>(
                             config.es_url.clone(),
-                            config.aws_credentials().clone(),
                             search_event.message,
                             object_id,
                             config.es_idx.search_log.clone(),

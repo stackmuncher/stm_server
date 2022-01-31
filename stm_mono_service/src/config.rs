@@ -156,11 +156,6 @@ impl Config {
         config
     }
 
-    /// Unwraps `aws_credentials` member with an initialized AwsCredentials.
-    pub(crate) fn aws_credentials(&self) -> &AwsCredentials {
-        self.aws_credentials.as_ref().unwrap()
-    }
-
     /// Checks if the the token in `aws_credentials` member is about to expire and tries to renew it.
     /// Panics if the creds cannot be renewed.
     pub(crate) async fn renew_aws_credentials(&mut self) {

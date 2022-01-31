@@ -1,57 +1,30 @@
 //use elasticsearch::{http::transport::Transport, CountParts, Elasticsearch, SearchParts};
-use hyper::{Body, Client, Request, Uri};
+use hyper::{header::HeaderValue, Body, Client, Request, Uri};
 use hyper_rustls::HttpsConnectorBuilder;
 use regex::Regex;
-use rusoto_core::credential::AwsCredentials;
-use rusoto_core::credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
-use rusoto_core::signature::SignedRequest;
 use serde::Serialize;
 use serde_json::Value;
-use std::convert::TryInto;
-use std::str::FromStr;
 use tracing::{debug, error, info};
 
 pub mod types;
 
-/// This value was extracted from the URL of AWS ES, but is no longer needed after migration to a self-hosted ES.
-/// TODO: drop use of Rusoto here - no signature is needed.
-const DUMMY_AWS_REGION: &str = "us-east-1";
-
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
-async fn call_es_api_put(
-    es_api_endpoint: String,
-    aws_credentials: &AwsCredentials,
-    payload: Vec<u8>,
-) -> Result<(), ()> {
+async fn call_es_api_put(es_api_endpoint: String, payload: Vec<u8>) -> Result<(), ()> {
     // The URL will need to be split into parts to extract region, host, etc.
     let uri = Uri::from_maybe_shared(es_api_endpoint).expect("Invalid ES URL");
-    let region = rusoto_core::Region::from_str(DUMMY_AWS_REGION).expect("Invalid DUMMY_AWS_REGION for ES. It's a bug.");
 
-    // prepare the request
-    let mut req = SignedRequest::new("PUT", "es", &region, uri.path());
-    req.set_payload(Some(payload.to_owned()));
-
-    // build a hostname with the port, if any
-    let uri = match uri.port_u16() {
-        Some(v) => [uri.host().expect("Missing host in ES URL"), ":", &v.to_string()].concat(),
-        None => uri.host().expect("Missing host in ES URL").to_string(),
-    };
-    req.set_hostname(Some(uri));
-
-    // these headers are required by ES
-    req.add_header("Content-Type", "application/json");
-
-    // sign the request
-    req.sign(&aws_credentials);
-
-    // convert the signed request into an HTTP request we can send out
-    let req: Request<Body> = match req.try_into() {
+    // prepare a request with Content-Type header required by ES
+    let req = match Request::builder().uri(uri).method("PUT").body(Body::from(payload)) {
+        Ok(mut v) => {
+            v.headers_mut()
+                .insert("Content-Type", HeaderValue::from_static("application/json"));
+            v
+        }
         Err(e) => {
-            error!("Cannot convert signed request into hyper request. {}", e);
+            error!("Invalid payload. {}", e);
             return Err(());
         }
-        Ok(v) => v,
     };
 
     debug!("Http rq: {:?}", req);
@@ -100,7 +73,6 @@ async fn call_es_api_put(
 /// Put the JSON string into the specified ES index. The string must be deserialisable into a valid JSON.
 pub async fn upload_serialized_object_to_es(
     es_url: &String,
-    aws_credentials: &AwsCredentials,
     object_to_upload: Vec<u8>,
     object_id: &String,
     es_idx: &str,
@@ -108,7 +80,7 @@ pub async fn upload_serialized_object_to_es(
     info!("Uploading to ES idx {} as {}", es_idx, object_id);
 
     let es_api_endpoint = [es_url, "/", es_idx, "/_doc/", object_id].concat();
-    call_es_api_put(es_api_endpoint, aws_credentials, object_to_upload).await?;
+    call_es_api_put(es_api_endpoint, object_to_upload).await?;
 
     info!("ES upload completed");
 
@@ -118,7 +90,6 @@ pub async fn upload_serialized_object_to_es(
 /// Deserializes the object into JSON and uploads into the specified ES index.
 pub async fn upload_object_to_es<T: Serialize>(
     es_url: String,
-    aws_credentials: AwsCredentials,
     object_to_upload: T,
     object_id: String,
     es_idx: String,
@@ -135,7 +106,7 @@ pub async fn upload_object_to_es<T: Serialize>(
     info!("Uploading id:{} to ES idx {}", object_id, es_idx);
 
     let es_api_endpoint = [es_url.as_ref(), "/", es_idx.as_ref(), "/_doc/", object_id.as_ref()].concat();
-    call_es_api_put(es_api_endpoint, &aws_credentials, object_to_upload).await?;
+    call_es_api_put(es_api_endpoint, object_to_upload).await?;
 
     info!("ES upload completed");
 
@@ -146,46 +117,29 @@ pub async fn upload_object_to_es<T: Serialize>(
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
 pub async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Result<Value, ()> {
     // prepare METHOD and the payload in one step
-    let (method, payload) = match payload {
-        None => ("GET", None),
-        Some(v) => ("POST", Some(v.as_bytes().to_owned())),
+    let (method, payload_id, payload) = match payload {
+        None => ("GET", 0usize, Body::empty()),
+        Some(v) => ("POST", v.len(), Body::from(v)),
     };
-    let payload_id = if payload.is_none() {
-        0usize
-    } else {
-        payload.as_ref().unwrap().len()
-    };
+
     info!("ES query {} started", payload_id);
 
     // The URL will need to be split into parts to extract region, host, etc.
     let uri = Uri::from_maybe_shared(es_api_endpoint).expect("Invalid ES URL");
-    let region = rusoto_core::Region::from_str(DUMMY_AWS_REGION).expect("Invalid DUMMY_AWS_REGION for ES. It's a bug.");
 
-    // prepare the request
-    let mut req = SignedRequest::new(method, "es", &region, uri.path());
-    req.set_payload(payload);
-
-     // build a hostname with the port, if any
-    let uri = match uri.port_u16() {
-        Some(v) => [uri.host().expect("Missing host in ES URL"), ":", &v.to_string()].concat(),
-        None => uri.host().expect("Missing host in ES URL").to_string(),
+    // prepare a request with Content-Type header required by ES
+    let req = match Request::builder().uri(uri).method(method).body(payload) {
+        Ok(mut v) => {
+            v.headers_mut()
+                .insert("Content-Type", HeaderValue::from_static("application/json"));
+            v
+        }
+        Err(e) => {
+            error!("Invalid payload. {}", e);
+            return Err(());
+        }
     };
-    req.set_hostname(Some(uri));
 
-    // these headers are required by ES
-    req.add_header("Content-Type", "application/json");
-
-    // get AWS creds
-    let provider = DefaultCredentialsProvider::new().expect("Cannot get default creds provider");
-    let credentials = provider.credentials().await.expect("Cannot find creds");
-
-    // sign the request
-    req.sign(&credentials);
-
-    // convert the signed request into an HTTP request we can send out
-    let req: Request<Body> = req
-        .try_into()
-        .expect("Cannot convert signed request into hyper request");
     debug!("Http rq: {:?}", req);
 
     let res = Client::builder()

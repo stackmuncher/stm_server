@@ -296,7 +296,6 @@ pub(crate) async fn process_dev(dev_job: DevJob, config: &Config, idx: usize) ->
     // save the same serialized profile in ES
     if stm_shared::elastic::upload_serialized_object_to_es(
         &config.es_url,
-        config.aws_credentials(),
         serialized_profile,
         &es_object_id,
         &config.es_idx.dev,

@@ -33,27 +33,6 @@ pub(crate) struct EsIdx {
 pub(crate) struct JobQueues {
     ///  A PgSQL connection string to the job queues for processing github logins, repos, devs and contributors.
     pub con_str: String,
-    /// Maximum duration for an active DEV job before it is returned to the queue, in seconds.
-    pub max_time_in_flight_dev: i64,
-    /// Maximum number of processing failures before the job stops being reprocessed.
-    pub max_number_of_fails: i32,
-}
-
-/// Params for S3 inventory and file retention
-#[derive(Debug, Deserialize)]
-pub(crate) struct Inventory {
-    ///  Do not download repositories larger than this size in bytes.
-    pub max_repo_size_download: i64,
-    /// Delete repositories larger than this size in bytes after processing.
-    pub max_repo_size_keep: i64,
-    /// Delay in milliseconds per login to throttle DB updates.
-    pub delay_ms: u64,
-    /// Number of logins to be processed concurrently during S3 inventory taking
-    pub concurrent_logins: usize,
-    /// The key to start inventory taking from - never read from the config - must come from CLI.
-    /// The key should contain the full S3 prefix. E.g. `repos/rimutaka`.
-    #[serde(skip)]
-    pub resume_after: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -196,11 +175,6 @@ impl Config {
         config.aws_credentials = Some(provider.credentials().await.expect("Cannot find creds"));
 
         config
-    }
-
-    /// Unwraps `aws_credentials` member with an initialized AwsCredentials.
-    pub(crate) fn aws_credentials(&self) -> &AwsCredentials {
-        self.aws_credentials.as_ref().unwrap()
     }
 
     /// Checks if the the token in `aws_credentials` member is about to expire and tries to renew it.
