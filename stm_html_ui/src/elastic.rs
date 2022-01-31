@@ -62,7 +62,7 @@ pub(crate) async fn matching_doc_count(
         es_url.as_ref(),
         "/",
         idx,
-        "/_search?filter_path=aggregations.total.buckets",
+        "/_search",
     ]
     .concat();
     let count = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
