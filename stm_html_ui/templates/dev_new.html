@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+
+{% include "includes/head.html" %}
+
+<body class="pb-5">
+  {% include "includes/top-nav.html" %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-2">
+        <h1><small>Open Directory of Software Developers</small></h1>
+
+
+        <h6 class="mt-4"><strong>Skill-based search</strong></h6>
+        <p>We analyse Git repositories to identify the technology
+          stack, package use, language features and other metrics.</p>
+
+        <h6 class="mt-4"><strong>Hiring a software developer</strong></h6>
+        <p>Look for developers with a <span class="badge bg-success">Hire me</span> badge.
+        </p>
+        <p>You are welcome to get in touch with them directly if their contact details are publicly available. More <a href="/about/employers/">for employers ...</a></p>
+
+      </div>
+
+      <div class="col-lg-6">
+        <main role="main">
+          <div class="row">
+            {% for dev in devs.hits.hits %}
+            {% if dev._source.hireable %}
+            <div class="col-lg-6">
+              {% include "includes/dev-card.html" %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            {% for dev in devs.hits.hits %}
+            {% if not dev._source.hireable %}
+            <div class="col-lg-6">
+              {% include "includes/dev-card.html" %}
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </main>
+      </div>
+
+      <div class="col-lg-4">
+        <h5>What the world is working on ...</h5>
+        {% for ref in related %}
+        <a class="card-text pe-3 me-6 my-3" title="Used {{ref.c}} times" href="/?{{ref.k}}"><small>{{ref.k}}</small></a>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</body>
+
+</html>

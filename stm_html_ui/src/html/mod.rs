@@ -9,6 +9,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
+mod dev_new;
 mod dev_profile;
 mod dev_search;
 mod gh_login_profile;
@@ -78,6 +79,12 @@ pub(crate) async fn html(
     if url_path.trim_end_matches("/") == "/_related" {
         // return related keywords page
         return Ok(related::html(config, url_query, html_data).await?);
+    }
+
+    // is it a list of recently updated profiles?
+    if url_path.trim_end_matches("/") == "/_new" {
+        // return a list of devs
+        return Ok(dev_new::html(config, html_data).await?);
     }
 
     // check if there is a path - it can be the developer login

@@ -58,13 +58,7 @@ pub(crate) async fn matching_doc_count(
     ]
     .concat();
 
-    let es_api_endpoint = [
-        es_url.as_ref(),
-        "/",
-        idx,
-        "/_search",
-    ]
-    .concat();
+    let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_search"].concat();
     let count = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
 
     // extract the actual value from a struct like this
@@ -258,6 +252,31 @@ pub(crate) async fn matching_devs(
         r#","track_scores":true,"query":{"bool":{"must":["#,
         &clauses,
         r#"]}},"sort":[{"report.last_contributor_commit_date_epoch":{"order":"desc"}}]}"#,
+    ]
+    .concat();
+
+    // call the query
+    let es_api_endpoint = [es_url.as_ref(), "/", dev_idx, "/_search"].concat();
+    let es_response = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
+
+    Ok(es_response)
+}
+
+/// Returns a list of 24 recently updated devs with publicly available email addresses.
+/// ```json
+/// {"size":24,"query":{"exists":{"field":"email"}},"sort":[{"updated_at":{"order":"desc"}}]}
+/// ```
+pub(crate) async fn new_devs(es_url: &String, dev_idx: &String, results_from: usize) -> Result<Value, ()> {
+    // sample query
+    // {"size":24,"query":{"match_all":{}},"sort":[{"updated_at":{"order":"desc"}}]}
+
+    // combine everything into a single query
+    let query = [
+        r#"{"size":"#,
+        &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(),
+        r#","from": "#,
+        &results_from.to_string(),
+        r#","query":{"exists":{"field":"email"}},"sort":[{"updated_at":{"order":"desc"}}]}"#,
     ]
     .concat();
 
