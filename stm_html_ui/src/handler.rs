@@ -40,6 +40,19 @@ struct ApiGatewayRequest {
 #[folder = "templates"]
 struct Asset;
 
+/// A blank error structure to return to the runtime. No messages are required because all necessary information has already been logged.
+/// The API Gateway will return 500 which may be picked up by CloudFront and converted into a nice looking 500 page.
+#[derive(Debug, Serialize)]
+struct HandlerError {}
+
+impl std::error::Error for HandlerError {}
+
+impl std::fmt::Display for HandlerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "")
+    }
+}
+
 //pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Error> {
 pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Error> {
     let mut sys = System::new_with_specifics(RefreshKind::with_memory(RefreshKind::new()));
@@ -94,7 +107,7 @@ pub(crate) async fn my_handler(event: Value, _ctx: Context) -> Result<Value, Err
     // send the user request downstream for processing
     let html_data = match html::html(&config, url_path, url_query, dev, api_request.headers).await {
         Ok(v) => v,
-        Err(_) => return gw_response("Server Error".to_owned(), 500, 600),
+        Err(_) => return Err(Box::new(HandlerError {})),
     };
 
     log_memory_use(&mut sys, "HTML data returned");
