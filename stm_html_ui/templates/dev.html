@@ -280,7 +280,7 @@
               </dd>
               {% for ref in refs | sort(attribute="k") | slice(start=0, end=col+1) %}
               <dt class="col-10 text-truncate">
-                <a href="/?{{tech.language | urlencode}} {{ref.k}}">{{ref.k}}</a>
+                <a href="/?{{ref.k | urlencode}}">{{ref.k}}</a>
               </dt>
               <dd class="col-2 text-end pe-3">
                 <small>{{pretty_num(v=ref.c)}}</small>
@@ -299,7 +299,7 @@
               </dd>
               {% for ref in refs | sort(attribute="k") | slice(start=col+1) %}
               <dt class="col-10 text-truncate">
-                <a href="/?{{tech.language | urlencode}} {{ref.k}}">{{ref.k}}</a>
+                <a href="/?{{ref.k | urlencode}}">{{ref.k}}</a>
               </dt>
               <dd class="col-2 text-end pe-3">
                 <small>{{pretty_num(v=ref.c)}}</small>

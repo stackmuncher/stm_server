@@ -56,6 +56,7 @@ pub(crate) async fn html(config: &Config, keyword: String, html_data: HtmlData) 
     // put everything together for Tera
     let html_data = HtmlData {
         related: Some(related),
+        meta_robots: None,
         ..html_data
     };
 
