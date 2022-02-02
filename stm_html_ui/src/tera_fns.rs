@@ -14,10 +14,8 @@ pub(crate) fn shorten_num() -> impl Function {
                 Ok(v) => match v.as_u64() {
                     Some(v) => {
                         // add commas
-                        let txt = if v < 100 {
-                            "<100".to_string()
-                        } else if v >= 100 && v < 1000 {
-                            v.to_string()
+                        let txt = if v < 1000 {
+                            "---".to_string()
                         } else if v >= 1_000 && v < 10_000 {
                             format!("{:.1}K", v as f64 / 1000.0)
                         } else if v >= 10_000 && v < 1_000_000 {
