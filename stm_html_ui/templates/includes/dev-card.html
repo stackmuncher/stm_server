@@ -46,11 +46,11 @@
       {% for lang in langs %}
       {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
       {% if lang.0 == tech.language | lower %}
-      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border border-success" title="Language, number of years, lines of code">
-        <span style="font-size:1.7em">{{tech.language}}</span>
-        <span class="badge bg-white text-dark ms-2 fw-light fw-normal lh-sm">
-          {% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% endif %}<br />
-          {{shorten_num(v=tech.total_lines)}}
+      <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border border-success">
+        <h6 class="mb-1">{{tech.language}}</h6>
+        <span class="fw-light smaller-90">
+          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}---{% endif %}</span>
+          <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
         </span>
       </li>
       {% endif %}
@@ -83,9 +83,11 @@
 
       {% endfor %}
 
-      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border border-success" title="The number of times this keyword was encountered in the code.">
-        <span style="font-size:1.7em">{{kw}}</span>
-        <span class="badge bg-white text-dark ms-2 fw-light normal">{{pretty_num(v=kw_cnt)}}</span>
+      <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border border-success">
+        <h6 class="mb-1">{{kw}}</h6>
+        <span class="fw-light smaller-90">
+          <span class="libs-badge">{{pretty_num(v=kw_cnt)}} mention{{kw_cnt | pluralize }}</span>
+        </span>
       </li>
 
       {% endfor %}
@@ -100,11 +102,11 @@
       {% endif %}
       {% endfor %}
       {% if incl_lang %}
-      <li class="list-inline-item bg-light text-dark p-1 rounded mb-2 border" title="Language, number of years, lines of code">
-        <span style="font-size:1.7em" class="fw-light">{{tech.language}}</span>
-        <span class="badge bg-white text-dark ms-2 fw-light lh-sm">
-          {% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% endif %}<br />
-          {{shorten_num(v=tech.total_lines)}}
+      <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border">
+        <h6 class="mb-1 fw-light">{{tech.language}}</h6>
+        <span class="fw-light smaller-90">
+          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}---{% endif %}</span>
+          <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
         </span>
       </li>
       {% endif %}
