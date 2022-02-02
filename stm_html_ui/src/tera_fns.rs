@@ -15,7 +15,7 @@ pub(crate) fn shorten_num() -> impl Function {
                     Some(v) => {
                         // add commas
                         let txt = if v < 1000 {
-                            "---".to_string()
+                            "< 1K".to_string()
                         } else if v >= 1_000 && v < 10_000 {
                             format!("{:.1}K", v as f64 / 1000.0)
                         } else if v >= 10_000 && v < 1_000_000 {
@@ -92,7 +92,7 @@ pub(crate) fn pretty_num() -> impl Function {
 pub(crate) fn months_to_years() -> impl Function {
     Box::new(move |args: &HashMap<String, Value>| -> Result<Value, tera::Error> {
         // can't be a constant because of to_string()
-        let blank_value = Value::String("-".to_string());
+        let blank_value = Value::String("n/a".to_string());
 
         match args.get("v") {
             Some(val) => match from_value::<Number>(val.clone()) {

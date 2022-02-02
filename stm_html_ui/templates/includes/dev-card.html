@@ -49,7 +49,7 @@
       <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border border-success">
         <h6 class="mb-1">{{tech.language}}</h6>
         <span class="fw-light smaller-90">
-          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}---{% endif %}</span>
+          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}n/a{% endif %}</span>
           <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
         </span>
       </li>
@@ -105,7 +105,7 @@
       <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border">
         <h6 class="mb-1 fw-light">{{tech.language}}</h6>
         <span class="fw-light smaller-90">
-          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}---{% endif %}</span>
+          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}n/a{% endif %}</span>
           <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
         </span>
       </li>
