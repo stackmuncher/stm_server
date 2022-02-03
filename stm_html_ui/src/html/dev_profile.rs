@@ -32,6 +32,7 @@ pub(crate) async fn html(config: &Config, owner_id: String, html_data: HtmlData)
         ttl: 3600,
         http_resp_code,
         owner_id_str: Some(owner_id),
+        meta_robots: Some("noindex".to_owned()),
         ..html_data
     };
 
