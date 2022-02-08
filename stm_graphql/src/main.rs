@@ -3,6 +3,8 @@ use lambda_runtime;
 use lambda_runtime::Error;
 
 mod handler;
+mod http_options;
+mod types;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

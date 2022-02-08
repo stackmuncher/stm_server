@@ -1,37 +1,12 @@
+use crate::types::{ApiGatewayRequest, ApiGatewayResponse};
 use crate::Error;
 use lambda_runtime::LambdaEvent;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashMap;
 use sysinfo::{RefreshKind, System, SystemExt};
 use tracing::{info, warn};
 use urlencoding::decode;
-
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct ApiGatewayResponse {
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // cookies: Option<Vec<String>>,
-    is_base64_encoded: bool,
-    status_code: u32,
-    headers: HashMap<String, String>,
-    body: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct ApiGatewayQueryStringParameters {
-    dev: Option<String>,
-    //project: String
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct ApiGatewayRequest {
-    raw_path: String,
-    raw_query_string: String,
-    headers: HashMap<String, String>,
-    query_string_parameters: Option<ApiGatewayQueryStringParameters>,
-}
 
 /// A blank error structure to return to the runtime. No messages are required because all necessary information has already been logged.
 /// The API Gateway will return 500 which may be picked up by CloudFront and converted into a nice looking 500 page.
@@ -50,7 +25,7 @@ impl std::fmt::Display for HandlerError {
 pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Error> {
     let mut sys = System::new_with_specifics(RefreshKind::with_memory(RefreshKind::new()));
     let (event, _ctx) = event.into_parts();
-    //info!("Event: {}", event);
+    info!("Event: {}", event);
     //info!("Context: {:?}", _ctx);
 
     log_memory_use(&mut sys, "Start");
@@ -58,6 +33,10 @@ pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, lambd
     let api_request = serde_json::from_value::<ApiGatewayRequest>(event).expect("Failed to deser APIGW request");
 
     // log_memory_use(&mut sys, "API Req created");
+
+    if api_request.request_context.http.method.to_uppercase().as_str() == "OPTIONS" {
+        return Ok(crate::http_options::http_options_response(api_request).to_value());
+    }
 
     // if Authorization env var is present check if it matches Authorization header
     // this is done for basic protection against direct calls to the api bypassing CloudFront
@@ -118,10 +97,10 @@ fn gw_response(body: String, status_code: u32, ttl: u32) -> Result<Value, Error>
         is_base64_encoded: false,
         status_code,
         headers,
-        body,
+        body: Some(body),
     };
 
-    Ok(serde_json::to_value(resp).expect("Failed to serialize response"))
+    Ok(resp.to_value())
 }
 
 /// Logs current memory use and the delta from the previous sample.
