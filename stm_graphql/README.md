@@ -23,6 +23,9 @@ aws lambda update-function-code --region us-east-1 --function-name stm_graphql -
 
 This lambda looks for a JWT in `Authorization` header and returns HTTP 401 error if it's missing, expired or invalid.
 
+It requires `n` and `e` values from the JWK as env vars. See https://stackmuncher.us.auth0.com/.well-known/jwks.json for values.
+The values can be found in Auth0 config for the application. 
+
 #### API Gateway
 
 * HTTP API with Lambda

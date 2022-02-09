@@ -2,6 +2,8 @@
 use lambda_runtime;
 use lambda_runtime::Error;
 
+mod authorizer;
+mod config;
 mod handler;
 mod http_options;
 mod types;

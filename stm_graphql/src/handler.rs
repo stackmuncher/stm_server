@@ -1,3 +1,4 @@
+use crate::authorizer::validate_jwt;
 use crate::types::{ApiGatewayRequest, ApiGatewayResponse};
 use crate::Error;
 use lambda_runtime::LambdaEvent;
@@ -5,7 +6,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashMap;
 use sysinfo::{RefreshKind, System, SystemExt};
-use tracing::{info, warn};
+use tracing::info;
 use urlencoding::decode;
 
 /// A blank error structure to return to the runtime. No messages are required because all necessary information has already been logged.
@@ -38,26 +39,29 @@ pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, lambd
         return Ok(crate::http_options::http_options_response(api_request).to_value());
     }
 
-    // if Authorization env var is present check if it matches Authorization header
-    // this is done for basic protection against direct calls to the api bypassing CloudFront
-    if let Ok(auth_var) = std::env::var("Authorization") {
-        let auth_header = match api_request.headers.get("authorization") {
-            Some(v) => v.clone(),
-            None => String::new(),
-        };
+    let config = crate::config::Config::new();
 
-        if auth_var != auth_header {
-            warn!("Unauthorized. Header: {}", auth_header);
-            return gw_response("Unauthorized".to_owned(), 403, 3600);
+    // get caller details from the JWT attached to the request
+    // return HTTP 401 if the request is not authorized
+    // why 401: https://stackoverflow.com/questions/3297048/403-forbidden-vs-401-unauthorized-http-responses
+    let jwt = match validate_jwt(&api_request, &config) {
+        Some(v) => v,
+        None => {
+            return Ok((ApiGatewayResponse {
+                is_base64_encoded: false,
+                status_code: 401,
+                headers: HashMap::new(),
+                body: None,
+            })
+            .to_value());
         }
-    } else {
-        #[cfg(debug_assertions)]
-        warn!("No Authorization env var - all requests are allowed");
     };
+
+    info!("Caller: {:?}", jwt.email);
 
     // log_memory_use(&mut sys, "Config init");
 
-     // decode possible URL path and query string
+    // decode possible URL path and query string
     info!("Raw path: {}, Query: {}", &api_request.raw_path, &api_request.raw_query_string);
     let url_path = decode(&api_request.raw_path).unwrap_or_default().trim().to_string();
     let url_query = decode(&api_request.raw_query_string)
