@@ -29,6 +29,7 @@ This lambda looks for a JWT in `Authorization` header and returns HTTP 401 error
 * ANY /{proxy+}
 * `stm_graphql` Lambda
 * `$default` stage
+* CORS: configure all fields / headers in the form
 
 ## Debugging
 

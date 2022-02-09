@@ -57,9 +57,7 @@ pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, lambd
 
     // log_memory_use(&mut sys, "Config init");
 
-    log_memory_use(&mut sys, "Tera init");
-
-    // decode possible URL path and query string
+     // decode possible URL path and query string
     info!("Raw path: {}, Query: {}", &api_request.raw_path, &api_request.raw_query_string);
     let url_path = decode(&api_request.raw_path).unwrap_or_default().trim().to_string();
     let url_query = decode(&api_request.raw_query_string)
@@ -73,7 +71,11 @@ pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, lambd
     info!("Decoded path: {}, query: {}, dev: {:?}", url_path, url_query, dev);
 
     // send the user request downstream for processing
-    let gql_data = r#"{"test":"some text"}"#;
+    let gql_data = r#"{
+        "data": {
+          "test": "Hello Vue!"
+        }
+      }"#;
 
     log_memory_use(&mut sys, "GQL data returned");
 
