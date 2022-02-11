@@ -1,29 +1,23 @@
-use super::types_hits::ESHitsCountHits;
-use super::types_source::ESHits;
 use serde::Deserialize;
 
-pub use super::types_aggregations::ESAggs;
-pub use super::types_search_log::SearchLog;
+// HITS WRAPPER **************************************************************************************
 
-/// A generic wrapper to get to any type of _source in ES response. E.g.
-/// ```json
-/// {
-///   "hits" : {
-///     "hits" : [
-///       {
-///         "_source" : {
-///           "report" : {
-///             "timestamp" : "2021-03-08T20:11:05.862454103+00:00"
-///           }
-///         }
-///       }
-///     ]
-///   }
-/// }
-/// ```
+/// An inner member
 #[derive(Deserialize, Debug)]
-pub struct ESSource<T> {
-    pub hits: ESHits<T>,
+pub struct ESSourceSource<T> {
+    #[serde(rename(deserialize = "_source"))]
+    pub source: T,
+}
+
+/// An inner member
+#[derive(Deserialize, Debug)]
+pub struct ESHits<T> {
+    pub hits: Vec<ESSourceSource<T>>,
+    // there should be member `total` with the counts from ESHitsCountHits
+    // e.g. "total" : {
+    //   "value" : 1,
+    //   "relation" : "eq"
+    // },
 }
 
 // MISC REPORT FIELDS **************************************************************************
@@ -44,6 +38,18 @@ pub struct ESReportTimestampTimestamp {
 #[derive(Deserialize, Debug)]
 pub struct ESReportTimestamp {
     pub report: ESReportTimestampTimestamp,
+}
+
+/// Member of ESHitsCount
+#[derive(Deserialize)]
+pub struct ESHitsCountTotals {
+    pub value: usize,
+}
+
+/// Member of ESHitsCount
+#[derive(Deserialize)]
+pub struct ESHitsCountHits {
+    pub total: ESHitsCountTotals,
 }
 
 /// Corresponds to ES response metadata

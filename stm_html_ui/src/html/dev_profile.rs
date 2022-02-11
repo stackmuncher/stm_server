@@ -1,6 +1,7 @@
 use super::html_data::HtmlData;
 use crate::config::Config;
 use crate::elastic;
+use serde_json::Value;
 use stm_shared::elastic as elastic_shared;
 use tracing::info;
 
@@ -11,7 +12,7 @@ pub(crate) async fn html(config: &Config, owner_id: String, html_data: HtmlData)
     let query =
         elastic::add_param(elastic::SEARCH_DEV_BY_DOC_ID, owner_id.clone(), &config.no_sql_string_invalidation_regex);
 
-    let devs = elastic_shared::search(&config.es_url, &config.dev_idx, Some(&query)).await?;
+    let devs = elastic_shared::search::<Value>(&config.es_url, &config.dev_idx, Some(&query)).await?;
 
     // default response code
     let mut http_resp_code = 404_u32;

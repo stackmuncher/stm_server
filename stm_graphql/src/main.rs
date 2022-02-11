@@ -7,6 +7,8 @@ mod config;
 mod handler;
 mod http_options;
 mod types;
+mod elastic;
+mod handlers;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

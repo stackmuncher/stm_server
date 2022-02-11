@@ -2,11 +2,15 @@
 use hyper::{header::HeaderValue, Body, Client, Request, Uri};
 use hyper_rustls::HttpsConnectorBuilder;
 use regex::Regex;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value;
 use tracing::{debug, error, info};
 
 pub mod types;
+pub mod types_aggregations;
+pub mod types_search_log;
+pub mod types_source;
+pub mod types_hits;
 
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
@@ -115,7 +119,7 @@ pub async fn upload_object_to_es<T: Serialize>(
 
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
-pub async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Result<Value, ()> {
+pub async fn call_es_api<T: DeserializeOwned>(es_api_endpoint: String, payload: Option<String>) -> Result<T, ()> {
     // prepare METHOD and the payload in one step
     let (method, payload_id, payload) = match payload {
         None => ("GET", 0usize, Body::empty()),
@@ -177,7 +181,7 @@ pub async fn call_es_api(es_api_endpoint: String, payload: Option<String>) -> Re
     }
 
     // all responses should be JSON. If it's not JSON it's an error.
-    let output = Ok(serde_json::from_slice::<Value>(&buf).expect("Failed to convert ES resp to JSON"));
+    let output = Ok(serde_json::from_slice::<T>(&buf).expect("Failed to convert ES resp to a type"));
     info!("ES query {} deserialized", payload_id);
     //info!("{}", output.as_ref().unwrap()); // for debugging
     output
@@ -221,12 +225,12 @@ pub async fn get_doc_by_id(
 /// * es_url: elastucsearch url
 /// * idx: ES index name
 /// * query: the query text, if any for *_search* or `None` for *_count*
-pub async fn search(es_url: &String, idx: &String, query: Option<&str>) -> Result<Value, ()> {
+pub async fn search<T: DeserializeOwned>(es_url: &String, idx: &String, query: Option<&str>) -> Result<T, ()> {
     if query.is_some() {
         let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_search"].concat();
-        return call_es_api(es_api_endpoint, Some(query.unwrap().to_string())).await;
+        return call_es_api::<T>(es_api_endpoint, Some(query.unwrap().to_string())).await;
     } else {
         let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_count"].concat();
-        return call_es_api(es_api_endpoint, None).await;
+        return call_es_api::<T>(es_api_endpoint, None).await;
     }
 }

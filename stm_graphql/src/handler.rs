@@ -1,9 +1,11 @@
 use crate::authorizer::validate_jwt;
+use crate::handlers;
 use crate::types::{ApiGatewayRequest, ApiGatewayResponse};
 use crate::Error;
 use lambda_runtime::LambdaEvent;
 use serde::Serialize;
 use serde_json::Value;
+use simple_error::SimpleError;
 use std::collections::HashMap;
 use sysinfo::{RefreshKind, System, SystemExt};
 use tracing::info;
@@ -75,13 +77,16 @@ pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, lambd
     info!("Decoded path: {}, query: {}, dev: {:?}", url_path, url_query, dev);
 
     // send the user request downstream for processing
-    let gql_data = r#"{
-        "data": {
-          "test": "Hello Vue!"
-        }
-      }"#;
+    let gql_data = handlers::home::language_stats(&config).await;
 
+    // measure memory consumption before unwrapping
     log_memory_use(&mut sys, "GQL data returned");
+    let gql_data = match gql_data {
+        Ok(v) => v,
+        Err(_) => {
+            return Err(Box::new(SimpleError::new("Failed to get GQL data")));
+        }
+    };
 
     info!("gql full: {} bytes", gql_data.len());
     let gql_data = minify::html::minify(&gql_data);
