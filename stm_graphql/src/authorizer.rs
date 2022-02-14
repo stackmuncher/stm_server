@@ -1,5 +1,5 @@
+use crate::api_gw_request::ApiGatewayRequest;
 use crate::config::Config;
-use crate::types::ApiGatewayRequest;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::Deserialize;
 use tracing::error;

@@ -123,5 +123,5 @@ impl KeywordMetadata {
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct RelatedKeywords {
     pub k: String,
-    pub c: usize,
+    pub c: u64,
 }

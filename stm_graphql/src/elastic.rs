@@ -58,13 +58,7 @@ pub(crate) async fn matching_doc_count(
     ]
     .concat();
 
-    let es_api_endpoint = [
-        es_url.as_ref(),
-        "/",
-        idx,
-        "/_search",
-    ]
-    .concat();
+    let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_search"].concat();
     let count = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
 
     // extract the actual value from a struct like this
@@ -277,7 +271,7 @@ pub(crate) async fn related_keywords(
     idx: &String,
     keyword: &String,
     regex_substring_invalidation: &Regex,
-) -> Result<Vec<(String, usize)>, ()> {
+) -> Result<Vec<(String, u64)>, ()> {
     // validate field_value for possible no-sql injection
     if regex_substring_invalidation.is_match(&keyword) {
         error!("Invalid keyword: {}", keyword);
@@ -325,7 +319,7 @@ pub(crate) async fn related_keywords(
         .buckets
         .into_iter()
         .map(|v| (v.key.to_lowercase(), v.doc_count))
-        .collect::<HashMap<String, usize>>();
+        .collect::<HashMap<String, u64>>();
 
     // combine the refs counts with pkgs counts
     for bucket in pkgs.aggregations.agg.buckets {
@@ -337,10 +331,7 @@ pub(crate) async fn related_keywords(
     }
 
     // convert the combined hashmap into an array
-    let mut related = related
-        .into_iter()
-        .map(|v| (v.0, v.1))
-        .collect::<Vec<(String, usize)>>();
+    let mut related = related.into_iter().map(|v| (v.0, v.1)).collect::<Vec<(String, u64)>>();
 
     // sort the result alphabetically
     related.sort_by(|a, b| b.1.cmp(&a.1));

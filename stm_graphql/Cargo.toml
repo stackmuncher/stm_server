@@ -27,4 +27,5 @@ urlencoding = "2.1"
 minify = "1.3.0"
 sysinfo = "0.23"
 jsonwebtoken = "8"
+juniper = { git = "https://github.com/graphql-rust/juniper.git", rev = "3a70403aba7a74652036b74f1db43fc0cfb6bb55"}
 stm_shared = { version = "0.1", path = "../stm_shared" }

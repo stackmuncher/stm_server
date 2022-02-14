@@ -2,13 +2,14 @@
 use lambda_runtime;
 use lambda_runtime::Error;
 
+mod api_gw_request;
+mod api_gw_response;
 mod authorizer;
 mod config;
-mod handler;
-mod http_options;
-mod types;
 mod elastic;
+mod handler;
 mod handlers;
+mod http_options_handler;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

@@ -1,11 +1,10 @@
+use crate::{api_gw_request::ApiGatewayRequest, api_gw_response::ApiGatewayResponse};
 use std::collections::HashMap;
-
-use crate::types::{ApiGatewayRequest, ApiGatewayResponse};
 use tracing::info;
 
-/// Returns a dummy HTTP response regardless of the OPTIONS request passed in.
+/// Returns a dummy HTTP response to HTTP OPTIONS request. All request headers are ignored.
 /// CORS headers are handled by the API Gateway and will overwrite what is prepared here if configured in the API GW.
-/// 
+///
 /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
 pub(crate) fn http_options_response(req: ApiGatewayRequest) -> ApiGatewayResponse {
     info!("OPTIONS: {:?}", req);
