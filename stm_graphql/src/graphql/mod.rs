@@ -1,42 +1,30 @@
 use crate::config::Config;
-use crate::elastic;
 use juniper::http::{GraphQLRequest, GraphQLResponse};
-use juniper::{graphql_object, FieldResult};
 use juniper::{EmptyMutation, EmptySubscription, RootNode};
-use stm_shared::elastic as elastic_shared;
-use stm_shared::elastic::types_aggregations::MyScalarValue;
+use stm_shared::graphql::RustScalarValue;
 use tracing::{error, info};
 
+// a list of query resolvers
+mod query_devs_per_language;
+
+/// A container for Query resolvers implemented in separate files.
 struct Query;
 
+/// A context structure for passing to query resolvers
 struct Ctx {
     es_url: String,
     dev_idx: String,
 }
-
 impl juniper::Context for Ctx {}
 
-#[graphql_object(context=Ctx, scalar = MyScalarValue)]
-impl Query {
-    async fn devs_per_language<'db>(&self, context: &'db Ctx) -> FieldResult<elastic_shared::types::ESAggs> {
-        // get number of devs per technology
-        let stack_stats = match elastic_shared::search::<elastic_shared::types::ESAggs>(
-            &context.es_url,
-            &context.dev_idx,
-            Some(elastic::SEARCH_ALL_LANGUAGES),
-        )
-        .await
-        {
-            Ok(v) => v,
-            Err(_) => return Err("error!".into()),
-        };
-
-        Ok(stack_stats)
-    }
-}
-
-pub(crate) async fn execute_gql(config: &Config, gql_request: GraphQLRequest<MyScalarValue>) -> Result<String, ()> {
-    info!("Generating vue-home");
+/// Executes the provided GQL request, logs errors and returns a tuple with
+/// 0. GraphQL response as String
+/// 1. A flag indicating the success of the execution
+pub(crate) async fn execute_gql(
+    config: &Config,
+    gql_request: GraphQLRequest<RustScalarValue>,
+) -> Result<(String, Result<(), ()>), ()> {
+    info!("Executing GQL request");
 
     // a struct to be passed to resolvers for accessing backend resources
     let context = Ctx {
@@ -48,26 +36,31 @@ pub(crate) async fn execute_gql(config: &Config, gql_request: GraphQLRequest<MyS
     let root_node =
         RootNode::new_with_scalar_value(Query, EmptyMutation::<Ctx>::new(), EmptySubscription::<Ctx>::new());
 
-    // execute the GQL query from `payload` using GQL resolvers
+    // execute the GQL query from `gql_request` using GQL resolvers
     let op = gql_request.operation_name.as_deref();
     let vars = &gql_request.variables();
-    // let res = crate::execute(&self.query, op, root_node, vars, context).await;
+    info!("Query: {}", gql_request.query);
     let res = juniper::execute(&gql_request.query, op, &root_node, vars, &context).await;
 
+    // `result is to passed back to the caller as an indication if there were any errors in the execution
+    let mut result = Ok(());
+
     // log any execution errors
-    // they will be returned as part of the response to the caller
+    // they will be returned as part of the response to the caller inside GQL response, but we need to know about them at the back end
     if let Err(e) = &res {
         error!("GQL execution error: {}, gql: {:?}", e, gql_request);
+        result = Err(());
     } else {
         for e in &res.as_ref().unwrap().1 {
             error!("GQL field error: {:?}, gql: {:?}", e, gql_request);
+            result = Err(());
         }
     }
 
     // convert the response into GQL format of {"data": ..., "error": ...} for returning back to the caller over HTTP
     let res = GraphQLResponse::from_result(res);
     match serde_json::to_string(&res) {
-        Ok(v) => Ok(v),
+        Ok(v) => Ok((v, result)),
         Err(e) => {
             error!("Failed serializing GraphQLResponse with {}", e);
             return Err(());
@@ -83,23 +76,7 @@ pub(crate) fn get_schema() -> String {
         .as_schema_language()
 }
 
-mod tests {
-
-    #[tokio::test]
-    async fn save_schema() {
-        std::fs::write("schema.graphql", super::get_schema()).expect("Unable to write './schema.graphql' file");
-    }
-
-    #[tokio::test]
-    async fn print_gql() {
-        let config = super::Config::new();
-
-        let gql_request = super::GraphQLRequest::<super::MyScalarValue> {
-            query: r#"query { devsPerLanguage { aggregations {agg {buckets {key, docCount}}} }}"#.to_string(),
-            operation_name: None,
-            variables: None,
-        };
-
-        let _gql_data = super::execute_gql(&config, gql_request).await;
-    }
+#[tokio::test]
+async fn save_schema() {
+    std::fs::write("schema.graphql", get_schema()).expect("Unable to write './schema.graphql' file");
 }

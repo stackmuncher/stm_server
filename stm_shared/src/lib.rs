@@ -6,6 +6,7 @@ pub mod elastic;
 pub mod pgsql;
 pub mod s3;
 pub mod sqs;
+pub mod graphql;
 
 /// Helps decide on the best course of action for job processing.
 /// The error must include the job it relates to for the job to be marked in the queue

@@ -1,0 +1,49 @@
+{
+  "body": "{\"variables\":{},\"query\":\"{\\n  devsPerLanguage {\\n    aggregations {\\n      agg {\\n        buckets {\\n          key\\n          docCount\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\"}",
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.5",
+    "authorization": "Bearer eyJhbGci...OQeO8xzND9Dpv7QYUi0BZ2Q",
+    "content-length": "247",
+    "content-type": "application/json",
+    "dnt": "1",
+    "host": "jv4ztf9od8.execute-api.us-east-1.amazonaws.com",
+    "origin": "http://localhost:8080",
+    "referer": "http://localhost:8080/",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "cross-site",
+    "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:96.0) Gecko/20100101 Firefox/96.0",
+    "x-amzn-trace-id": "Root=1-620b023b-1f835caf4844ec367c14e92d",
+    "x-forwarded-for": "122.155.96.222",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "proxy": ""
+  },
+  "rawPath": "/",
+  "rawQueryString": "",
+  "requestContext": {
+    "accountId": "028534811986",
+    "apiId": "jv4ztf9od8",
+    "domainName": "jv4ztf9od8.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "jv4ztf9od8",
+    "http": {
+      "method": "POST",
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "122.155.96.222",
+      "userAgent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:96.0) Gecko/20100101 Firefox/96.0"
+    },
+    "requestId": "Nj1JWjgIIAMEVLA=",
+    "routeKey": "ANY /{proxy+}",
+    "stage": "$default",
+    "time": "15/Feb/2022:01:30:35 +0000",
+    "timeEpoch": 1644888635635
+  },
+  "routeKey": "ANY /{proxy+}",
+  "version": "2.0"
+}

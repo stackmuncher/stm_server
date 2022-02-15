@@ -8,7 +8,7 @@ mod authorizer;
 mod config;
 mod elastic;
 mod handler;
-mod handlers;
+mod graphql;
 mod http_options_handler;
 
 #[tokio::main]

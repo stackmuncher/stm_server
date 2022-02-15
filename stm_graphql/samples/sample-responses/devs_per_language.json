@@ -1,0 +1,158 @@
+{
+  "took": 378,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 10000,
+      "relation": "gte"
+    },
+    "max_score": null,
+    "hits": []
+  },
+  "aggregations": {
+    "agg": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "markdown",
+          "doc_count": 1819766
+        },
+        {
+          "key": "javascript",
+          "doc_count": 1329356
+        },
+        {
+          "key": "css",
+          "doc_count": 1244443
+        },
+        {
+          "key": "python",
+          "doc_count": 818917
+        },
+        {
+          "key": "html",
+          "doc_count": 758973
+        },
+        {
+          "key": "scss",
+          "doc_count": 467314
+        },
+        {
+          "key": "java",
+          "doc_count": 448122
+        },
+        {
+          "key": "typescript",
+          "doc_count": 397867
+        },
+        {
+          "key": "shell",
+          "doc_count": 382730
+        },
+        {
+          "key": "devops",
+          "doc_count": 353102
+        },
+        {
+          "key": "c#",
+          "doc_count": 340143
+        },
+        {
+          "key": "sql",
+          "doc_count": 286216
+        },
+        {
+          "key": "c++",
+          "doc_count": 266290
+        },
+        {
+          "key": "docker",
+          "doc_count": 246968
+        },
+        {
+          "key": "jupyter",
+          "doc_count": 179952
+        },
+        {
+          "key": "reactjs",
+          "doc_count": 139651
+        },
+        {
+          "key": "vuejs",
+          "doc_count": 124157
+        },
+        {
+          "key": "restructuredtext",
+          "doc_count": 113193
+        },
+        {
+          "key": "powershell",
+          "doc_count": 105397
+        },
+        {
+          "key": "go",
+          "doc_count": 103498
+        },
+        {
+          "key": "kotlin",
+          "doc_count": 98403
+        },
+        {
+          "key": "ruby",
+          "doc_count": 92947
+        },
+        {
+          "key": "rust",
+          "doc_count": 55373
+        },
+        {
+          "key": "makefile",
+          "doc_count": 47030
+        },
+        {
+          "key": "eruby",
+          "doc_count": 35560
+        },
+        {
+          "key": "terraform",
+          "doc_count": 10366
+        },
+        {
+          "key": "haml",
+          "doc_count": 5298
+        },
+        {
+          "key": "puppet",
+          "doc_count": 4866
+        },
+        {
+          "key": "liquid",
+          "doc_count": 1848
+        },
+        {
+          "key": "travisci",
+          "doc_count": 236
+        },
+        {
+          "key": "appveyor",
+          "doc_count": 46
+        },
+        {
+          "key": "codecov",
+          "doc_count": 14
+        },
+        {
+          "key": "circleci",
+          "doc_count": 5
+        }
+      ]
+    }
+  }
+}
