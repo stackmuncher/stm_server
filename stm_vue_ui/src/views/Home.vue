@@ -28,10 +28,7 @@
             <span>{{ auth.loading ? 'Loading' : 'Not loading' }}</span>
             <span>User: {{ auth.user?.name || 'NO_USER' }}</span>
             <span>Email: {{ auth.user?.email || 'NO_EMAIL' }}</span>
-            <span>JWT: {{ jwt || 'NO_TOKEN' }}</span>
           </div>
-
-          <p>Response: {{ test }}</p>
 
           <div class="d-flex mt-4">
             <input
@@ -56,17 +53,24 @@
             Find software developers by their technology stack, e.g. <code>typescript vuejs apollo</code> or <code>c# sql cosmos</code>
           </p> <h6 class="mt-5 mb-3">
             Developers per language
-          </h6> <ul class="list-inline">
-            <li class="list-inline-item bg-light text-dark p-1 rounded mb-3 border me-4">
+          </h6> <ul
+            v-if="devsPerLanguage"
+            class="list-inline"
+          >
+            <li
+              v-for="bucket in devsPerLanguage.aggregations.agg.buckets"
+              :key="bucket.key"
+              class="list-inline-item bg-light text-dark p-1 rounded mb-3 border me-4"
+            >
               <a
-                title="c# developers"
+                :title="`${bucket.key} developers`"
                 style="text-decoration: underline #6c757d;"
                 class="text-dark"
-                href="/?c%23"
-              > C# <span
+                href="/?{{ bucket.key }}"
+              > {{ bucket.key }} <span
                 class="badge bg-white text-dark ms-2"
                 style="font-weight: 300;"
-              >335,638</span></a>
+              >{{ bucket.docCount }}</span></a>
             </li>
           </ul> <h6 class="mt-5">
             About StackMuncher
@@ -85,7 +89,7 @@
 <script>
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
-import gql from 'graphql-tag'
+import { devsPerLanguageQuery } from '@/graphql/queries.ts'
 
 export default {
   name: 'Home',
@@ -95,19 +99,15 @@ export default {
   inject: ['auth'],
   data () {
     return {
-    // Initialize your apollo data
-      test: 'init'
+      devsPerLanguage: null,
+      loading: 0
     }
   },
   computed: {
-    jwt () {
-      const j = this.auth.getIdTokenClaims()
-      console.log(j)
-      return 'j.__raw'
-    }
+
   },
   apollo: {
-    test: gql`query { test }`
+    devsPerLanguage: devsPerLanguageQuery
   }
 
 }

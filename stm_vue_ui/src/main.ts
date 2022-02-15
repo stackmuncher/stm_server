@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import store from './store'
 import router from './router'
-import VueAuth0Plugin from 'vue-auth0-plugin'
+import VueAuth0Plugin, { AuthenticationProperties as auth0 } from 'vue-auth0-plugin'
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client/core'
 import { setContext } from '@apollo/client/link/context'
 import { createApolloProvider } from '@vue/apollo-option'
@@ -11,14 +11,14 @@ const httpLink = createHttpLink({
   uri: 'https://jv4ztf9od8.execute-api.us-east-1.amazonaws.com'
 })
 
-const authLink = setContext((_, { headers }) => {
-  // get the authentication token from local storage if it exists
-  const token = 'jwt-token' // localStorage.getItem('jwt')
-  // return the headers to the context so httpLink can read them
+// middleware required to inject a JWT into every GQL request
+// see https://github.com/jnt0r/vue-auth0-plugin, https://github.com/apollographql/apollo-client/issues/2441, https://www.apollographql.com/docs/react/networking/authentication/
+const authLink = setContext(async (_, { headers }) => {
+  const token = await auth0.getIdTokenClaims()
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : ''
+      authorization: token ? `Bearer ${token.__raw}` : ''
     }
   }
 })
