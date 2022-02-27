@@ -1,0 +1,12 @@
+POST /_security/role/stm_apps
+{
+  "run_as": [ "_es_anonymous_user" ],
+  "indices": [
+    {
+      "names": [ "stm*","dev*", "org*", "stats*" ],
+      "privileges": [ "read","write","create" ]
+    }
+  ]
+}
+
+GET /_security/role/stm_apps

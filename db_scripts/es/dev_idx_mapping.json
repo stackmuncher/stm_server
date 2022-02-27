@@ -28,6 +28,9 @@
       "bio": {
         "type": "text"
       },
+      "description": {
+        "type": "text"
+      },
       "blog": {
         "type": "text"
       },
@@ -63,6 +66,9 @@
         "type": "long"
       },
       "hireable": {
+        "type": "boolean"
+      },
+      "is_verified": {
         "type": "boolean"
       },
       "id": {
