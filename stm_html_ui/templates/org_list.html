@@ -18,12 +18,12 @@
           <small>
             Organizations using
             {% for kw in used_terms %}
-              {% if loop.first %}{% elif loop.last %} and {% else%},{% endif %}
-              {% if kw.es_language_count > 0 %}
-               {{kw.search_term_fmt}}
-              {% else %}
-                <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="Click to explore related keywords.">{{kw.search_term}}</a></code>
-              {% endif %}
+            {% if loop.first %}{% elif loop.last %} and {% else%},{% endif %}
+            {% if kw.es_language_count > 0 %}
+            {{kw.search_term_fmt}}
+            {% else %}
+            <code><a style="color:inherit;" href="/_related?{{kw.search_term | urlencode }}" title="Click to explore related keywords.">{{kw.search_term}}</a></code>
+            {% endif %}
             {% endfor %}
           </small>
         </h1>
@@ -63,9 +63,11 @@
           <div class="col-12">
             <hr style="border: 0; border-bottom: 1px dotted #ccc; background: #999;" />
           </div>
+          <div class="col-12">
+            <label for="search_lang" class="form-label fw-bold text-muted">Language</label>
+          </div>
           <div class="col-6">
-            <label for="search_lang1" class="form-label fw-bold text-muted">Languages</label>
-            <select class="form-select form-select-sm" id="search_lang1" aria-label="Select a language (1 of 3)" onchange="if (!this.value) {document.getElementById('search_lang1loc').getElementsByTagName('option')[0].selected = 'selected'}">
+            <select class="form-select form-select-sm" id="search_lang" aria-label="Select a language">
               <option {% if langs | length==0 %}selected{% endif %}></option>
               {% for l in all_langs %}
               <option value="{{l | lower}}" {% if langs | length> 0 and langs[0].0 == l | lower %}selected{% endif %}>{{l}}</option>
@@ -73,136 +75,34 @@
             </select>
           </div>
           <div class="col-6">
-            <label for="search_lang1loc" class="form-label fw-bold text-muted">Exposure</label>
-            <select disabled class="form-select form-select-sm" id="search_lang1loc" aria-label="Select expertise level for language 1">
-              <option {% if langs | length==0 %}selected{% endif %}></option>
-              <option value="" {% if langs | length> 0 and langs[0].1 < 5000 %}selected{% endif %}>any</option>
-              <option value="5000" {% if langs | length> 0 and langs[0].1 >= 5000 and langs[0].1 < 30000 %}selected{% endif %}>medium</option>
-              <option value="30000" {% if langs | length> 0 and langs[0].1 >= 30000 %}selected{% endif %}>high</option>
-            </select>
-          </div>
-          <div class="col-6">
-            <select disabled class="form-select form-select-sm" id="search_lang2" aria-label="Select a language (2 out of 3)" onchange="if (!this.value) {document.getElementById('search_lang2loc').getElementsByTagName('option')[0].selected = 'selected'}">
-              <option {% if langs | length==1 %}selected{% endif %}></option>
-              {% for l in all_langs %}
-              <option value="{{l | lower}}" {% if langs | length> 1 and langs[1].0 == l | lower %}selected{% endif %}>{{l}}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-6">
-            <select disabled class="form-select form-select-sm" id="search_lang2loc" aria-label="Select expertise level for language 2">
-              <option {% if langs | length==1 %}selected{% endif %}></option>
-              <option value="" {% if langs | length> 1 and langs[1].1 < 5000 %}selected{% endif %}>any</option>
-              <option value="5000" {% if langs | length> 1 and langs[1].1 >= 5000 and langs[1].1 < 30000 %}selected{% endif %}>medium</option>
-              <option value="30000" {% if langs | length> 1 and langs[1].1 >= 30000 %}selected{% endif %}>high</option>
-            </select>
-          </div>
-          <div class="col-6">
-            <select disabled class="form-select form-select-sm" id="search_lang3" aria-label="Select a language (3 out of 3)" onchange="if (!this.value) {document.getElementById('search_lang3loc').getElementsByTagName('option')[0].selected = 'selected'}">
-              <option {% if langs | length < 3 %}selected{% endif %}></option>
-              {% for l in all_langs %}
-              <option value="{{l | lower}}" {% if langs | length> 2 and langs[2].0 == l | lower %}selected{% endif %}>{{l}}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-6">
-            <select disabled class="form-select form-select-sm" id="search_lang3loc" aria-label="Select expertise level for language 3">
-              <option {% if langs | length < 3 %}selected{% endif %}></option>
-              <option value="" {% if langs | length> 2 and langs[2].1 < 5000 %}selected{% endif %}>any</option>
-              <option value="5000" {% if langs | length> 2 and langs[2].1 >= 5000 and langs[2].1 < 30000 %}selected{% endif %}>medium</option>
-              <option value="30000" {% if langs | length> 2 and langs[2].1 >= 30000 %}selected{% endif %}>high</option>
-            </select>
-          </div>
-
-          <div class="col-12 mt-3">
-            <label for="search_kw" class="form-label fw-bold text-muted">Framework, package or API names</label>
-            <span class="badge rounded-pill bg-secondary bg-opacity-50">
-              <a class="text-light fw-bold text-decoration-none" href="/_related/" title="Click to explore different keywords for a more specific search">?</a>
-            </span>
-            {% set_global kw_control_value = "" %}
-            {% for v in keywords %}{% set_global kw_control_value = kw_control_value ~ " " ~ v %}{% endfor %}
-            {% set_global kw_control_value = kw_control_value | trim %}
-            <input disabled class="form-control form-control-sm me-2" type="search" title="E.g. `mongodb` will limit your search to developers interfacing with MongoDB from their code." value="{{kw_control_value}}" id="search_kw" minlength="1" maxlength="100" onkeydown="if (event.keyCode===13) document.getElementById('btn').click()">
-          </div>
-
-          <div class="col-12 mt-3">
-            <label for="search_tz" class="form-label fw-bold text-muted">Timezone availability</label>
-          </div>
-
-          <div class="col-8">
-            <select disabled class="form-select form-select-sm" id="search_tz" aria-label="Timezone availability - timezone name" onchange="if (!this.value) {document.getElementById('search_tzhrs').getElementsByTagName('option')[0].selected = 'selected'}">
-              <option {% if not availability_tz %}selected{% endif %}></option>
-              <option value="+12" {% if availability_tz and availability_tz is ending_with('+12') %}selected{% endif %}>New Zealand, UTC+12</option>
-              <option value="+10" {% if availability_tz and availability_tz is ending_with('+10') %}selected{% endif %}>Australia East, UTC+10</option>
-              <option value="+9" {% if availability_tz and availability_tz is ending_with('+09') %}selected{% endif %}>Japan, Korea, UTC+09</option>
-              <option value="+8" {% if availability_tz and availability_tz is ending_with('+08') %}selected{% endif %}>Australia West, UTC+08</option>
-              <option value="+5" {% if availability_tz and availability_tz is ending_with('+05') %}selected{% endif %}>India, Pakistan, UTC+05</option>
-              <option value="+3" {% if availability_tz and availability_tz is ending_with('+03') %}selected{% endif %}>Russia (Moscow), UTC+03</option>
-              <option value="+2" {% if availability_tz and availability_tz is ending_with('+02') %}selected{% endif %}>Europe East, UTC+02</option>
-              <option value="+1" {% if availability_tz and availability_tz is ending_with('+01') %}selected{% endif %}>Europe Central, UTC+01</option>
-              <option value="+0" {% if availability_tz and availability_tz is ending_with('+00') %}selected{% endif %}>Europe West, GMT</option>
-              <option value="-3" {% if availability_tz and availability_tz is ending_with('-03') %}selected{% endif %}>Argentina, Brasil, UTC-03</option>
-              <option value="-5" {% if availability_tz and availability_tz is ending_with('-05') %}selected{% endif %}>US East, UTC-05</option>
-              <option value="-6" {% if availability_tz and availability_tz is ending_with('-06') %}selected{% endif %}>US Central, UTC-06</option>
-              <option value="-7" {% if availability_tz and availability_tz is ending_with('-07') %}selected{% endif %}>US Mountain, UTC-07</option>
-              <option value="-8" {% if availability_tz and availability_tz is ending_with('-08') %}selected{% endif %}>US Pacific, UTC-08</option>
-              <option value="-10" {% if availability_tz and availability_tz is ending_with('-10') %}selected{% endif %}>Hawaii, UTC-10</option>
-            </select>
-          </div>
-
-          <div class="col-4">
-            <select disabled class="form-select form-select-sm" id="search_tzhrs" aria-label="Timezone availability - hours">
-              <option {% if not availability_tz_hrs %}selected{% endif %}></option>
-              <option value="1" {% if availability_tz_hrs and availability_tz_hrs==1 %}selected{% endif %}>1 hr</option>
-              {% for v in [2,3,4,5,6,7,8,9,10] %}
-              <option value="{{v}}" {% if availability_tz_hrs and availability_tz_hrs==v %}selected{% endif %}>{{v}} hrs</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col text-end">
             <script>
               function do_search() {
-                let q = '';
-                for (let i = 1; i < 4; i++) {
-                  let v = document.getElementById('search_lang' + i).value;
-                  if (v) {
-                    q = q + v;
-                    v = document.getElementById('search_lang' + i + 'loc').value;
-                    if (v && v > 0) {
-                      q = q + ':' + v;
-                    }
-                    q = q + ' ';
-                  }
-                }
-                v = document.getElementById('search_kw').value;
-                if (v) {
-                  q = q + v + ' ';
-                }
-                v = document.getElementById('search_tz').value;
-                if (v) {
-                  let h = document.getElementById('search_tzhrs').value;
-                  if (h) {
-                    q = q + h + 'hrs@utc' + v;
-                  }
-                }
-                window.location.href = '/?' + encodeURIComponent(q.trim());
+                let q = document.getElementById('search_lang').value;
+                window.location.href = '/_orgs/?' + encodeURIComponent(q.trim());
               }
             </script>
-            <button class="btn btn-sm btn-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="do_search()" title="Find developers matching the search parameters">Find organizations</button>
+            <button class="btn btn-sm btn-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="do_search()" title="Find organizations using this language">Find organizations</button>
+
           </div>
         </div>
 
         {% if devs and devs.hits.hits | length > 0 %}
 
         {% if langs | length > 0 %}
-        <h6 class="mt-5"><strong>Looking for {{langs.0.0}} work?</strong></h6>
+        <h6 class="mt-5">
+          <strong>Looking for
+            {% for l in all_langs %}
+            {% if langs | length> 0 and langs[0].0 == l | lower %}{{l}}{% endif %}
+            {% endfor %}
+            work?
+          </strong>
+        </h6>
         {% else %}
-        <h6 class="mt-5"><strong>Looking for specialist work?</strong></h6>
+        <h6 class="mt-5"><strong>Looking for specialist software development work?</strong></h6>
         {% endif %}
 
         <p>StackMuncher developer search is a free service to help developers and employers connect.</p>
-        <p>You are welcome to <a href="mailto:info@stackmuncher.com">send us your work requirements</a> for a more detailed database search.</p>
+        <p><a href="https://github.com/stackmuncher/stm_app">Sign up</a> to be notified when someone is looking for your set of skills with an offer matching your expectations.</p>
         {% endif %}
 
       </div>
@@ -213,7 +113,7 @@
           {# ----- LIST OF DEVS ----- #}
           <div class="row">
             {% for dev in devs.hits.hits %}
-            <div class="col-12">
+            <div class="col-12" title="Number of years in use and the LoC across all projects">
               {% include "includes/org-card.html" %}
             </div>
             {% endfor %}
