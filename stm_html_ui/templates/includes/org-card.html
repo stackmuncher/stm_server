@@ -1,0 +1,137 @@
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center" width="100%" height="50">
+      <h5 class="card-title ma-1">
+        <a href="/_org/{{dev._source.login}}">
+          {% if dev._source.name %}
+          {{dev._source.name}}
+          {% elif dev._source.login %}
+          {{dev._source.login}}
+          {% else %}
+          Anonymous Organization
+          {% endif %}
+        </a>
+      </h5>
+    </div>
+    {% if dev._source.report.first_contributor_commit_date_iso %}
+    {% set init = dev._source.report.first_contributor_commit_date_iso | date(format="%Y") | int() %}
+    {% elif dev._source.report.date_init %}
+    {% set init = dev._source.report.date_init | date(format="%Y") | int() %}
+    {% else %}
+    {% set init = now() | date(format="%Y") | int() %}
+    {% endif %}
+    {% set today = now() | date(format="%Y") | int() %}
+
+    {% if dev._source.description %}
+    <p class="card-subtitle mb-2 text-muted">
+      {{dev._source.description}}
+    </p>
+    {% endif %}
+
+    <p class="card-subtitle mb-2 text-muted">
+      {% if dev._source.public_repos %}{{dev._source.public_repos}}
+      {% elif dev._source.report.projects_included %}{{dev._source.report.projects_included | length}}
+      {% else %}some
+      {% endif %} projects over
+      {% set years = today - init + 1 %}
+      {{ years }} year{% if years > 1%}s{% endif %}
+    </p>
+    
+    {% if dev._source.location %}
+    <p class="card-subtitle mb-2 text-muted">
+      <small>{{dev._source.location}}</small>
+    </p>
+    {% endif %}
+
+    {% if dev._source.email or dev._source.blog %}
+    <p class="card-subtitle mb-2">
+      {% if dev._source.blog and dev._source.blog is starting_with("http") %}
+      <a href="{{dev._source.blog}}" title="Org's homepage">{{dev._source.blog}}</a>
+      {% elif dev._source.blog %}
+      {{dev._source.blog}}
+      {% elif dev._source.email and dev._source.email is containing("@") %}
+      <a href="mailto:{{dev._source.email}}" title="Org's contact email">{{dev._source.email}}</a>
+      {% elif dev._source.email %}
+      {{dev._source.email}}
+      {% endif %}
+    </p>
+    {% endif %}
+
+    <p class="card-subtitle mb-2">
+      <a href="https://github.com/{{dev._source.login}}" title="Contact details available on GitHub">https://github.com/{{dev._source.login}}</a>
+    </p>
+
+    <ul class="list-inline mt-3">
+      {# ----- MATCHING LANGUAGES ----- #}
+      {% for lang in langs %}
+      {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
+      {% if lang.0 == tech.language | lower %}
+      <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border border-success">
+        <h6 class="mb-1">{{tech.language}}</h6>
+        <span class="fw-light smaller-90">
+          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}n/a{% endif %}</span>
+          <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
+        </span>
+      </li>
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+
+      {# ----- PACKAGES ----- #}
+      {% for kw in keywords %}
+      {% set_global kw_cnt = 0 %}
+
+      {% for tech in dev._source.report.tech %}
+
+      {% if tech.refs %}
+      {% for ref in tech.refs %}
+      {% set ref_k = ref.k | lower %}
+      {% if ref_k is containing(kw) %}
+      {% set_global kw_cnt = kw_cnt + ref.c %}
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+
+      {% if tech.pkgs %}
+      {% for ref in tech.pkgs %}
+      {% set ref_k = ref.k | lower %}
+      {% if ref_k is containing(kw) %}
+      {% set_global kw_cnt = kw_cnt + ref.c %}
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+
+      {% endfor %}
+
+      <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border border-success">
+        <h6 class="mb-1">{{kw}}</h6>
+        <span class="fw-light smaller-90">
+          <span class="libs-badge">{{pretty_num(v=kw_cnt)}} mention{{kw_cnt | pluralize }}</span>
+        </span>
+      </li>
+
+      {% endfor %}
+
+      {# ----- OTHER LANGUAGES ----- #}
+      {% for tech in dev._source.report.tech | sort(attribute="code_lines") | reverse %}
+      {% set_global incl_lang = true %}
+      {% for lang in langs %}
+      {% if lang.0 == tech.language | lower %}
+      {% set_global incl_lang = false %}
+      {% break %}
+      {% endif %}
+      {% endfor %}
+      {% if incl_lang %}
+      <li class="list-inline-item bg-light text-dark py-1 px-2 rounded mb-3 me-3 border">
+        <h6 class="mb-1 fw-light">{{tech.language}}</h6>
+        <span class="fw-light smaller-90">
+          <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}n/a{% endif %}</span>
+          <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
+        </span>
+      </li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+
+  </div>
+</div>

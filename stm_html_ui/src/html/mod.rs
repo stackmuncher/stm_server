@@ -14,6 +14,7 @@ mod dev_search;
 mod gh_login_profile;
 mod home;
 pub(crate) mod html_data;
+mod org_list;
 mod related;
 mod stats;
 
@@ -68,21 +69,29 @@ pub(crate) async fn html(
         return Ok(html_data);
     }
 
+    // remove leading and trailing slash for ease of matching
+    let url_path = url_path
+        .trim()
+        .trim_end_matches("/")
+        .trim_start_matches("/")
+        .trim()
+        .to_string();
+
     // is it a stats page?
-    if url_path.trim_end_matches("/") == "/_stats" {
+    if url_path == "_stats" {
         // return stats page
         return Ok(stats::html(config, html_data).await?);
     }
 
     // is it a related keyword search?
-    if url_path.trim_end_matches("/") == "/_related" {
+    if url_path == "_related" {
         // return related keywords page
         return Ok(related::html(config, url_query, html_data).await?);
     }
 
     // check if there is a path - it can be the developer login
     // there shouldn't be any other paths at this stage
-    if url_path.len() > 1 {
+    if url_path.len() > 1 && !url_path.starts_with("_") {
         // it must be a dev login that matches the one on github, e.g. rimutaka
         let login = url_path
             .trim()
@@ -114,6 +123,9 @@ pub(crate) async fn html(
         // return dev profile page
         return dev_profile::html(config, owner_id, html_data).await;
     }
+
+    // the request may be for a dev or for an org
+    let is_orgs = url_path == "_orgs";
 
     // is there something in the query string?
     if url_query.len() > 1 {
@@ -326,11 +338,16 @@ pub(crate) async fn html(
             ..html_data
         };
 
-        // run a keyword search for devs
-        let html_data = dev_search::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?;
+        // run a keyword search for devs or orgs
+        let html_data = if is_orgs {
+            org_list::html(config,  langs,  html_data).await?
+        } else {
+            dev_search::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?
+        };
 
         // log the search query and its results in a DB via SQS
-        if !html_data.raw_search.is_empty() {
+        // do not log ORG searches - they can be tracked through web logs
+        if !is_orgs && !html_data.raw_search.is_empty() {
             send_to_sqs(&SearchLog::from(&html_data), &config.sqs_client, &config.search_log_sqs_url).await;
         }
 

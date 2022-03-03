@@ -4,3 +4,4 @@ Cargo.lock
 trace*.txt
 config.json
 *.session.sql
+/.vscode

@@ -7,6 +7,8 @@ use tracing::warn;
 /// Add the name of the ElasticSearch index to that env var
 const ES_DEV_IDX_ENV: &str = "STM_HTML_ES_DEV_IDX";
 /// Add the name of the ElasticSearch index to that env var
+const ES_ORG_IDX_ENV: &str = "STM_HTML_ES_ORG_IDX";
+/// Add the name of the ElasticSearch index to that env var
 const ES_STATS_IDX_ENV: &str = "STM_HTML_ES_STATS_IDX";
 /// Add the absolute ElasticSearch URL to that env var
 const ES_URL_ENV: &str = "STM_HTML_ES_URL";
@@ -19,6 +21,8 @@ pub struct Config {
     pub es_url: String,
     /// Name of `dev` index
     pub dev_idx: String,
+    /// Name of `org` index
+    pub org_idx: String,
     /// Name of `stats` index
     pub stats_idx: String,
     /// SQS URL for logging search results
@@ -81,6 +85,10 @@ impl Config {
                 .to_string(),
             dev_idx: std::env::var(ES_DEV_IDX_ENV)
                 .expect(&format!("Missing {} env var with ES DEV index name", ES_DEV_IDX_ENV))
+                .trim()
+                .to_string(),
+            org_idx: std::env::var(ES_ORG_IDX_ENV)
+                .expect(&format!("Missing {} env var with ES ORG index name", ES_ORG_IDX_ENV))
                 .trim()
                 .to_string(),
             stats_idx: std::env::var(ES_STATS_IDX_ENV)
