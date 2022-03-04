@@ -11,11 +11,11 @@ use tracing::{debug, info, warn};
 
 mod anon_dev_profile;
 mod dev_search;
-mod gh_login_profile;
 mod home;
 pub(crate) mod html_data;
 mod org_list;
 mod org_profile;
+mod public_dev_profile;
 mod related;
 mod stats;
 
@@ -107,7 +107,7 @@ pub(crate) async fn html(
     // https://stackmuncher.com/rimutaka
     if url_path.len() > 1 && !is_orgs {
         // return dev profile page found by the login in the URL, e.g. /rimutaka/
-        return gh_login_profile::html(config, url_path, html_data).await;
+        return public_dev_profile::html(config, url_path, html_data).await;
     }
 
     // check if dev ID was specified
