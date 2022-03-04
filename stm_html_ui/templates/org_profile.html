@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+
+{% include "includes/head.html" %}
+
+<body>
+  {% include "includes/top-nav.html" %}
+  <div class="container-fluid">
+    <div class="row">
+      {# ----- SIDEBAR ----- #}
+      {% if devs.hits.hits | length > 0 %}
+      <div class="col-md-3">
+        {% for hit in devs.hits.hits %}
+        {% set user = hit._source %}
+
+        {% if user.name %}{% set user_name = user.name %}{% elif user.login %}{% set user_name = user.login %}{% else %}{% set user_name = "Anonymous" %}{% endif %}
+
+        <h1><small>{{user_name}}</small></h1>
+        <h5><small>Organization Stack Analysis</small></h5>
+
+        {% if user.description %}
+        <p class="mt-3 text-muted">{{user.description}}</p>
+        {% endif %}
+
+        <ul class="mt-3 ps-3">
+          {% if user.hireable %}
+          <li class="mb-1"><strong><span class="badge bg-success">Open to work</span></strong></li>
+          {% endif %}
+          {% if user.location %}
+          <li class="mb-1"><strong>Location</strong>: {{user.location}}</li>
+          {% endif %}
+          {% if user.company %}
+          <li class="mb-1"><strong>Company</strong>: {{user.company}}</li>
+          {% endif %}
+          {% if user.login %}
+          <li class="mb-1"><strong>Github</strong>: <a href="https://github.com/{{user.login}}">{{user.login}}</a></li>
+          {% endif %}
+          {% if user.blog %}
+          <li class="mb-1">
+            <div class="text-truncate"><strong>Website</strong>: <a class="text-truncate" href="{% if user.blog is not starting_with('http') %}//{% endif %}{{user.blog}}">{{user.blog}}</a></div>
+          </li>
+          {% endif %}
+
+          {% if devs.hits.hits[0]._source.report.last_contributor_commit_date_iso %}
+          {% set last_active = devs.hits.hits[0]._source.report.last_contributor_commit_date_iso | date(format="%b %Y") %}
+          {% elif devs.hits.hits[0]._source.report.date_head %}
+          {% set last_active = devs.hits.hits[0]._source.report.date_head | date(format="%b %Y") %}
+          {% endif %}
+
+          {% if devs.hits.hits[0]._source.report.first_contributor_commit_date_iso %}
+          {% set init = devs.hits.hits[0]._source.report.first_contributor_commit_date_iso | date(format="%Y") | int() %}
+          {% elif devs.hits.hits[0]._source.report.date_init %}
+          {% set init = devs.hits.hits[0]._source.report.date_init | date(format="%Y") | int() %}
+          {% else %}
+          {% set init = now() | date(format="%Y") | int() %}
+          {% endif %}
+
+          {% set today = now() | date(format="%Y") | int() %}
+          <li class="mb-1"><strong>Code history</strong>: {% if today == init %}
+            &lt; 1 year
+            {% else %}
+            {{ today - init + 1 }} years
+            {% endif %}
+          </li>
+          {% if last_active %}<li class="mb-1"><strong>Last commit</strong>: {{ last_active }}</li>{% endif %}
+          <li class="mb-1"><strong>Report updated</strong>:
+            {{ user.report.timestamp | date(format="%d %b %Y") }}
+          </li>
+        </ul>
+
+        <p class="text-muted">The analysis is limited to public repositories in {{user_name}}'s GitHub account. <a href="mailto:info@stackmuncher.com">Let us know</a> if any information is missing or is incorrect.</p>
+
+      </div>
+      {# ----- STACK TABLE ----- #}
+      <div class="col-md-9">
+        <div class="table-responsive">
+          <table class="table mt-4 table-striped">
+            <thead>
+              <tr>
+                <th scope="col">Language</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Years</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Last used</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Lines of code</th>
+                <th scope="col" class="text-end text-nowrap ps-5">File count</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Packages</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Doco comments</th>
+                <th scope="col" class="text-end text-nowrap ps-5">Inline comments</th>
+                <th scope="col" style="width:100%"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tech in user.report.tech | sort(attribute="total_lines") | reverse %}
+
+              {% if tech.pkgs %}
+              {% set pkgs = tech.pkgs | length %}
+              {% else %}
+              {% set pkgs = 0 %}
+              {% endif %}
+              {% if tech.refs %}
+              {% set refs = tech.refs | length %}
+              {% else %}
+              {% set refs = 0 %}
+              {% endif %}
+
+              {% set libs = pkgs + refs %}
+              <tr>
+                <td scope="row"><strong>{{tech.language}}</strong></td>
+                <td class="text-end me-2" {% if tech.history and tech.history.months %}title="{{tech.history.months}} months" {% endif %}>{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}{% endif %}</td>
+                <td class="text-end me-2">{% if tech.history and tech.history.to_date_iso %}{{tech.history.to_date_iso | truncate(length=4, end="") }}{% endif %}</td>
+                <td class="text-end me-2">{{pretty_num(v=tech.code_lines)}}</td>
+                <td class="text-end me-2">{{pretty_num(v=tech.files)}}</td>
+                <td class="text-end me-2">{% if libs > 0 %}{{pretty_num(v=libs)}}{% endif %}</td>
+                <td class="text-end me-2">{% if tech.docs_comments > 0 %}{{pretty_num(v=tech.docs_comments)}}{% endif %}</td>
+                <td class="text-end me-2">{% if tech.line_comments > 0 %}{{pretty_num(v=tech.line_comments)}}{% endif %}</td>
+                <td scope="col" style="width:100%"></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if user.report.projects_included %}
+        {% if user.name %}{% set dev_name = user.name %}{% elif user.login %}{% set dev_name = user.login %}{% else %}{% set dev_name = "this developer" %}{% endif %}
+        <h3 class="mt-4">Projects</h3>
+        <div class="row g-3">
+          {% for proj in user.report.projects_included %}
+          {% if proj.loc > 0 %}
+          <div class="col-lg-6 col-xxl-4">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title">
+                  <a {% if proj.github_user_name %} href="https://github.com/{{proj.github_user_name}}/{{proj.project_name}}" {% elif user.login %} href="https://github.com/{{user.login}}/{{proj.project_name}}" {% elif proj.project_id %} href="/?project={{proj.project_id}}" {% endif %} title="Lines of code: {{proj.loc}}, packages: {{proj.libs}}. Click to view more details.">
+                    {% if user.login and proj.github_user_name and user.login != proj.github_user_name %}{{proj.github_user_name | truncate(length=50)}}/{% endif %}{{proj.project_name | truncate(length=50)}}
+                  </a>
+                </h6>
+                <div class="card-subtitle mb-2 text-muted">
+                  <span title="{{pretty_num(v=proj.loc)}} lines of code from {{dev_name}}{% if proj.loc_project %}. Current project size: {{proj.loc_project}} lines{% endif %}" class="loc-badge">{{pretty_num(v=proj.loc)}}</span>
+                  {% if proj.commit_count %}<span title="Commits made by {{dev_name}}" class="commits-badge ms-3">{{proj.commit_count}}</span>{% endif %}
+                  {% if proj.ppl %}<span title="Total number of committers" class="team-badge ms-3">{{proj.ppl}}</span>{% endif %}
+
+                  {% if proj.contributor_first_commit %}
+                  {% set date_init = proj.contributor_first_commit | date(format="%b %Y") %}
+                  {% elif proj.date_init %}
+                  {% set date_init = proj.date_init | date(format="%b %Y") %}
+                  {% endif %}
+
+                  {% if proj.contributor_last_commit %}
+                  {% set date_head = proj.contributor_last_commit | date(format="%b %Y") %}
+                  {% elif proj.date_head %}
+                  {% set date_head = proj.date_head | date(format="%b %Y") %}
+                  {% endif %}
+
+                  {% if date_init and date_head and date_init != date_head %}
+                  <span title="Date range of commits from {{dev_name}}" class="calendar-badge ms-3"><small>{{date_init}} - {{date_head}}</small></span>
+                  {% elif date_head %}
+                  <span title="Date of the last commit from {{dev_name}}" class="calendar-badge ms-3"><small>{{date_head}}</small></span>
+                  {% endif %}
+                </div>
+                <p class="card-text">{{proj.tech | sort(attribute="loc") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ")}}</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% for tech in user.report.tech | sort(attribute="total_lines") | reverse%}
+
+        {% if tech.refs and tech.refs | length > 0 %}
+        {% set_global refs = tech.refs %}
+        {% elif tech.pkgs and tech.pkgs | length > 0 %}
+        {% set_global refs = tech.pkgs %}
+        {% else %}
+        {% set_global refs = [] %}
+        {% endif %}
+
+        {% if refs | length > 0 %}
+        {% set col = refs | length / 2 | int() %}
+        <h3 class="mt-4">{{tech.language}} Packages</h3>
+        <div class="row">
+
+          <div class="col-lg-6">
+
+            <dl class="row mb-0">
+              <dt class="col-10 text-truncate">
+                <strong>Name</strong>
+              </dt>
+              <dd class="col-2 text-end">
+                <strong>Times used</strong>
+              </dd>
+              {% for ref in refs | sort(attribute="k") | slice(start=0, end=col+1) %}
+              <dt class="col-10 text-truncate">
+                <a href="/?{{ref.k | urlencode}}">{{ref.k}}</a>
+              </dt>
+              <dd class="col-2 text-end pe-3">
+                <small>{{pretty_num(v=ref.c)}}</small>
+              </dd>
+              {% endfor %}
+            </dl>
+          </div>
+
+          <div class="col-lg-6">
+            <dl class="row mb-0">
+              <dt class="col-10 text-truncate d-none d-lg-block">
+                <strong>Name</strong>
+              </dt>
+              <dd class="col-2 text-end d-none d-lg-block">
+                <strong>Times used</strong>
+              </dd>
+              {% for ref in refs | sort(attribute="k") | slice(start=col+1) %}
+              <dt class="col-10 text-truncate">
+                <a href="/?{{ref.k | urlencode}}">{{ref.k}}</a>
+              </dt>
+              <dd class="col-2 text-end pe-3">
+                <small>{{pretty_num(v=ref.c)}}</small>
+              </dd>
+              {% endfor %}
+            </dl>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        {% if user.report.file_types %}
+        <h3 class="mt-4">File types</h3>
+        <ul class="list-inline">
+          {% for ftype in user.report.file_types | sort(attribute="k") %}
+          <li class="list-inline-item bg-light text-dark py-0 ps-1 rounded mb-2 border">{{ftype.k}}
+            <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=ftype.c)}}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% endfor %}
+      </div>
+      {% else %}
+      <h1 class="mt-5 mb-5 text-center">No data for this software developer</h1>
+      {% endif %}
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</body>
+
+</html>

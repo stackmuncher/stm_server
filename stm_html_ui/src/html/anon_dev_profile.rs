@@ -29,7 +29,7 @@ pub(crate) async fn html(config: &Config, owner_id: String, html_data: HtmlData)
 
     let html_data = HtmlData {
         devs: Some(devs),
-        template_name: "dev.html".to_owned(),
+        template_name: "dev_profile.html".to_owned(),
         ttl: 3600,
         http_resp_code,
         owner_id_str: Some(owner_id),
