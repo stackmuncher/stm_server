@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+
+{% include "includes/head.html" %}
+
+<body class="pb-5">
+  {% include "includes/top-nav.html" %}
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+
+      <div class="col-lg-8 col-md-10 col-xs-12 col-xxl-6">
+
+        <h1>Browse GitHub Organizations by Language</h1>
+
+        <div class="d-flex flex-wrap justify-content-start mt-5">
+          {% for tech in stack_stats.aggregations.agg.buckets | sort(attribute="key") %}
+          {% for tech_lang in all_langs %}
+          {% if tech.key == tech_lang | lower %}
+          <div class="bg-light text-dark p-1 rounded mb-3 border me-4 fs-5">
+            <a title="View {{pretty_num(v=tech.doc_count)}} orgs using {{tech_lang}}" style="text-decoration: underline #6c757d;" class="text-dark" href="/orgs/?{{tech.key | urlencode}}">
+              {{tech_lang}}
+              <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=tech.doc_count)}}</span>
+            </a>
+          </div>
+          {% endif %}
+          {% endfor %}
+          {% endfor %}
+        </div>
+
+        <h6 class="mt-5">About this list</h6>
+        <p class="mt-3">The language use and other tech-stack details are extracted from public repositories of organizations on GitHub with StackMuncher <a href="https://github.com/stackmuncher/stm_app" title="An open source stack analysis app">code analysis app</a>. Only <a href="https://docs.github.com/en/organizations/managing-organization-settings/verifying-or-approving-a-domain-for-your-organization" title="Definition of Verified Organization and how to become verified">verified organizations</a> with commits after Jan 2021 are included in the published lists.</p>
+
+      </div>
+
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</body>
+
+</html>

@@ -15,6 +15,7 @@ mod home;
 pub(crate) mod html_data;
 mod org_list;
 mod org_profile;
+mod orgs;
 mod public_dev_profile;
 mod related;
 mod stats;
@@ -79,7 +80,9 @@ pub(crate) async fn html(
         .to_string();
 
     // the request may be for a dev or for an org
-    let is_orgs = url_path == "orgs";
+    // * /orgs/?search_params
+    // * /orgs/ or /org for an intro
+    let is_orgs = url_path == "orgs" || url_path == "org";
 
     // is it a stats page?
     // https://stackmuncher.com/_stats
@@ -349,6 +352,11 @@ pub(crate) async fn html(
         }
 
         return Ok(html_data);
+    }
+
+    // return ORGS homepage for "/orgs/" with no other params
+    if is_orgs {
+        return Ok(orgs::html(config, html_data).await?);
     }
 
     // return the homepage if there is nothing else

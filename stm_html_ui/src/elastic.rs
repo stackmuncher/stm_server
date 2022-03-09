@@ -12,6 +12,7 @@ pub const SEARCH_ENGINEER_BY_LOGIN: &str = r#"{"query":{"term":{"login.keyword":
 pub const SEARCH_DEV_BY_DOC_ID: &str = r#"{"query":{"term":{"_id":"%"}}}"#;
 pub const SEARCH_ALL_LANGUAGES: &str =
     r#"{"size":0,"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000}}}}"#;
+pub const SEARCH_VERIFIED_ORGS_PER_LANGUAGE: &str = r#"{"size":0,"query":{"bool":{"must":[{"match":{"is_verified":true}}]}},"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000}}}}"#;
 
 /// Inserts a single param in the ES query in place of %. The param may be repeated within the query multiple times.
 /// Panics if the param is unsafe for no-sql queries.
@@ -153,11 +154,6 @@ pub(crate) async fn matching_orgs(
     //             "match": {
     //               "is_verified": true
     //             }
-    //           },
-    //           {
-    //             "exists": {
-    //               "field": "login"
-    //             }
     //           }
     //         ]
     //       }
@@ -186,7 +182,7 @@ pub(crate) async fn matching_orgs(
         return Err(());
     }
 
-    let query = [r#"{"size":"#, &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(), r#","from":"#, &results_from.to_string(), r#","track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":""#, &lang, r#""}},{"match":{"is_verified":true}},{"exists": {"field": "login"}}]}},"sort":[{"report.tech.code_lines":{"order":"desc","nested":{"path":"report.tech","filter":{"term":{"report.tech.language.keyword":""#, &lang, r#""}}}}}]}"#].concat();
+    let query = [r#"{"size":"#, &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(), r#","from":"#, &results_from.to_string(), r#","track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":""#, &lang, r#""}},{"match":{"is_verified":true}}]}},"sort":[{"report.tech.code_lines":{"order":"desc","nested":{"path":"report.tech","filter":{"term":{"report.tech.language.keyword":""#, &lang, r#""}}}}}]}"#].concat();
 
     // call the query
     let es_api_endpoint = [es_url.as_ref(), "/", org_idx, "/_search"].concat();

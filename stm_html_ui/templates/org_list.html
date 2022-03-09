@@ -91,13 +91,13 @@
         <h6 class="mt-5">
           <strong>How this list was produced</strong>
         </h6>
-        <p>StackMuncher <a href="https://github.com/stackmuncher/stm_app" title="An open source stack analysis app">code analysis app</a> used public repositories of <a href="https://docs.github.com/en/organizations/managing-organization-settings/verifying-or-approving-a-domain-for-your-organization" title="Definition of Verified Organization and how to become verified">verified organizations</a> on GitHub. The results are sorted by the number of lines of
+        <p>The tech-stack data was extracted from public repositories of <a href="https://docs.github.com/en/organizations/managing-organization-settings/verifying-or-approving-a-domain-for-your-organization" title="Definition of Verified Organization and how to become verified">verified organizations</a> on GitHub with StackMuncher <a href="https://github.com/stackmuncher/stm_app" title="An open source stack analysis app">code analysis app</a>. The results are sorted by the number of lines of
           {% if langs | length > 0 %}
           {% for l in all_langs %}
           {% if langs | length> 0 and langs[0].0 == l | lower %}{{l}}{% endif %}
           {% endfor %}
           {% endif %}
-          code.</p>
+          code across all repositories.</p>
 
         {% if langs | length > 0 %}
         <h6 class="mt-5">
@@ -112,7 +112,7 @@
         <h6 class="mt-5"><strong>Looking for specialist software development work?</strong></h6>
         {% endif %}
 
-        <p>StackMuncher developer search is a free service to help developers and employers connect.</p>
+        <p>StackMuncher is a free service to help software developers and employers connect.</p>
         <p><a href="https://github.com/stackmuncher/stm_app">Join us</a> to be notified when someone is looking for your set of skills with an offer matching your expectations.</p>
         {% endif %}
 
