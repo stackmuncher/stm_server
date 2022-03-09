@@ -70,7 +70,7 @@
         <h6 class="mb-1">{{tech.language}}</h6>
         <span class="fw-light smaller-90">
           <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}n/a{% endif %}</span>
-          <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
+          <span class="loc-badge">{{shorten_num(v=tech.code_lines)}}</span>
         </span>
       </li>
       {% endif %}
@@ -126,7 +126,7 @@
         <h6 class="mb-1 fw-light">{{tech.language}}</h6>
         <span class="fw-light smaller-90">
           <span class="calendar-badge me-3">{% if tech.history and tech.history.months %}{{months_to_years(v=tech.history.months)}}y{% else %}n/a{% endif %}</span>
-          <span class="loc-badge">{{shorten_num(v=tech.total_lines)}}</span>
+          <span class="loc-badge">{{shorten_num(v=tech.code_lines)}}</span>
         </span>
       </li>
       {% endif %}

@@ -164,7 +164,7 @@ pub(crate) async fn matching_orgs(
     //     },
     //     "sort": [
     //       {
-    //         "report.tech.total_lines": {
+    //         "report.tech.code_lines": {
     //           "order": "desc",
     //           "nested": {
     //             "path": "report.tech",
@@ -186,7 +186,7 @@ pub(crate) async fn matching_orgs(
         return Err(());
     }
 
-    let query = [r#"{"size":"#, &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(), r#","from":"#, &results_from.to_string(), r#","track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":""#, &lang, r#""}},{"match":{"is_verified":true}},{"exists": {"field": "login"}}]}},"sort":[{"report.tech.total_lines":{"order":"desc","nested":{"path":"report.tech","filter":{"term":{"report.tech.language.keyword":""#, &lang, r#""}}}}}]}"#].concat();
+    let query = [r#"{"size":"#, &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(), r#","from":"#, &results_from.to_string(), r#","track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":""#, &lang, r#""}},{"match":{"is_verified":true}},{"exists": {"field": "login"}}]}},"sort":[{"report.tech.code_lines":{"order":"desc","nested":{"path":"report.tech","filter":{"term":{"report.tech.language.keyword":""#, &lang, r#""}}}}}]}"#].concat();
 
     // call the query
     let es_api_endpoint = [es_url.as_ref(), "/", org_idx, "/_search"].concat();

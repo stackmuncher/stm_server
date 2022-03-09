@@ -16,7 +16,7 @@
         {% if user.name %}{% set user_name = user.name %}{% elif user.login %}{% set user_name = user.login %}{% else %}{% set user_name = "Anonymous" %}{% endif %}
 
         <h1><small>{{user_name}}</small></h1>
-        <h5><small>Organization Stack Analysis</small></h5>
+        <h5><small>Tech-stack analysis</small></h5>
 
         {% if user.description %}
         <p class="mt-3 text-muted">{{user.description}}</p>
