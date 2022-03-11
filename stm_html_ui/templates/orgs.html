@@ -16,8 +16,8 @@
           {% for tech in stack_stats.aggregations.agg.buckets | sort(attribute="key") %}
           {% for tech_lang in all_langs %}
           {% if tech.key == tech_lang | lower %}
-          <div class="bg-light text-dark p-1 rounded mb-3 border me-4 fs-5">
-            <a title="View {{pretty_num(v=tech.doc_count)}} orgs using {{tech_lang}}" style="text-decoration: underline #6c757d;" class="text-dark" href="/orgs/?{{tech.key | urlencode}}">
+          <div class="bg-light text-dark p-2 rounded mb-3 border me-4 fs-5">
+            <a title="View {{pretty_num(v=tech.doc_count)}} orgs using {{tech_lang}}" style="text-decoration: underline #6c757d;" class="text-dark" href="/org/?{{tech.key | urlencode}}">
               {{tech_lang}}
               <span class="badge bg-white text-dark ms-2" style="font-weight: 300;">{{pretty_num(v=tech.doc_count)}}</span>
             </a>

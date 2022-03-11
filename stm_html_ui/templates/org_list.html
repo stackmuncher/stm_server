@@ -78,7 +78,7 @@
             <script>
               function do_search() {
                 let q = document.getElementById('search_lang').value;
-                window.location.href = '/orgs/?' + encodeURIComponent(q.trim());
+                window.location.href = '/org/?' + encodeURIComponent(q.trim());
               }
             </script>
             <button class="btn btn-sm btn-success my-2 my-sm-0" type="button" id="btn" autocomplete="off" onclick="do_search()" title="Find organizations using this language">Find organizations</button>
@@ -149,7 +149,7 @@
             {% if page_link_num == page_number %}
             <li class="list-inline-item">{{page_link_num}}</li>
             {% else %}
-            <li class="list-inline-item"><a href="/orgs/?{{raw_search | urlencode}} p:{{page_link_num}}">{{page_link_num}}</a></li>
+            <li class="list-inline-item"><a href="/org/?{{raw_search | urlencode}} p:{{page_link_num}}">{{page_link_num}}</a></li>
             {% endif %}
             {% endfor %}
           </ul>

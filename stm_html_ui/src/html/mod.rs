@@ -80,9 +80,9 @@ pub(crate) async fn html(
         .to_string();
 
     // the request may be for a dev or for an org
-    // * /orgs/?search_params
-    // * /orgs/ or /org for an intro
-    let is_orgs = url_path == "orgs" || url_path == "org";
+    // * /org/?search_params
+    // * /org/org-name or /org for an intro
+    let is_org = url_path == "org" || url_path.starts_with("org/");
 
     // is it a stats page?
     // https://stackmuncher.com/_stats
@@ -108,7 +108,7 @@ pub(crate) async fn html(
     // check if there is a path - it can be the developer login
     // there shouldn't be any other paths at this stage
     // https://stackmuncher.com/rimutaka
-    if url_path.len() > 1 && !is_orgs {
+    if url_path.len() > 1 && !is_org {
         // return dev profile page found by the login in the URL, e.g. /rimutaka/
         return public_dev_profile::html(config, url_path, html_data).await;
     }
@@ -339,7 +339,7 @@ pub(crate) async fn html(
         };
 
         // run a keyword search for devs or orgs
-        let html_data = if is_orgs {
+        let html_data = if is_org {
             org_list::html(config, langs, html_data).await?
         } else {
             dev_search::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?
@@ -347,15 +347,15 @@ pub(crate) async fn html(
 
         // log the search query and its results in a DB via SQS
         // do not log ORG searches - they can be tracked through web logs
-        if !is_orgs && !html_data.raw_search.is_empty() {
+        if !is_org && !html_data.raw_search.is_empty() {
             send_to_sqs(&SearchLog::from(&html_data), &config.sqs_client, &config.search_log_sqs_url).await;
         }
 
         return Ok(html_data);
     }
 
-    // return ORGS homepage for "/orgs/" with no other params
-    if is_orgs {
+    // return ORGS homepage for "/org/" with no other params
+    if is_org {
         return Ok(orgs::html(config, html_data).await?);
     }
 
