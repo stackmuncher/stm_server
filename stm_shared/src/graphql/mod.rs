@@ -2,7 +2,7 @@ use juniper::{
     graphql_scalar,
     parser::{ParseError, ScalarToken, Token},
     serde::{de, Deserialize, Deserializer, Serialize},
-    GraphQLScalarValue, ParseScalarResult, ScalarValue, Value,
+    InputValue, ParseScalarResult, ScalarValue, Value,
 };
 use std::{convert::TryInto as _, fmt};
 
@@ -14,11 +14,11 @@ use std::{convert::TryInto as _, fmt};
 /// ### About extending the GraphQL scalars in Juniper
 /// * https://graphql-rust.github.io/juniper/master/types/scalars.html#custom-scalars
 /// * https://github.com/graphql-rust/juniper/issues/862
-///
-#[derive(GraphQLScalarValue, Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, ScalarValue, Serialize)]
 #[serde(untagged)]
 pub enum RustScalarValue {
     /// A GraphQL scalar for i32
+    #[value(as_float, as_int)]
     Int(i32),
     /// A custom scalar for u64. The value is serialized into JSON number and should not be more than 53 bits to fit into JS Number type:
     /// * Number.MAX_SAFE_INTEGER = 2^53 - 1 = 9_007_199_254_740_991
@@ -26,79 +26,14 @@ pub enum RustScalarValue {
     /// JSON spec does not constrain integer values unless specified in the schema. 53 bits is sufficient for our purposes.
     U64(u64),
     /// A GraphQL scalar for f64
+    #[value(as_float)]
     Float(f64),
     /// A GraphQL scalar for String
+    #[value(as_str, as_string, into_string)]
     String(String),
     /// A GraphQL scalar for bool
+    #[value(as_bool)]
     Boolean(bool),
-}
-
-#[graphql_scalar(name = "U64")]
-impl GraphQLScalar for u64 {
-    fn resolve(&self) -> Value {
-        Value::scalar(*self)
-    }
-
-    fn from_input_value(v: &InputValue) -> Result<u64, String> {
-        v.as_scalar_value::<u64>()
-            .copied()
-            .ok_or_else(|| format!("Expected `RustScalarValue::U64`, found: {}", v))
-    }
-
-    fn from_str<'a>(value: ScalarToken<'a>) -> ParseScalarResult<'a, RustScalarValue> {
-        if let ScalarToken::Int(v) = value {
-            v.parse()
-                .map_err(|_| ParseError::UnexpectedToken(Token::Scalar(value)))
-                .map(|s: u64| s.into())
-        } else {
-            Err(ParseError::UnexpectedToken(Token::Scalar(value)))
-        }
-    }
-}
-
-impl ScalarValue for RustScalarValue {
-    fn as_int(&self) -> Option<i32> {
-        match self {
-            Self::Int(i) => Some(*i),
-            _ => None,
-        }
-    }
-
-    fn as_string(&self) -> Option<String> {
-        match self {
-            Self::String(s) => Some(s.clone()),
-            _ => None,
-        }
-    }
-
-    fn into_string(self) -> Option<String> {
-        match self {
-            Self::String(s) => Some(s),
-            _ => None,
-        }
-    }
-
-    fn as_str(&self) -> Option<&str> {
-        match self {
-            Self::String(s) => Some(s.as_str()),
-            _ => None,
-        }
-    }
-
-    fn as_float(&self) -> Option<f64> {
-        match self {
-            Self::Int(i) => Some(f64::from(*i)),
-            Self::Float(f) => Some(*f),
-            _ => None,
-        }
-    }
-
-    fn as_boolean(&self) -> Option<bool> {
-        match self {
-            Self::Boolean(b) => Some(*b),
-            _ => None,
-        }
-    }
 }
 
 impl<'de> Deserialize<'de> for RustScalarValue {
@@ -121,8 +56,7 @@ impl<'de> Deserialize<'de> for RustScalarValue {
             }
 
             fn visit_u64<E: de::Error>(self, b: u64) -> Result<Self::Value, E> {
-                // I do not understand why this IF is needed
-                if b <= u64::from(u32::MAX) {
+                if b <= u64::from(i32::MAX as u32) {
                     self.visit_i32(b.try_into().unwrap())
                 } else {
                     Ok(RustScalarValue::U64(b))
@@ -130,7 +64,6 @@ impl<'de> Deserialize<'de> for RustScalarValue {
             }
 
             fn visit_u32<E: de::Error>(self, n: u32) -> Result<Self::Value, E> {
-                // I do not understand why this IF is needed
                 if n <= i32::MAX as u32 {
                     self.visit_i32(n.try_into().unwrap())
                 } else {
@@ -167,5 +100,32 @@ impl<'de> Deserialize<'de> for RustScalarValue {
         }
 
         de.deserialize_any(Visitor)
+    }
+}
+
+#[graphql_scalar(with = long, scalar = RustScalarValue)]
+type U64 = u64;
+
+mod long {
+    use super::*;
+
+    pub(super) fn to_output(v: &U64) -> Value<RustScalarValue> {
+        Value::scalar(*v)
+    }
+
+    pub(super) fn from_input(v: &InputValue<RustScalarValue>) -> Result<U64, String> {
+        v.as_scalar_value::<u64>()
+            .copied()
+            .ok_or_else(|| format!("Expected `RustScalarValue::U64`, found: {}", v))
+    }
+
+    pub(super) fn parse_token(value: ScalarToken<'_>) -> ParseScalarResult<'_, RustScalarValue> {
+        if let ScalarToken::Int(v) = value {
+            v.parse()
+                .map_err(|_| ParseError::UnexpectedToken(Token::Scalar(value)))
+                .map(|s: u64| s.into())
+        } else {
+            Err(ParseError::UnexpectedToken(Token::Scalar(value)))
+        }
     }
 }
