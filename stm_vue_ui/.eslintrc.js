@@ -20,6 +20,7 @@ module.exports = {
     'no-debugger': 'off',
     'comma-dangle': ['error', 'only-multiline'],
     'vue/comma-dangle': ['error', 'only-multiline'],
-    "@typescript-eslint/comma-dangle": ["error", "only-multiline"]
+    '@typescript-eslint/comma-dangle': ['error', 'only-multiline'],
+    'vue/multi-word-component-names': 'off'
   },
 }
