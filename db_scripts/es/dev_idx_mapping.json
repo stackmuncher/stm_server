@@ -45,6 +45,9 @@
       "created_at": {
         "type": "date"
       },
+      "description": {
+        "type": "text"
+      },
       "email": {
         "type": "text",
         "fields": {
@@ -67,6 +70,9 @@
       },
       "id": {
         "type": "long"
+      },
+      "is_verified": {
+        "type": "boolean"
       },
       "location": {
         "type": "text",
@@ -611,6 +617,43 @@
           },
           "libs_project": {
             "type": "long"
+          },
+          "list_counts": {
+            "properties": {
+              "contributor_git_ids": {
+                "type": "long"
+              },
+              "contributors": {
+                "type": "long"
+              },
+              "file_types": {
+                "type": "long"
+              },
+              "git_ids_included": {
+                "type": "long"
+              },
+              "keywords": {
+                "type": "long"
+              },
+              "per_file_tech": {
+                "type": "long"
+              },
+              "projects_included": {
+                "type": "long"
+              },
+              "recent_project_commits": {
+                "type": "long"
+              },
+              "reports_included": {
+                "type": "long"
+              },
+              "tech": {
+                "type": "long"
+              },
+              "tree_files": {
+                "type": "long"
+              }
+            }
           },
           "loc_project": {
             "type": "long"

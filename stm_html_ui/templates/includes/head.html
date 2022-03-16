@@ -10,7 +10,22 @@
   <meta name="description" content="A list of software developers and engineers with experience in {{keywords_str}}.">
 
   {% elif login_str and devs.hits.hits | length > 0 %}
-  <title>{% if devs.hits.hits[0]._source.name %}{{devs.hits.hits[0]._source.name}}{% elif devs.hits.hits[0]._source.login %}{{devs.hits.hits[0]._source.login}}{% else %}Anonymous{% endif %} | Software Developer Profile</title>
+  <title>
+    {% if devs.hits.hits[0]._source.name %}
+    {{devs.hits.hits[0]._source.name}}
+    {% elif devs.hits.hits[0]._source.login %}
+    {{devs.hits.hits[0]._source.login}}
+    {% else %}
+    Anonymous
+    {% endif %}
+
+    {% if devs.hits.hits[0]._source.type and devs.hits.hits[0]._source.type == "Organization" %}
+    | Tech-Stack Analysis
+    {% else %}
+    | Software Developer Profile
+    {% endif %}
+
+  </title>
 
   {% if devs.hits.hits[0]._source.report and devs.hits.hits[0]._source.report.tech %}
   {% set skills = devs.hits.hits[0]._source.report.tech | sort(attribute="total_lines") | reverse | slice(end=3) | map(attribute="language") | join(sep=", ") %}

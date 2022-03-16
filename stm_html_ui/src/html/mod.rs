@@ -9,11 +9,14 @@ use regex::Regex;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
-mod dev_profile;
+mod anon_dev_profile;
 mod dev_search;
-mod gh_login_profile;
 mod home;
 pub(crate) mod html_data;
+mod org_list;
+mod org_profile;
+mod orgs;
+mod public_dev_profile;
 mod related;
 mod stats;
 
@@ -68,37 +71,46 @@ pub(crate) async fn html(
         return Ok(html_data);
     }
 
+    // remove leading and trailing slash for ease of matching
+    let url_path = url_path
+        .trim()
+        .trim_end_matches("/")
+        .trim_start_matches("/")
+        .trim()
+        .to_string();
+
+    // the request may be for a dev or for an org
+    // * /org/?search_params
+    // * /org/org-name or /org for an intro
+    let is_org = url_path == "org" || url_path.starts_with("org/");
+
     // is it a stats page?
-    if url_path.trim_end_matches("/") == "/_stats" {
+    // https://stackmuncher.com/_stats
+    if url_path == "_stats" {
         // return stats page
         return Ok(stats::html(config, html_data).await?);
     }
 
     // is it a related keyword search?
-    if url_path.trim_end_matches("/") == "/_related" {
+    // https://stackmuncher.com/_related?actix
+    if url_path == "_related" {
         // return related keywords page
         return Ok(related::html(config, url_query, html_data).await?);
     }
 
+    // check if it's an ORG profile
+    // https://stackmuncher.com/org/stackmuncher
+    if url_path.len() > 4 && url_path.starts_with("org/") {
+        // returns org profile page using the login followed after `org/` part
+        return org_profile::html(config, url_path, html_data).await;
+    }
+
     // check if there is a path - it can be the developer login
     // there shouldn't be any other paths at this stage
-    if url_path.len() > 1 {
-        // it must be a dev login that matches the one on github, e.g. rimutaka
-        let login = url_path
-            .trim()
-            .trim_end_matches("/")
-            .trim_start_matches("/")
-            .trim()
-            .to_string();
-
-        // is it a valid format for a dev login?
-        if config.no_sql_string_invalidation_regex.is_match(&login) {
-            warn!("Invalid dev login: {}", url_path);
-            return Ok(html_data);
-        }
-
-        // return dev profile page
-        return gh_login_profile::html(config, login, html_data).await;
+    // https://stackmuncher.com/rimutaka
+    if url_path.len() > 1 && !is_org {
+        // return dev profile page found by the login in the URL, e.g. /rimutaka/
+        return public_dev_profile::html(config, url_path, html_data).await;
     }
 
     // check if dev ID was specified
@@ -112,7 +124,7 @@ pub(crate) async fn html(
         }
 
         // return dev profile page
-        return dev_profile::html(config, owner_id, html_data).await;
+        return anon_dev_profile::html(config, owner_id, html_data).await;
     }
 
     // is there something in the query string?
@@ -326,15 +338,25 @@ pub(crate) async fn html(
             ..html_data
         };
 
-        // run a keyword search for devs
-        let html_data = dev_search::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?;
+        // run a keyword search for devs or orgs
+        let html_data = if is_org {
+            org_list::html(config, langs, html_data).await?
+        } else {
+            dev_search::html(config, keywords, langs, tz_offset, tz_hours, html_data).await?
+        };
 
         // log the search query and its results in a DB via SQS
-        if !html_data.raw_search.is_empty() {
+        // do not log ORG searches - they can be tracked through web logs
+        if !is_org && !html_data.raw_search.is_empty() {
             send_to_sqs(&SearchLog::from(&html_data), &config.sqs_client, &config.search_log_sqs_url).await;
         }
 
         return Ok(html_data);
+    }
+
+    // return ORGS homepage for "/org/" with no other params
+    if is_org {
+        return Ok(orgs::html(config, html_data).await?);
     }
 
     // return the homepage if there is nothing else

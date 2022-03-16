@@ -12,6 +12,7 @@ pub const SEARCH_ENGINEER_BY_LOGIN: &str = r#"{"query":{"term":{"login.keyword":
 pub const SEARCH_DEV_BY_DOC_ID: &str = r#"{"query":{"term":{"_id":"%"}}}"#;
 pub const SEARCH_ALL_LANGUAGES: &str =
     r#"{"size":0,"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000}}}}"#;
+pub const SEARCH_VERIFIED_ORGS_PER_LANGUAGE: &str = r#"{"size":0,"query":{"bool":{"must":[{"match":{"is_verified":true}}]}},"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000}}}}"#;
 
 /// Inserts a single param in the ES query in place of %. The param may be repeated within the query multiple times.
 /// Panics if the param is unsafe for no-sql queries.
@@ -125,12 +126,71 @@ pub(crate) async fn matching_doc_counts(
     Ok(counts)
 }
 
-/// Returns up to 100 matching docs from DEV idx depending on the params. The query is built to match the list of params.
-/// Lang and KW params are checked for No-SQL injection.
-/// * langs: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
-/// * timezone_offset: 0..23 where anything > 12 is the negative offset
-/// * timezone_hours: number of hours worked in the timezone
+/// Returns up to 100 matching docs from ORG idx for the specified LANG.
 /// * results_from: a pagination value to be passed onto ES
+/// * login is required for Tera template
+pub(crate) async fn matching_orgs(
+    es_url: &String,
+    org_idx: &String,
+    lang: String,
+    results_from: usize,
+    no_sql_string_invalidation_regex: &Regex,
+) -> Result<Value, ()> {
+    // sample query
+    // GET /org/_search?_source_excludes=report
+    // {
+    //     "size": 50,
+    //     "from": 0,
+    //     "track_scores": true,
+    //     "query": {
+    //       "bool": {
+    //         "must": [
+    //           {
+    //             "match": {
+    //               "report.tech.language.keyword": "rust"
+    //             }
+    //           },
+    //           {
+    //             "match": {
+    //               "is_verified": true
+    //             }
+    //           }
+    //         ]
+    //       }
+    //     },
+    //     "sort": [
+    //       {
+    //         "report.tech.code_lines": {
+    //           "order": "desc",
+    //           "nested": {
+    //             "path": "report.tech",
+    //             "filter": {
+    //               "term": {
+    //                 "report.tech.language.keyword": "rust"
+    //               }
+    //             }
+    //           }
+    //         }
+    //       }
+    //     ]
+    //   }
+
+    // build language clause
+    // validate field_value for possible no-sql injection
+    if no_sql_string_invalidation_regex.is_match(&lang) {
+        error!("Invalid lang: {}", lang);
+        return Err(());
+    }
+
+    let query = [r#"{"size":"#, &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(), r#","from":"#, &results_from.to_string(), r#","track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":""#, &lang, r#""}},{"match":{"is_verified":true}}]}},"sort":[{"report.tech.code_lines":{"order":"desc","nested":{"path":"report.tech","filter":{"term":{"report.tech.language.keyword":""#, &lang, r#""}}}}}]}"#].concat();
+
+    // call the query
+    let es_api_endpoint = [es_url.as_ref(), "/", org_idx, "/_search"].concat();
+    let es_response = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
+
+    Ok(es_response)
+}
+
 pub(crate) async fn matching_devs(
     es_url: &String,
     dev_idx: &String,
