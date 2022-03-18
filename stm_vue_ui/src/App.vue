@@ -21,7 +21,7 @@
   <Footer />
 </template>
 
-<script>
+<script lang="ts">
 import Footer from '@/components/Footer.vue'
 import Login from '@/components/Login.vue'
 

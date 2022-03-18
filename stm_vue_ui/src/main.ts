@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import store from './store'
-import router from './router'
+import { key, store } from '@/store'
+import router from '@/router'
 import VueAuth0Plugin, { AuthenticationProperties as auth0 } from 'vue-auth0-plugin'
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client/core'
 import { setContext } from '@apollo/client/link/context'
@@ -33,7 +33,7 @@ const apolloProvider = createApolloProvider({
   defaultClient: apolloClient
 })
 
-createApp(App).use(router).use(store).use(VueAuth0Plugin, {
+createApp(App).use(router).use(store, key).use(VueAuth0Plugin, {
   domain: 'stackmuncher.us.auth0.com',
   client_id: 'Zf2S4CkHRe9M7l74J1AjDgaxYuooujH0',
   redirect_uri: 'http://localhost:8080/about',
