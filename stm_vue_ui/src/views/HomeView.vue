@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import DevCounts from "@/components/DevCounts.vue";
+import DevSearch from "@/components/DevSearch.vue";
+import AboutStm from "@/components/explainers/AboutStm.vue";
+</script>
+
 <template>
   <div class="home">
     <div class="container-fluid">
@@ -12,19 +18,3 @@
     </div>
   </div>
 </template>
-
-<script>
-import DevCounts from '@/components/DevCounts.vue'
-import DevSearch from '@/components/DevSearch.vue'
-import AboutStm from '@/components/explainers/AboutStm.vue'
-
-export default {
-  name: 'Home',
-  components: {
-    DevCounts,
-    DevSearch,
-    AboutStm
-  }
-}
-
-</script>

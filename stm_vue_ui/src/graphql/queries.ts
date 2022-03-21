@@ -1,19 +1,16 @@
-import gql from 'graphql-tag'
+import gql from "graphql-tag";
 
-export const devsPerLanguageQuery = gql`query 
-{ 
-  devsPerLanguage 
-  { 
-    aggregations 
-    {
-      agg 
-      {
-        buckets 
-        {
-          key, 
-          docCount
+export const devsPerLanguageQuery = gql`
+  query {
+    devsPerLanguage {
+      aggregations {
+        agg {
+          buckets {
+            key
+            docCount
+          }
         }
       }
     }
   }
-}`
+`;
