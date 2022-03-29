@@ -1,11 +1,12 @@
 use crate::config::Config;
 use juniper::http::{GraphQLRequest, GraphQLResponse};
 use juniper::{EmptyMutation, EmptySubscription, RootNode};
+use regex::Regex;
 use stm_shared::graphql::RustScalarValue;
 use tracing::{error, info};
 
 // a list of query resolvers
-mod query_devs_per_language;
+mod query;
 
 /// A container for Query resolvers implemented in separate files.
 struct Query;
@@ -14,6 +15,7 @@ struct Query;
 struct Ctx {
     es_url: String,
     dev_idx: String,
+    no_sql_string_invalidation_regex: Regex,
 }
 impl juniper::Context for Ctx {}
 
@@ -30,6 +32,7 @@ pub(crate) async fn execute_gql(
     let context = Ctx {
         es_url: config.es_url.clone(),
         dev_idx: config.dev_idx.clone(),
+        no_sql_string_invalidation_regex: config.no_sql_string_invalidation_regex.clone(),
     };
 
     // the GQL schema is static and can be reused between calls
@@ -78,5 +81,5 @@ pub(crate) fn get_schema() -> String {
 
 #[tokio::test]
 async fn save_schema() {
-    std::fs::write("schema.graphql", get_schema()).expect("Unable to write './schema.graphql' file");
+    std::fs::write("samples/schema.graphql", get_schema()).expect("Unable to write 'samples/schema.graphql' file");
 }

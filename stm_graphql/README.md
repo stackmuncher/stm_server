@@ -19,13 +19,6 @@ cp ./target/x86_64-unknown-linux-gnu/release/stm_graphql ./bootstrap && zip stm_
 aws lambda update-function-code --region us-east-1 --function-name stm_graphql --zip-file fileb://stm_graphql.zip
 ```
 
-#### Authorizer
-
-This lambda looks for a JWT in `Authorization` header and returns HTTP 401 error if it's missing, expired or invalid.
-
-It requires `n` and `e` values from the JWK as env vars. See https://stackmuncher.us.auth0.com/.well-known/jwks.json for values.
-The values can be found in Auth0 config for the application. 
-
 #### API Gateway
 
 * HTTP API with Lambda
@@ -48,3 +41,9 @@ The above steps should trigger a chain of requests and responses:
 > APIGW -> Lambda *stm_graphql* proxy -> SQS Request Queue -> the locally run *stm_graphql* app -> SQS Response Queue -> Lambda *stm_graphql* proxy -> APIGW
 
 [main.rs](./src/main.rs) has sections of code annotated with `#[cfg(debug_assertions)]` to use *lambda-debug-proxy* feature in DEBUG mode or exclude it when built with `--release`.
+
+## GraphQL schema
+
+A call to the root returns the full GraphQL schema.
+
+Run `cargo test` to save the schema and all resolver responses to _samples_ sub-folder.
