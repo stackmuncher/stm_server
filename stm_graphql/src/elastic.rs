@@ -1,6 +1,5 @@
 //use elasticsearch::{http::transport::Transport, CountParts, Elasticsearch, SearchParts};
-use crate::config::Config;
-use futures::future::{join, join_all};
+use futures::future::join;
 use regex::Regex;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -8,10 +7,35 @@ use stm_shared::elastic::types as es_types;
 use stm_shared::elastic::{call_es_api, search};
 use tracing::error;
 
-pub const SEARCH_ENGINEER_BY_LOGIN: &str = r#"{"query":{"term":{"login.keyword":{"value":"%"}}}}"#;
-pub const SEARCH_DEV_BY_DOC_ID: &str = r#"{"query":{"term":{"_id":"%"}}}"#;
-pub const SEARCH_ALL_LANGUAGES: &str =
-    r#"{"size":0,"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000}}}}"#;
+pub const QUERY_DEVS_PER_TECH: &str = r#"{"size":0,"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000,"order":{"_key":"asc"}}}}}"#;
+
+/// Describes the required experience level for the tech.
+#[derive(juniper::GraphQLInputObject)]
+pub(crate) struct TechExperience {
+    /// Name of the tech, e.g. `c#`, case insensitive.
+    tech: String,
+    /// Band for the minimum number of lines of code. Valid values 1 and 2. Any other value is ignored and no LoC search clause is constructed.
+    loc_band: Option<i32>,
+    // /// Minimum number of years the tech was in use. Valid values 1-10. Any other value is ignored and no LoC search clause is constructed.
+    // years: Option<i32>,
+}
+
+impl TechExperience {
+    /// Returns a validated number of LoC for the specified band.
+    /// TODO: add a param with averages per tech. E.g. 10,000 Dockerfile lines is not the same as 10,000 Rust lines
+    pub(crate) fn validated_loc(&self) -> u64 {
+        if let Some(band) = self.loc_band {
+            // these are arbitrary numbers
+            return match band {
+                1 => 20_000,
+                2 => 50_000,
+                _ => 0,
+            };
+        }
+        // no special LoC value was specified
+        0
+    }
+}
 
 /// Inserts a single param in the ES query in place of %. The param may be repeated within the query multiple times.
 /// Panics if the param is unsafe for no-sql queries.
@@ -33,132 +57,39 @@ pub(crate) fn add_param(query: &str, param: String, no_sql_string_invalidation_r
     modded_query
 }
 
-/// Returns the number of ES docs that match the query. The field name is not validated or sanitized.
-/// Returns an error if the field value contains anything other than alphanumerics and `.-_`.
-pub(crate) async fn matching_doc_count(
-    es_url: &String,
-    idx: &String,
-    field: &str,
-    field_value: &String,
-    no_sql_string_invalidation_regex: &Regex,
-) -> Result<usize, ()> {
-    // validate field_value for possible no-sql injection
-    if no_sql_string_invalidation_regex.is_match(field_value) {
-        error!("Invalid field_value: {}", field_value);
-        return Err(());
-    }
-
-    // the query must be build inside this fn to get a consistent response
-    let query = [
-        r#"{"query":{"match":{""#,
-        field,
-        r#"":""#,
-        field_value,
-        r#""}},"size":0}"#,
-    ]
-    .concat();
-
-    let es_api_endpoint = [es_url.as_ref(), "/", idx, "/_search"].concat();
-    let count = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
-
-    // extract the actual value from a struct like this
-    // {
-    //     "took" : 652,
-    //     "timed_out" : false,
-    //     "_shards" : {
-    //       "total" : 5,
-    //       "successful" : 5,
-    //       "skipped" : 0,
-    //       "failed" : 0
-    //     },
-    //     "hits" : {
-    //       "total" : {
-    //         "value" : 0,
-    //         "relation" : "eq"
-    //       },
-    //       "max_score" : null,
-    //       "hits" : [ ]
-    //     }
-    // }
-    let count = match serde_json::from_value::<es_types::ESHitsCount>(count) {
-        Ok(v) => v.hits.total.value,
-        Err(e) => {
-            error!(
-                "Failed to doc count response for idx:{}, field: {}, value: {} with {}",
-                idx, field, field_value, e
-            );
-            return Err(());
-        }
-    };
-
-    Ok(count)
-}
-
-/// Executes multiple doc counts queries in parallel and returns the results in the same order.
-/// Returns an error if any of the queries fail.
-pub(crate) async fn matching_doc_counts(
-    es_url: &String,
-    idx: &String,
-    fields: Vec<&str>,
-    field_value: &String,
-    no_sql_string_invalidation_regex: &Regex,
-) -> Result<Vec<usize>, ()> {
-    let mut futures: Vec<_> = Vec::new();
-
-    for field in fields {
-        futures.push(matching_doc_count(es_url, idx, field, field_value, no_sql_string_invalidation_regex));
-    }
-
-    // execute all searches in parallel and unwrap the results
-    let mut counts: Vec<usize> = Vec::new();
-    for count in join_all(futures).await {
-        match count {
-            Err(_) => {
-                return Err(());
-            }
-            Ok(v) => {
-                counts.push(v);
-            }
-        }
-    }
-
-    Ok(counts)
-}
-
-/// Returns up to 100 matching docs from DEV idx depending on the params. The query is built to match the list of params.
+/// Returns the count of matching docs from DEV idx depending on the params. The query is built to match the list of params and may vary in length and complexity.
 /// Lang and KW params are checked for No-SQL injection.
-/// * langs: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
+/// * stack: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
 /// * timezone_offset: 0..23 where anything > 12 is the negative offset
 /// * timezone_hours: number of hours worked in the timezone
-/// * results_from: a pagination value to be passed onto ES
-pub(crate) async fn matching_devs(
+pub(crate) async fn matching_dev_count(
     es_url: &String,
     dev_idx: &String,
     keywords: Vec<String>,
-    langs: Vec<(String, usize)>,
-    timezone_offset: usize,
-    timezone_hours: usize,
-    results_from: usize,
+    stack: Vec<TechExperience>,
+    timezone_offset: u32,
+    timezone_hours: u32,
     no_sql_string_invalidation_regex: &Regex,
 ) -> Result<Value, ()> {
     // sample query
-    // {"size":100,"track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":"rust"}},{"multi_match":{"query":"logger","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"clap","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"serde","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}}]}},"sort":[{"hireable":{"order":"desc"}},{"report.timestamp":{"order":"desc"}}]}
+    // {"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":"rust"}},{"multi_match":{"query":"logger","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"clap","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"serde","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}}]}}}
 
     // a collector of must clauses
     let mut must_clauses: Vec<String> = Vec::new();
 
     // build language clause
-    for lang in langs {
+    for lang in stack {
         // validate field_value for possible no-sql injection
-        if no_sql_string_invalidation_regex.is_match(&lang.0) {
-            error!("Invalid lang: {}", lang.0);
+        if no_sql_string_invalidation_regex.is_match(&lang.tech) {
+            error!("Invalid lang: {}", lang.tech);
             return Err(());
         }
 
         // language clause is different from keywords clause
-        let clause = if lang.1 == 0 {
+        let loc = lang.validated_loc();
+        let clause = if loc == 0 {
             // a simple clause with no line counts
-            [r#"{"match":{"report.tech.language.keyword":""#, &lang.0, r#""}}"#].concat()
+            [r#"{"match":{"report.tech.language.keyword":""#, &lang.tech, r#""}}"#].concat()
         } else {
             // LoC counts included in the query
             [
@@ -171,7 +102,7 @@ pub(crate) async fn matching_devs(
                           {
                             "match": {
                               "report.tech.language.keyword": ""#,
-                &lang.0,
+                &lang.tech,
                 r#""
                             }
                           },
@@ -179,7 +110,7 @@ pub(crate) async fn matching_devs(
                             "range": {
                               "report.tech.code_lines": {
                                 "gt": "#,
-                &lang.1.to_string(),
+                &loc.to_string(),
                 r#"
                               }
                             }
@@ -244,24 +175,16 @@ pub(crate) async fn matching_devs(
     let clauses = must_clauses.join(",");
 
     // combine everything into a single query
-    let query = [
-        r#"{"size":"#,
-        &Config::MAX_DEV_LISTINGS_PER_SEARCH_RESULT.to_string(),
-        r#","from": "#,
-        &results_from.to_string(),
-        r#","track_scores":true,"query":{"bool":{"must":["#,
-        &clauses,
-        r#"]}},"sort":[{"report.last_contributor_commit_date_epoch":{"order":"desc"}}]}"#,
-    ]
-    .concat();
+    let query = [r#"{"query":{"bool":{"must":["#, &clauses, r#"]}}}"#].concat();
 
     // call the query
-    let es_api_endpoint = [es_url.as_ref(), "/", dev_idx, "/_search"].concat();
+    let es_api_endpoint = [es_url.as_ref(), "/", dev_idx, "/_count"].concat();
     let es_response = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
 
     Ok(es_response)
 }
 
+/*
 /// Search related keywords and packages by a partial keyword, up to 100 of each.
 /// Returns a combined list of keyword/populary count for refs_kw and pkgs_kw sorted alphabetically.
 /// The keyword is checked for validity ([^\-_0-9a-zA-Z]) before inserting into the regex query.
@@ -371,3 +294,4 @@ pub(crate) async fn get_stm_stats(es_url: &String, idx: &str, count: usize) -> R
 
     Ok(es_response)
 }
+*/

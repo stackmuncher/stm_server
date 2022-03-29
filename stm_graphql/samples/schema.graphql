@@ -1,0 +1,83 @@
+type Query {
+  """
+    Returns a list of all `tech` names with doc counts.
+    ```
+    "aggregations" : {
+    "agg" : {
+        "doc_count_error_upper_bound" : 0,
+        "sum_other_doc_count" : 0,
+        "buckets" : [
+          {
+            "key" : "markdown",
+            "doc_count" : 1819766
+          },
+    ```
+    See stm_graphql/samples/sample-responses/devs_per_language.json for the full example.
+  """
+  devsPerLanguage: ESAggs!
+  """
+    Returns the number of devs matching the stack.
+    ```json
+    "aggregations" : {
+    "agg" : {
+        "doc_count_error_upper_bound" : 0,
+        "sum_other_doc_count" : 0,
+        "buckets" : [
+          {
+            "key" : "markdown",
+            "doc_count" : 1819766
+          },
+    ```
+    See stm_graphql/samples/sample-responses/devs_per_language.json for the full example.
+  """
+  devCountForStack(langs: [TechExperience!]!): Int!
+}
+
+"Part of ESAggs"
+type ESAggsAgg {
+  agg: ESAggsBuckets!
+}
+
+"Describes the required experience level for the tech."
+input TechExperience {
+  "Name of the tech, e.g. `c#`, case insensitive." tech: String!
+  "Band for the minimum number of lines of code. Valid values 1 and 2. Any other value is ignored and no LoC search clause is constructed." locBand: Int
+}
+
+scalar U64
+
+"""
+  A generic structure for ES aggregations result. Make sure the aggregation name is `agg`.
+  ```json
+    {
+      "aggregations" : {
+        "agg" : {
+          "buckets" : [
+            {
+              "key" : "twilio",
+              "doc_count" : 597
+            }
+          ]
+        }
+      }
+    }
+  ```
+"""
+type ESAggs {
+  aggregations: ESAggsAgg!
+}
+
+"Part of ESAggs"
+type ESAggsBuckets {
+  buckets: [ESAggsBucket!]!
+}
+
+"Part of ESAggs"
+type ESAggsBucket {
+  key: String!
+  docCount: U64!
+}
+
+schema {
+  query: Query
+}

@@ -108,3 +108,20 @@ pub struct ESSourceDev {
     /// A free-text location from GH
     pub location: Option<String>,
 }
+
+/// Represents the response to ES `_count` queries.
+/// ```json
+/// {
+///   "count" : 660,
+///   "_shards" : {
+///     "total" : 5,
+///     "successful" : 5,
+///     "skipped" : 0,
+///     "failed" : 0
+///   }
+/// }
+/// ```
+#[derive(Deserialize, Debug)]
+pub struct ESDocCount {
+   pub count: i32,
+}
