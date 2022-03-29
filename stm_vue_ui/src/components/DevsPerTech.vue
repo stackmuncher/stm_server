@@ -2,21 +2,25 @@
 import { devsPerLanguageQuery } from "@/graphql/queries";
 import { useQuery } from "@vue/apollo-composable";
 import { ref } from "vue";
-import type { Ref } from "vue";
-import { computed } from "@vue/reactivity";
+// import type { Ref } from "vue";
+import { useQueryStore } from "@/stores/QueryStore";
 
-const tech: Ref<string[]> = ref([]);
+const store = useQueryStore();
+
+const tech = ref(store.tech);
 
 // Experience in lines of code (tech name / band of experience).
 // The band of exp is relative to how much code is written in that language on average.
 // E.g. Java - lots, Docker - very little
-const expLoc: Ref<Map<string, number>> = ref(new Map<string, number>());
+// const expLoc: Ref<Map<string, number>> = ref(new Map<string, number>());
+const expLoc = ref(store.expLoc);
 
 const anyLoc = "any LoC";
 const anyYears = "any duration";
 
 // Experience in years (tech name / years in use)
-const expYears: Ref<Map<string, number>> = ref(new Map<string, number>());
+// const expYears: Ref<Map<string, number>> = ref(new Map<string, number>());
+const expYears = ref(store.expYears);
 
 // A flag to toggle visibility of tech card details. It should be computed()
 const selected_tech_class = (t: string) =>

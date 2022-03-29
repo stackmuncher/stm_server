@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DevCounts from "@/components/DevCounts.vue";
+import DevsPerTech from "@/components/DevsPerTech.vue";
 import DevSearch from "@/components/DevSearch.vue";
 import AboutStm from "@/components/explainers/AboutStm.vue";
 </script>
@@ -10,8 +10,8 @@ import AboutStm from "@/components/explainers/AboutStm.vue";
       <div class="row justify-content-center">
         <div class="col-lg-8 col-md-10 col-xs-12 col-xxl-6">
           <h1>Reach out to software developers</h1>
+          <DevsPerTech />
           <DevSearch />
-          <DevCounts />
           <AboutStm />
         </div>
       </div>
