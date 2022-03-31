@@ -1,101 +1,113 @@
 <script setup lang="ts">
 import { devsPerLanguageQuery } from "@/graphql/queries";
 import { useQuery } from "@vue/apollo-composable";
-import { ref } from "vue";
-// import type { Ref } from "vue";
+import { ref, watch } from "vue";
 import { useQueryStore } from "@/stores/QueryStore";
 
 const store = useQueryStore();
 
 const tech = ref(store.tech);
 
-// Experience in lines of code (tech name / band of experience).
-// The band of exp is relative to how much code is written in that language on average.
-// E.g. Java - lots, Docker - very little
-// const expLoc: Ref<Map<string, number>> = ref(new Map<string, number>());
-const expLoc = ref(store.expLoc);
-
 const anyLoc = "any LoC";
 const anyYears = "any duration";
 
-// Experience in years (tech name / years in use)
-// const expYears: Ref<Map<string, number>> = ref(new Map<string, number>());
-const expYears = ref(store.expYears);
-
 // A flag to toggle visibility of tech card details. It should be computed()
 const selected_tech_class = (t: string) =>
-  tech.value.includes(t) ? "visible" : "invisible";
+  tech.value.has(t) ? "visible" : "invisible";
+
+const toggleTechExp = (t: string, v: boolean) => {
+  if (!v) {
+    tech.value.delete(t);
+  } else if (!tech.value.has(t)) {
+    // create a new tech exp with defaults
+    tech.value.set(t, { loc: 0, years: 0 });
+  }
+};
 
 // Sets expLoc for a particular tech (t) in expLoc or removes it if `any`. It should be computed()
-const setLoCParam = (t: string, v: string) => {
-  console.log(`Setting expLoc ${t} / ${v}`);
+const setTechExp = (t: string, loc: string | null, years: string | null) => {
+  console.log(`Setting TechExp ${t} / loc:${loc}, years:${years}`);
 
-  switch (v) {
+  const techExp = tech.value.get(t);
+
+  if (!techExp) {
+    console.error(
+      `Tech record for ${t} not found in local Vue store. It's a bug.`
+    );
+    return;
+  }
+
+  switch (loc) {
+    case null:
+      break;
     case anyLoc:
-      expLoc.value.delete(t);
+      techExp.loc = 0;
       break;
     case "some":
-      expLoc.value.set(t, 1);
+      techExp.loc = 1;
       break;
     case "a lot":
-      expYears.value.set(t, 2);
+      techExp.loc = 2;
       break;
     default:
-      console.error(`Unknown expLoc option ${v}. It's a bug.`);
+      console.error(`Unknown expLoC option ${loc}. It's a bug.`);
+  }
+
+  switch (years) {
+    case null:
+      break;
+    case anyYears:
+      techExp.years = 0;
+      break;
+    case "1 year":
+      techExp.years = 1;
+      break;
+    case "2 years":
+      techExp.years = 2;
+      break;
+    case "3 years":
+      techExp.years = 3;
+      break;
+    case "5 years":
+      techExp.years = 5;
+      break;
+    case "10 years":
+      techExp.years = 10;
+      break;
+    default:
+      console.error(`Unknown expYears option ${years}. It's a bug.`);
   }
 };
 
 // Gets expLoc for a particular tech (t) in expLoc or `any`. It should be computed()
 const getLoCParam = (t: string) => {
   // console.log(`Getting expLoc ${t}`);
-  const v = expLoc.value.get(t);
+  const v = tech.value.get(t);
+
   if (v) {
-    switch (v) {
+    switch (v.loc) {
+      case 0:
+        return anyLoc;
       case 1:
         return "some";
       case 2:
         return "a lot";
       default:
-        console.error(`Unknown expLoc option ${v}. It's a bug.`);
+        console.error(`Unknown loc value: ${v.loc}. It's a bug.`);
+        return anyLoc;
     }
   } else {
     return anyLoc;
   }
 };
 
-// Sets expYears for a particular tech (t) in expYears or removes it if `any`. It should be computed()
-const setYearsParam = (t: string, v: string) => {
-  console.log(`Setting expYears ${t} / ${v}`);
-
-  switch (v) {
-    case anyYears:
-      expYears.value.delete(t);
-      break;
-    case "1 year":
-      expYears.value.set(t, 1);
-      break;
-    case "2 years":
-      expYears.value.set(t, 2);
-      break;
-    case "3 years":
-      expYears.value.set(t, 3);
-      break;
-    case "5 years":
-      expYears.value.set(t, 5);
-      break;
-    case "10 years":
-      expYears.value.set(t, 10);
-      break;
-    default:
-      console.error(`Unknown expYears option ${v}. It's a bug.`);
-  }
-};
-
 const getYearsParam = (t: string) => {
   // console.log(`Getting expYears ${t}`);
-  const v = expYears.value.get(t);
+  const v = tech.value.get(t);
   if (v) {
-    switch (v) {
+    switch (v.years) {
+      case 0:
+        return anyYears;
       case 1:
         return "1 year";
       case 2:
@@ -107,7 +119,7 @@ const getYearsParam = (t: string) => {
       case 10:
         return "10 years";
       default:
-        console.error(`Unknown expYears option ${v}. It's a bug.`);
+        console.error(`Unknown expYears option ${v.years}. It's a bug.`);
         return anyYears;
     }
   } else {
@@ -117,14 +129,16 @@ const getYearsParam = (t: string) => {
 
 const { result } = useQuery(devsPerLanguageQuery);
 
-// watch(result, (value) => {
-//   console.log(value);
-// });
+watch(result, (value) => {
+  console.log("devsPerLanguageQuery result arrived");
+  console.log(value);
+  if (value) {
+    store.techListLoaded = true;
+  }
+});
 </script>
 
 <template>
-  <h6 class="mt-5 mb-3">Developers per language</h6>
-  <p>{{ tech }} / {{ expLoc }} / {{ expYears }}</p>
   <div v-if="result && result.devsPerLanguage" class="row g-3">
     <div
       v-for="bucket in result.devsPerLanguage.aggregations.agg.buckets"
@@ -136,7 +150,7 @@ const { result } = useQuery(devsPerLanguageQuery);
           type="checkbox"
           :id="bucket.key"
           :value="bucket.key"
-          v-model="tech"
+          @change="(event) => toggleTechExp(bucket.key, (event.target as HTMLInputElement).checked)"
           class="me-2"
         />
         <label
@@ -154,7 +168,7 @@ const { result } = useQuery(devsPerLanguageQuery);
             <span class="loc-badge"
               ><select
                 :value="getLoCParam(bucket.key)"
-                @change="(event) => setLoCParam(bucket.key, (event.target as HTMLSelectElement).value)"
+                @change="(event) => setTechExp(bucket.key, (event.target as HTMLSelectElement).value, null)"
               >
                 <option>{{ anyLoc }}</option>
                 <option>some</option>
@@ -166,7 +180,7 @@ const { result } = useQuery(devsPerLanguageQuery);
             <span class="calendar-badge ms-2"
               ><select
                 :value="getYearsParam(bucket.key)"
-                @change="(event) => setYearsParam(bucket.key, (event.target as HTMLSelectElement).value)"
+                @change="(event) => setTechExp(bucket.key, null, (event.target as HTMLSelectElement).value)"
               >
                 <option>{{ anyYears }}</option>
                 <option>1 year</option>
