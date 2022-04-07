@@ -3,7 +3,6 @@ use crate::elastic;
 use juniper::{graphql_object, FieldResult};
 use stm_shared::elastic as elastic_shared;
 use stm_shared::graphql::RustScalarValue;
-use tracing::error;
 
 // This block has to contain all queries for the macro to work. It is possible to split it into multiple modules
 // with a bit of a workaround. See https://github.com/graphql-rust/juniper/discussions/1045
@@ -33,37 +32,38 @@ impl Query {
         &self,
         context: &'db Ctx,
         stack: Vec<elastic::TechExperience>,
+        pkgs: Vec<String>,
     ) -> FieldResult<i32> {
         // get number of devs per technology
-        let dev_count = match elastic::matching_dev_count(
-            &context.es_url,
-            &context.dev_idx,
-            Vec::new(),
-            stack,
-            0,
-            0,
-            &context.no_sql_string_invalidation_regex,
-        )
-        .await
-        {
+        let dev_count = match elastic::matching_dev_count(&context.es_url, &context.dev_idx, stack, pkgs, 0, 0).await {
             Ok(v) => v,
             Err(_) => return Err("ES query failed. See server logs.".into()),
         };
 
-        let dev_count = match serde_json::from_value::<elastic_shared::types::ESDocCount>(dev_count) {
-            Ok(v) => v.count,
-            Err(e) => {
-                error!("Failed to convert dev_count response with {e}");
-                return Err("ES query failed. See server logs.".into());
-            }
+        Ok(dev_count)
+    }
+
+    /// Returns a list of keywords starting with what the user typed in so far.
+    /// See stm_graphql/samples/es-responses/devs_per_language.json for the full example.
+    async fn keyword_suggester<'db>(
+        &self,
+        context: &'db Ctx,
+        starts_with: String,
+    ) -> FieldResult<Option<elastic_shared::types::ESAggs>> {
+        // get number of devs per technology
+        let keywords = match elastic::keyword_suggester(&context.es_url, &context.dev_idx, starts_with).await {
+            Ok(v) => v,
+            Err(_) => return Err("ES query failed. See server logs.".into()),
         };
 
-        Ok(dev_count)
+        Ok(keywords)
     }
 }
 
+// IMPORTANT: GQL errors are logged in the sample response output files
+// remember to check them if the tests fail
 #[tokio::test]
-async fn devs_per_language() {
+async fn devs_per_language_test() {
     let config = super::Config::new();
 
     let gql_request = super::GraphQLRequest::<super::RustScalarValue> {
@@ -86,11 +86,11 @@ async fn devs_per_language() {
 }
 
 #[tokio::test]
-async fn dev_count_for_stack() {
+async fn dev_count_for_stack_test() {
     let config = super::Config::new();
 
     let gql_request = super::GraphQLRequest::<super::RustScalarValue> {
-        query: r#"query { devCountForStack (langs: [{tech: "rust"}])}"#.to_string(),
+        query: r#"query { devCountForStack (stack: [{tech: "rust"}], pkgs: ["serde"])}"#.to_string(),
         operation_name: None,
         variables: None,
     };
@@ -107,4 +107,24 @@ async fn dev_count_for_stack() {
             .is_match(&gql_data),
         "Unexpected devCountForStack query response"
     );
+}
+
+#[tokio::test]
+async fn keyword_suggester_test() {
+    let config = super::Config::new();
+
+    let gql_request = super::GraphQLRequest::<super::RustScalarValue> {
+        query: r#"query { keywordSuggester (startsWith: "mongo") { aggregations {agg {buckets {key, docCount}}}} }"#
+            .to_string(),
+        operation_name: None,
+        variables: None,
+    };
+
+    let (gql_data, result) = super::execute_gql(&config, gql_request).await.unwrap();
+
+    std::fs::write("samples/gql-responses/keywordSuggester.gql.json", gql_data.clone())
+        .expect("Unable to write 'samples/gql-responses/keywordSuggester.gql.json' file");
+
+    assert!(result.is_ok(), "keywordSuggester query executed with errors");
+    assert!(gql_data.contains("mongodb"), "Unexpected devCountForStack query response");
 }

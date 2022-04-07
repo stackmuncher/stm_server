@@ -11,6 +11,7 @@ pub mod types_aggregations;
 pub mod types_search_log;
 pub mod types_source;
 pub mod types_hits;
+pub mod validators;
 
 /// A generic function for making signed(v4) API calls to AWS ES.
 /// `es_api_endpoint` must be a fully qualified URL, e.g. https://x.ap-southeast-2.es.amazonaws.com/my_index/_search
