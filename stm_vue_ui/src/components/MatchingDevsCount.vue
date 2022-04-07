@@ -9,6 +9,7 @@ import { computed } from "@vue/reactivity";
 const store = useQueryStore();
 
 const tech = ref(store.tech);
+const pkg = ref(store.pkg);
 
 const count = ref(0);
 
@@ -19,12 +20,13 @@ const stackVar = computed(() => {
     stack.push({ tech: k, locBand: v.loc } as inpTechExperienceInterface);
   });
 
-  console.log("stackVar computed");
-  console.log(stack);
-
   let x = {
     stack: stack,
+    pkgs: Array.from(pkg.value),
   };
+
+  console.log("stackVar computed");
+  console.log(x);
 
   return x;
 });
@@ -56,6 +58,9 @@ watch(store.tech, async (tNew, tOld) => {
   <ul class="text-muted list-inline">
     <li v-for="t in stackVar.stack" :key="t.tech" class="list-inline-item">
       {{ t.tech }}
+    </li>
+    <li v-for="p in stackVar.pkgs" :key="p" class="list-inline-item">
+      {{ p }}
     </li>
   </ul>
   <p v-if="error" class="text-danger">

@@ -29,7 +29,22 @@ export const devsPerLanguageQuery = gql`
 `;
 
 export const devCountForStack = gql`
-  query ($stack: [TechExperience!]!) {
-    devCountForStack(stack: $stack)
+  query ($stack: [TechExperience!]!, $pkgs: [String!]!) {
+    devCountForStack(stack: $stack, pkgs: $pkgs)
+  }
+`;
+
+export const keywordSuggesterQuery = gql`
+  query ($startsWith: String!) {
+    keywordSuggester(startsWith: $startsWith) {
+      aggregations {
+        agg {
+          buckets {
+            key
+            docCount
+          }
+        }
+      }
+    }
   }
 `;
