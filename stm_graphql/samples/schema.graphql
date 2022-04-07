@@ -1,36 +1,19 @@
 type Query {
   """
     Returns a list of all `tech` names with doc counts.
-    ```
-    "aggregations" : {
-    "agg" : {
-        "doc_count_error_upper_bound" : 0,
-        "sum_other_doc_count" : 0,
-        "buckets" : [
-          {
-            "key" : "markdown",
-            "doc_count" : 1819766
-          },
-    ```
-    See stm_graphql/samples/sample-responses/devs_per_language.json for the full example.
+    See stm_graphql/samples/es-responses/devs_per_language.json for the full example.
   """
   devsPerLanguage: ESAggs!
   """
     Returns the number of devs matching the stack.
-    ```json
-    "aggregations" : {
-    "agg" : {
-        "doc_count_error_upper_bound" : 0,
-        "sum_other_doc_count" : 0,
-        "buckets" : [
-          {
-            "key" : "markdown",
-            "doc_count" : 1819766
-          },
-    ```
-    See stm_graphql/samples/sample-responses/devs_per_language.json for the full example.
+    See stm_graphql/samples/es-responses/dev_count_for_stack.json for the full example.
   """
-  devCountForStack(langs: [TechExperience!]!): Int!
+  devCountForStack(stack: [TechExperience!]!, pkgs: [String!]!): Int!
+  """
+    Returns a list of keywords starting with what the user typed in so far.
+    See stm_graphql/samples/es-responses/devs_per_language.json for the full example.
+  """
+  keywordSuggester(startsWith: String!): ESAggs
 }
 
 "Part of ESAggs"

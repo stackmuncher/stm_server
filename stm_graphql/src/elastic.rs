@@ -1,11 +1,10 @@
 //use elasticsearch::{http::transport::Transport, CountParts, Elasticsearch, SearchParts};
-use futures::future::join;
-use regex::Regex;
-use serde_json::Value;
-use std::collections::HashMap;
 use stm_shared::elastic::types as es_types;
-use stm_shared::elastic::{call_es_api, search};
-use tracing::error;
+use stm_shared::elastic::{
+    call_es_api,
+    validators::{escape_for_regex_fields, NO_SQL_STRING_INVALIDATION_REGEX},
+};
+use tracing::{error, info};
 
 pub const QUERY_DEVS_PER_TECH: &str = r#"{"size":0,"aggs":{"agg":{"terms":{"field":"report.tech.language.keyword","size":1000,"order":{"_key":"asc"}}}}}"#;
 
@@ -13,9 +12,9 @@ pub const QUERY_DEVS_PER_TECH: &str = r#"{"size":0,"aggs":{"agg":{"terms":{"fiel
 #[derive(juniper::GraphQLInputObject)]
 pub(crate) struct TechExperience {
     /// Name of the tech, e.g. `c#`, case insensitive.
-    tech: String,
+    pub tech: String,
     /// Band for the minimum number of lines of code. Valid values 1 and 2. Any other value is ignored and no LoC search clause is constructed.
-    loc_band: Option<i32>,
+    pub loc_band: Option<i32>,
     // /// Minimum number of years the tech was in use. Valid values 1-10. Any other value is ignored and no LoC search clause is constructed.
     // years: Option<i32>,
 }
@@ -37,26 +36,6 @@ impl TechExperience {
     }
 }
 
-/// Inserts a single param in the ES query in place of %. The param may be repeated within the query multiple times.
-/// Panics if the param is unsafe for no-sql queries.
-pub(crate) fn add_param(query: &str, param: String, no_sql_string_invalidation_regex: &Regex) -> String {
-    // validate the param
-    if no_sql_string_invalidation_regex.is_match(&param) {
-        panic!("Unsafe param value: {}", param);
-    }
-
-    let mut modded_query = query.to_string();
-
-    // loop through the query until there are no more % to replace
-    while modded_query.contains("%") {
-        let (left, right) = modded_query.split_at(modded_query.find("%").expect("Cannot split the query"));
-
-        modded_query = [left, param.as_str(), &right[1..]].concat().to_string();
-    }
-
-    modded_query
-}
-
 /// Returns the count of matching docs from DEV idx depending on the params. The query is built to match the list of params and may vary in length and complexity.
 /// Lang and KW params are checked for No-SQL injection.
 /// * stack: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
@@ -65,14 +44,13 @@ pub(crate) fn add_param(query: &str, param: String, no_sql_string_invalidation_r
 pub(crate) async fn matching_dev_count(
     es_url: &String,
     dev_idx: &String,
-    keywords: Vec<String>,
     stack: Vec<TechExperience>,
+    pkgs: Vec<String>,
     timezone_offset: u32,
     timezone_hours: u32,
-    no_sql_string_invalidation_regex: &Regex,
-) -> Result<Value, ()> {
+) -> Result<i32, ()> {
     // sample query
-    // {"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":"rust"}},{"multi_match":{"query":"logger","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"clap","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"serde","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}}]}}}
+    // {"size":100,"track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":"rust"}},{"multi_match":{"query":"logger","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"clap","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"serde","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}}]}},"sort":[{"hireable":{"order":"desc"}},{"report.timestamp":{"order":"desc"}}]}
 
     // a collector of must clauses
     let mut must_clauses: Vec<String> = Vec::new();
@@ -80,14 +58,16 @@ pub(crate) async fn matching_dev_count(
     // build language clause
     for lang in stack {
         // validate field_value for possible no-sql injection
-        if no_sql_string_invalidation_regex.is_match(&lang.tech) {
+        if NO_SQL_STRING_INVALIDATION_REGEX.is_match(&lang.tech) {
             error!("Invalid lang: {}", lang.tech);
             return Err(());
         }
 
-        // language clause is different from keywords clause
+        // get the actual number of lines for this language for this band
         let loc = lang.validated_loc();
-        let clause = if loc == 0 {
+
+        // language clause is different from keywords clause
+        let clause = if lang.loc_band == Some(0) {
             // a simple clause with no line counts
             [r#"{"match":{"report.tech.language.keyword":""#, &lang.tech, r#""}}"#].concat()
         } else {
@@ -129,22 +109,22 @@ pub(crate) async fn matching_dev_count(
     }
 
     // build keywords clauses
-    for keyword in keywords {
+    for pkg in pkgs {
         // validate field_value for possible no-sql injection
-        if no_sql_string_invalidation_regex.is_match(&keyword) {
-            error!("Invalid keyword: {}", keyword);
+        if NO_SQL_STRING_INVALIDATION_REGEX.is_match(&pkg) {
+            error!("Invalid kw: {}", pkg);
             return Err(());
         }
 
         // query  pkgs and refs if the name is qualified or pkgs_kw and refs_kw if it's not
-        let qual_unqual_clause = if keyword.contains(".") {
+        let qual_unqual_clause = if pkg.contains(".") {
             r#"","fields":["report.tech.pkgs.k.keyword","report.tech.refs.k.keyword"]}}"#
         } else {
             r#"","fields":["report.keywords.keyword"]}}"#
         };
 
         // using multimatch because different techs have keywords in different places
-        let clause = [r#"{"multi_match":{"query":""#, &keyword, qual_unqual_clause].concat();
+        let clause = [r#"{"multi_match":{"query":""#, &pkg, qual_unqual_clause].concat();
 
         must_clauses.push(clause);
     }
@@ -181,7 +161,147 @@ pub(crate) async fn matching_dev_count(
     let es_api_endpoint = [es_url.as_ref(), "/", dev_idx, "/_count"].concat();
     let es_response = call_es_api(es_api_endpoint, Some(query.to_string())).await?;
 
-    Ok(es_response)
+    let dev_count = match serde_json::from_value::<es_types::ESDocCount>(es_response) {
+        Ok(v) => v.count,
+        Err(e) => {
+            error!("Failed to convert dev_count response with {}", e);
+            return Err(());
+        }
+    };
+
+    Ok(dev_count)
+}
+
+#[tokio::test]
+async fn matching_dev_count_ok_test() {
+    crate::config::init_logging();
+
+    info!("matching_dev_count_ok_test");
+
+    let config = crate::config::Config::new();
+
+    let dev_count = matching_dev_count(
+        &config.es_url,
+        &config.dev_idx,
+        vec![TechExperience {
+            tech: "rust".to_string(),
+            loc_band: Some(2),
+        }],
+        vec!["serde".to_string()],
+        0,
+        0,
+    )
+    .await
+    .unwrap();
+
+    assert!(dev_count > 100, "ES returned: {}", dev_count);
+}
+
+/// Returns a list of keywords starting with the string in `starts_with`.
+/// Min required length for the substring is 3 chars.
+/// Input shorter than that returns None.
+pub(crate) async fn keyword_suggester(
+    es_url: &String,
+    dev_idx: &String,
+    starts_with: String,
+) -> Result<Option<es_types::ESAggs>, ()> {
+    // sample query
+    // GET dev/_search
+    // {
+    //   "aggs": {
+    //     "suggestions": {
+    //       "terms": { "field": "report.tech.pkgs_kw.k.keyword" ,
+    //         "include": "mon.*"}
+    //     }
+    //   },
+    //   "size": 0
+    // }
+
+    // ignore queries that are too short
+    let starts_with = starts_with.trim().to_lowercase();
+    if starts_with.len() < 4 {
+        error!("Short starts_with: {}", starts_with);
+        return Ok(None);
+    }
+
+    // validate field_value for possible no-sql injection
+    if NO_SQL_STRING_INVALIDATION_REGEX.is_match(&starts_with) {
+        error!("Invalid starts_with: {}", starts_with);
+        return Err(());
+    }
+
+    // combine everything into a single query
+    let starts_with = escape_for_regex_fields(&starts_with);
+    info!("Escaped kw: {}", starts_with);
+    let query = [
+        r#"{"aggs":{"agg":{"terms":{"field":"report.tech.pkgs_kw.k.keyword","include":""#,
+        &starts_with,
+        r#".*"}}},"size":0}"#,
+    ]
+    .concat();
+
+    info!("{query}");
+
+    // call the query
+    let es_api_endpoint = [es_url.as_ref(), "/", dev_idx, "/_search"].concat();
+    let es_response = call_es_api::<es_types::ESAggs>(es_api_endpoint, Some(query.to_string())).await?;
+
+    // the response looks like this
+    // "aggregations" : {
+    //     "agg" : {
+    //       "doc_count_error_upper_bound" : 19,
+    //       "sum_other_doc_count" : 1351,
+    //       "buckets" : ["key" : "mono","doc_count" : 15636},{"key" : "mongodb","doc_count" : 8505},{ ...
+
+    // extract the list of keys in the order they appear in the response
+
+    Ok(Some(es_response))
+}
+
+#[tokio::test]
+async fn keyword_suggester_ok_test() {
+    crate::config::init_logging();
+
+    info!("keyword_suggester_ok_test");
+
+    let config = crate::config::Config::new();
+
+    let es_response = keyword_suggester(&config.es_url, &config.dev_idx, "mongo".to_string())
+        .await
+        .unwrap()
+        .unwrap();
+
+    let es_response = serde_json::to_string(&es_response).unwrap();
+
+    assert!(es_response.contains("mongodb"), "ES returned: {}", es_response);
+}
+
+#[tokio::test]
+async fn keyword_suggester_too_short_test() {
+    crate::config::init_logging();
+
+    info!("keyword_suggester_too_short_test");
+
+    let config = crate::config::Config::new();
+
+    let es_response = keyword_suggester(&config.es_url, &config.dev_idx, "mon".to_string())
+        .await
+        .unwrap();
+
+    assert!(es_response.is_none());
+}
+
+#[tokio::test]
+async fn keyword_suggester_invalid_input_test() {
+    crate::config::init_logging();
+
+    info!("keyword_suggester_invalid_input_test");
+
+    let config = crate::config::Config::new();
+
+    assert!(keyword_suggester(&config.es_url, &config.dev_idx, r#".\=/(-)oir"#.to_string())
+        .await
+        .is_err());
 }
 
 /*

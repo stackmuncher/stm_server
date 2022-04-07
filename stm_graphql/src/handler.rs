@@ -29,7 +29,7 @@ impl std::fmt::Display for HandlerError {
 pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, Error> {
     let mut sys = System::new_with_specifics(RefreshKind::with_memory(RefreshKind::new()));
     let (event, _ctx) = event.into_parts();
-    info!("Event: {}", event);
+    // info!("Event: {}", event);
     //info!("Context: {:?}", _ctx);
 
     log_memory_use(&mut sys, "Start");
@@ -110,7 +110,7 @@ pub(crate) async fn my_handler(event: LambdaEvent<Value>) -> Result<Value, Error
     info!("Resp size: {} bytes", gql_data.len());
 
     // return back the result
-    Ok(ApiGatewayResponse::new(gql_data, 200, 0))
+    Ok(ApiGatewayResponse::new(gql_data, 200, 600))
 }
 
 /// Logs current memory use and the delta from the previous sample.

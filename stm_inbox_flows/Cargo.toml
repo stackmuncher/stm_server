@@ -2,7 +2,7 @@
 name = "stm_inbox_flows"
 version = "0.1.0"
 authors = ["rimutaka <max@onebro.me>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 hyper = { version = "0.14", features = ["http2", "runtime"] }
