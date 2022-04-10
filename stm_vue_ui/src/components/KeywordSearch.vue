@@ -3,25 +3,24 @@ import { keywordSuggesterQuery } from "@/graphql/queries";
 import { useQuery } from "@vue/apollo-composable";
 import { ref, watch, computed } from "vue";
 import { useQueryStore } from "@/stores/QueryStore";
+import { numFmt } from "@/formatters"
 
 const store = useQueryStore();
 
 const pkg = ref(store.pkg);
 
-const userInput = ref("");
-
 const startsWithVar = computed(() => {
-  console.log(`startsWithVar computed: ${userInput.value}`);
+  console.log(`startsWithVar computed: ${store.searchFilter}`);
 
   let x = {
-    startsWith: userInput.value,
+    startsWith: store.searchFilter,
   };
 
   return x;
 });
 
 const keywordSuggesterEnabled = computed(() => {
-  return userInput.value.length > 3;
+  return store.searchFilter.length > 3;
 });
 
 const { result, loading } = useQuery(
@@ -54,7 +53,7 @@ watch(result, (value) => {
       class="form-control me-2"
       type="search"
       title="Start typing keywords of the required technology stack, e.g. C# + Twilio + Azure."
-      v-model="userInput"
+      v-model="store.searchFilter"
     />
   </div>
   <p v-if="!keywordSuggesterEnabled" class="mb-5 text-muted mt-2">
@@ -67,10 +66,11 @@ watch(result, (value) => {
       <li
         v-for="bucket in result.keywordSuggester.aggregations.agg.buckets"
         :key="bucket.key"
-        class="me-3 mb-3 bg-light text-dark rounded border fs-5 text-wrap p-2 list-inline-item "
+        class="me-3 mb-3 bg-light text-dark rounded border text-wrap p-1 list-inline-item "
       >
        <input
           type="checkbox"
+          :checked="store.pkg.has(bucket.key)"
           :id="bucket.key"
           :value="bucket.key"
           @change="(event) => togglePkg(bucket.key, (event.target as HTMLInputElement).checked)"
@@ -78,7 +78,7 @@ watch(result, (value) => {
         /> <label
           :for="bucket.key"
         >{{ bucket.key }} <div class="badge bg-white text-dark ms-2" style="font-weight: 300">
-            <span class="team-badge"> {{ bucket.docCount }}</span>
+            <span class="team-badge"> {{ numFmt(bucket.docCount) }}</span>
           </div></label
         >
       </li>

@@ -5,6 +5,7 @@ import { useQuery } from "@vue/apollo-composable";
 import { ref, watch } from "vue";
 import { useQueryStore } from "@/stores/QueryStore";
 import { computed } from "@vue/reactivity";
+import { numFmt } from "@/formatters";
 
 const store = useQueryStore();
 
@@ -31,6 +32,18 @@ const stackVar = computed(() => {
   return x;
 });
 
+const isEmptyStack = computed(
+  () => stackVar.value.stack.length + stackVar.value.pkgs.length == 0
+);
+
+const removePkg = (t: string) => {
+  pkg.value.delete(t);
+};
+
+const removeTech = (t: string) => {
+  tech.value.delete(t);
+};
+
 const { result, loading, error } = useQuery(devCountForStack, stackVar);
 
 watch(result, (value) => {
@@ -53,14 +66,41 @@ watch(store.tech, async (tNew, tOld) => {
     <span v-else> Matching profiles: </span>
 
     <span v-if="loading"> Loading ...</span>
-    <span v-else>{{ count }}</span>
+    <span v-else>{{ numFmt(count) }}</span>
   </h6>
   <ul class="text-muted list-inline">
-    <li v-for="t in stackVar.stack" :key="t.tech" class="list-inline-item">
+    <li class="list-inline-item">Stack:</li>
+    <li v-if="isEmptyStack" class="list-inline-item">any</li>
+
+    <li
+      v-for="t in stackVar.stack"
+      :key="t.tech"
+      class="me-3 mb-3 bg-light text-dark rounded border text-wrap p-1 list-inline-item"
+    >
       {{ t.tech }}
+      <span
+        @click="() => removeTech(t.tech)"
+        class="badge bg-secondary p-1 ms-2"
+        style="cursor: pointer"
+        title="Remove from the filter"
+      >
+        x
+      </span>
     </li>
-    <li v-for="p in stackVar.pkgs" :key="p" class="list-inline-item">
-      {{ p }}
+    <li
+      v-for="pkg in stackVar.pkgs"
+      :key="pkg"
+      class="me-3 mb-3 bg-light text-dark rounded border text-wrap p-1 list-inline-item"
+    >
+      {{ pkg }}
+      <span
+        @click="() => removePkg(pkg)"
+        class="badge bg-secondary p-1 ms-2"
+        style="cursor: pointer"
+        title="Remove from the filter"
+      >
+        x
+      </span>
     </li>
   </ul>
   <p v-if="error" class="text-danger">

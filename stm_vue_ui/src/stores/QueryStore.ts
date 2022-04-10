@@ -23,6 +23,6 @@ export const useQueryStore = defineStore({
     // Set to true when the list of main tech items is loaded into Apollo
     techListLoaded: false,
     // A search string typed into the search box to get a list of matching keywords
-    sarchFilter: "",
+    searchFilter: "",
   }),
 });

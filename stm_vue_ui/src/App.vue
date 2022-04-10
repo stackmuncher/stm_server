@@ -100,7 +100,7 @@ dt {
   background-clip: padding-box;
   background-position: left;
   background-repeat: no-repeat;
-  padding-left: 1.5rem;
+  padding-left: 1.7rem;
 }
 .commits-badge {
   background-image: url("https://assets.stackmuncher.com/icons/commits.svg");
