@@ -3,6 +3,7 @@ import { devsPerLanguageQuery } from "@/graphql/queries";
 import { useQuery } from "@vue/apollo-composable";
 import { ref, watch } from "vue";
 import { useQueryStore } from "@/stores/QueryStore";
+import { numFmt } from "@/formatters";
 
 const store = useQueryStore();
 
@@ -142,12 +143,18 @@ watch(result, (value) => {
   <div v-if="result && result.devsPerLanguage" class="row g-3">
     <div
       v-for="bucket in result.devsPerLanguage.aggregations.agg.buckets"
+      v-show="
+        store.searchFilter.length == 0 ||
+        tech.has(bucket.key) ||
+        bucket.key.startsWith(store.searchFilter)
+      "
       :key="bucket.key"
       class="col-12 col-md-6 col-xl-4"
     >
       <div class="bg-light text-dark rounded border p-2">
         <input
           type="checkbox"
+          :checked="store.tech.has(bucket.key)"
           :id="bucket.key"
           :value="bucket.key"
           @change="(event) => toggleTechExp(bucket.key, (event.target as HTMLInputElement).checked)"
@@ -160,7 +167,7 @@ watch(result, (value) => {
         >
           {{ bucket.key }}
           <div class="badge bg-white text-dark ms-2" style="font-weight: 300">
-            <span class="team-badge"> {{ bucket.docCount }}</span>
+            <span class="team-badge"> {{ numFmt(bucket.docCount) }}</span>
           </div></label
         >
         <div :class="selected_tech_class(bucket.key)" class="row mt-2 gx-3">

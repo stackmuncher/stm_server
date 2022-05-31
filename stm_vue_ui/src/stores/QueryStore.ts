@@ -18,6 +18,11 @@ export const useQueryStore = defineStore({
   state: () => ({
     // Experience (value) per tech (key).
     tech: new Map<string, TechExperience>(),
+    // List of packages to be used in the search
+    pkg: new Set<string>(),
+    // Set to true when the list of main tech items is loaded into Apollo
     techListLoaded: false,
+    // A search string typed into the search box to get a list of matching keywords
+    searchFilter: "",
   }),
 });
