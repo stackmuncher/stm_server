@@ -7,8 +7,8 @@ use lambda_runtime::LambdaEvent;
 use serde::Serialize;
 use serde_json::Value;
 use simple_error::SimpleError;
+use stackmuncher_lib::graphql::RustScalarValue;
 use std::collections::HashMap;
-use stm_shared::graphql::RustScalarValue;
 use sysinfo::{RefreshKind, System, SystemExt};
 use tracing::{error, info};
 

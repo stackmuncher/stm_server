@@ -49,14 +49,6 @@ pub struct Config {
 }
 
 impl Config {
-    /// The maximum number of dev listings per page of search results
-    pub const MAX_DEV_LISTINGS_PER_SEARCH_RESULT: usize = 50;
-
-    /// The maximum number of pages allowed in search.
-    /// Check HTML templates if changing the limits on page numbers
-    /// 20 is hardcoded in some of the logic there
-    pub const MAX_PAGES_PER_SEARCH_RESULT: usize = 20;
-
     pub fn new() -> Self {
         let aws_region = AwsRegion::from_str(
             std::env::var("AWS_REGION")

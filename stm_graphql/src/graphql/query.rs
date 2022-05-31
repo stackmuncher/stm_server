@@ -1,8 +1,9 @@
 use super::{Ctx, Query};
 use crate::elastic;
 use juniper::{graphql_object, FieldResult};
+use stackmuncher_lib::graphql::RustScalarValue;
 use stm_shared::elastic as elastic_shared;
-use stm_shared::graphql::RustScalarValue;
+use stm_shared::elastic::types as es_types;
 
 // This block has to contain all queries for the macro to work. It is possible to split it into multiple modules
 // with a bit of a workaround. See https://github.com/graphql-rust/juniper/discussions/1045
@@ -41,6 +42,35 @@ impl Query {
         };
 
         Ok(dev_count)
+    }
+
+    /// Returns the number of devs matching the stack.
+    /// See stm_graphql/samples/es-responses/dev_count_for_stack.json for the full example.
+    async fn dev_list_stack<'db>(
+        &self,
+        context: &'db Ctx,
+        stack: Vec<elastic::TechExperience>,
+        pkgs: Vec<String>,
+    ) -> FieldResult<Vec<es_types::GitHubUser>> {
+        // get number of devs per technology
+        let dev_list = match elastic::matching_dev_list(
+            &context.es_url,
+            &context.dev_idx,
+            stack,
+            pkgs,
+            0,
+            0,
+            0,
+            elastic::EsSortType::RecentlyActive,
+            elastic::EsSortDirection::Desc,
+        )
+        .await
+        {
+            Ok(v) => v,
+            Err(_) => return Err("ES query failed. See server logs.".into()),
+        };
+
+        Ok(dev_list)
     }
 
     /// Returns a list of keywords starting with what the user typed in so far.

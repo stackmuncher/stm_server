@@ -10,7 +10,8 @@ pub(crate) async fn html(config: &Config, html_data: HtmlData) -> Result<HtmlDat
 
     // get number of devs per technology
     let stack_stats =
-        elastic_shared::search(&config.es_url, &config.org_idx, Some(elastic::SEARCH_VERIFIED_ORGS_PER_LANGUAGE)).await?;
+        elastic_shared::search(&config.es_url, &config.org_idx, Some(elastic::SEARCH_VERIFIED_ORGS_PER_LANGUAGE))
+            .await?;
 
     // combine everything together for Tera
     let html_data = HtmlData {

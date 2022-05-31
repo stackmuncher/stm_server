@@ -96,9 +96,7 @@ impl<'de> Visitor<'de> for LogLevelVisitor {
     type Value = super::LogLevel;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str(&format!(
-            "Expecting a valid log level, e.g. info, debug, etc"
-        ))
+        formatter.write_str(&format!("Expecting a valid log level, e.g. info, debug, etc"))
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>

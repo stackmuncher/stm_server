@@ -1,12 +1,12 @@
 use tracing::info;
 
 mod config;
-mod flows;
 mod db;
+mod flows;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-        // load the main config
+    // load the main config
     let config = config::Config::new().await;
 
     tracing_subscriber::fmt()
@@ -18,11 +18,9 @@ async fn main() -> Result<(), std::io::Error> {
     info!("StackMuncher Mono-Service started: {:?}", config.flow);
 
     match config.flow {
- 
         config::Flow::WwwLogReader => {
             flows::www_log_reader::read_www_logs(config).await;
         }
-
     }
 
     Ok(())

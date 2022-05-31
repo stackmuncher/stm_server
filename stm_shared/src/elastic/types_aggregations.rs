@@ -1,6 +1,6 @@
-use crate::graphql::RustScalarValue;
 use juniper::GraphQLObject;
 use serde::{Deserialize, Serialize};
+use stackmuncher_lib::graphql::RustScalarValue;
 
 /// A generic structure for ES aggregations result. Make sure the aggregation name is `agg`.
 /// ```json

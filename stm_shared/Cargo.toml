@@ -23,11 +23,12 @@ bytes = "1.0"
 tar = "0.4"
 flate2 = "1.0"
 once_cell = "1.10.0"
-uuid = { version = "0.8", features = ["serde", "v4"] }
+uuid = { version = "1.1.0", features = ["serde", "v4"] }
 rusoto_s3 = { version = "0.47", features = ["rustls"], default-features = false }
 rusoto_sqs = { version = "0.47", features = ["rustls"], default-features = false }
 rusoto_core = { version = "0.47", features = ["rustls"], default-features = false }
 tokio-postgres = { version = "0.7", features = ["with-uuid-0_8", "with-chrono-0_4"] }
 regex = "1.4"
-juniper = { git = "https://github.com/graphql-rust/juniper.git"}
+# juniper = { git = "https://github.com/graphql-rust/juniper.git"}
+juniper = { git = "https://github.com/rimutaka/juniper.git", branch = "impl-hashset-as-vec" }
 stackmuncher_lib = { version = "0.2", path = "../../stm_app/stackmuncher_lib" }

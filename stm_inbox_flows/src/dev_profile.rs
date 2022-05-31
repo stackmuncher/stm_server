@@ -3,8 +3,8 @@ use chrono::Utc;
 use futures::stream::{FuturesUnordered, StreamExt};
 use serde::{Deserialize, Serialize};
 use stackmuncher_lib::report::Report;
-use tracing::{error, info};
 use stm_shared::s3;
+use tracing::{error, info};
 
 /// A private developer profile with the stack report and some personal info
 #[derive(Debug, Serialize)]

@@ -34,10 +34,7 @@ impl Config {
     /// Initializes a new Config struct from the environment. Panics on invalid config values.
     pub fn new() -> Self {
         let s3_region = std::env::var(S3_REGION_ENV)
-            .expect(&format!(
-                "Missing {} env var with S3 region name, e.g. us-east-1",
-                S3_REGION_ENV
-            ))
+            .expect(&format!("Missing {} env var with S3 region name, e.g. us-east-1", S3_REGION_ENV))
             .trim()
             .to_string();
 
@@ -53,10 +50,7 @@ impl Config {
                 .trim_end_matches("/")
                 .to_string(),
             s3_prefix: std::env::var(S3_PREFIX_ENV)
-                .expect(&format!(
-                    "Missing {} env var with S3 prefix, e.g. `queue`",
-                    S3_PREFIX_ENV
-                ))
+                .expect(&format!("Missing {} env var with S3 prefix, e.g. `queue`", S3_PREFIX_ENV))
                 .trim()
                 .trim_end_matches("/")
                 .to_string(),

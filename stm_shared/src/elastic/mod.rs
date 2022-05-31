@@ -8,9 +8,9 @@ use tracing::{debug, error, info};
 
 pub mod types;
 pub mod types_aggregations;
+pub mod types_hits;
 pub mod types_search_log;
 pub mod types_source;
-pub mod types_hits;
 pub mod validators;
 
 /// A generic function for making signed(v4) API calls to AWS ES.

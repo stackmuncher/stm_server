@@ -1,4 +1,6 @@
-use serde::Deserialize;
+use juniper::GraphQLObject;
+use serde::{Deserialize, Serialize};
+use stackmuncher_lib::graphql::RustScalarValue;
 
 // HITS WRAPPER **************************************************************************************
 
@@ -113,4 +115,35 @@ pub struct ESSourceDev {
     pub email: Option<String>,
     /// A free-text location from GH
     pub location: Option<String>,
+}
+
+/// Reflects the structure used by GitHub API and combines properties for User and Org.
+/// It has been used as the main STM structure for all dev details.
+#[derive(Debug, Deserialize, Serialize, GraphQLObject)]
+#[graphql(scalar = RustScalarValue)]
+pub struct GitHubUser {
+    pub login: String,
+    pub id: i32,
+    pub node_id: String,
+    pub avatar_url: Option<String>,
+    pub name: Option<String>,
+    pub company: Option<String>,
+    pub blog: Option<String>,
+    pub location: Option<String>,
+    pub email: Option<String>,
+    pub hireable: Option<bool>,
+    pub bio: Option<String>,
+    pub twitter_username: Option<String>,
+    pub public_repos: i32,
+    pub public_gists: i32,
+    pub followers: i32,
+    pub following: i32,
+    pub created_at: String,
+    pub updated_at: String,
+    pub is_verified: Option<bool>,
+    pub description: Option<String>,
+    #[serde(rename = "type")]
+    pub user_type: Option<String>,
+    #[serde(skip_deserializing)]
+    pub report: Option<stackmuncher_lib::report::Report>,
 }

@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 pub use super::types_aggregations::ESAggs;
 pub use super::types_search_log::SearchLog;
+pub use super::types_source::GitHubUser;
 
 /// A generic wrapper to get to any type of _source in ES response. E.g.
 /// ```json
@@ -123,5 +124,5 @@ pub struct ESSourceDev {
 /// ```
 #[derive(Deserialize, Debug)]
 pub struct ESDocCount {
-   pub count: i32,
+    pub count: i32,
 }

@@ -27,5 +27,7 @@ futures = "0.3"
 urlencoding = "2.1"
 sysinfo = "0.23"
 jsonwebtoken = "8"
-juniper = { git = "https://github.com/graphql-rust/juniper.git"}
+# juniper = { git = "https://github.com/graphql-rust/juniper.git"}
+juniper = { git = "https://github.com/rimutaka/juniper.git", branch = "impl-hashset-as-vec" }
 stm_shared = { version = "0.1", path = "../stm_shared" }
+stackmuncher_lib = { version = "0.2", path = "../../stm_app/stackmuncher_lib" }

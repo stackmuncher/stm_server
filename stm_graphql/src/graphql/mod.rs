@@ -1,7 +1,7 @@
 use crate::config::Config;
 use juniper::http::{GraphQLRequest, GraphQLResponse};
 use juniper::{EmptyMutation, EmptySubscription, RootNode};
-use stm_shared::graphql::RustScalarValue;
+use stackmuncher_lib::graphql::RustScalarValue;
 use tracing::{error, info};
 
 // a list of query resolvers
