@@ -1,0 +1,48 @@
+{
+  "aggregations": {
+    "agg": {
+      "buckets": [
+        {
+          "key": "mongodb",
+          "doc_count": 8505
+        },
+        {
+          "key": "mongo",
+          "doc_count": 244
+        },
+        {
+          "key": "mongocsharpdriver",
+          "doc_count": 182
+        },
+        {
+          "key": "mongoid",
+          "doc_count": 171
+        },
+        {
+          "key": "mongo2go",
+          "doc_count": 135
+        },
+        {
+          "key": "mongo_mapper",
+          "doc_count": 116
+        },
+        {
+          "key": "mongodbcore",
+          "doc_count": 80
+        },
+        {
+          "key": "mongorepository",
+          "doc_count": 27
+        },
+        {
+          "key": "mongodbatlas",
+          "doc_count": 17
+        },
+        {
+          "key": "mongodbgenericrepository",
+          "doc_count": 15
+        }
+      ]
+    }
+  }
+}

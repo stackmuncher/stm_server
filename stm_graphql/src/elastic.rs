@@ -21,8 +21,8 @@ pub(crate) enum EsSortDirection {
 impl Display for EsSortDirection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Asc => write!(f, "asc"),
-            Desc => write!(f, "desc"),
+            EsSortDirection::Asc => write!(f, "asc"),
+            EsSortDirection::Desc => write!(f, "desc"),
         }
     }
 }
@@ -37,8 +37,8 @@ pub(crate) enum EsSortType {
 impl Display for EsSortType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Newest => write!(f, "created_at"),
-            RecentlyActive => write!(f, "report.last_contributor_commit_date_epoch"),
+            EsSortType::Newest => write!(f, "created_at"),
+            EsSortType::RecentlyActive => write!(f, "report.last_contributor_commit_date_epoch"),
         }
     }
 }
@@ -218,6 +218,12 @@ async fn matching_dev_list_ok_test() {
     )
     .await
     .unwrap();
+
+    std::fs::write(
+        "samples/es-responses/matching_dev_list.json",
+        serde_json::to_string_pretty(&dev_list).unwrap(),
+    )
+    .expect("Unable to write 'samples/es-responses/matching_dev_list.json' file");
 
     assert_eq!(dev_list.len(), MAX_DEV_LISTINGS_PER_SEARCH_RESULT as usize);
 }
@@ -459,7 +465,10 @@ async fn keyword_suggester_ok_test() {
         .unwrap()
         .unwrap();
 
-    let es_response = serde_json::to_string(&es_response).unwrap();
+    let es_response = serde_json::to_string_pretty(&es_response).unwrap();
+
+    std::fs::write("samples/es-responses/keyword_suggester.json", es_response.clone())
+        .expect("Unable to write 'samples/es-responses/keyword_suggester.json' file");
 
     assert!(es_response.contains("mongodb"), "ES returned: {}", es_response);
 }

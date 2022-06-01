@@ -44,9 +44,9 @@ impl Query {
         Ok(dev_count)
     }
 
-    /// Returns the number of devs matching the stack.
-    /// See stm_graphql/samples/es-responses/dev_count_for_stack.json for the full example.
-    async fn dev_list_stack<'db>(
+    /// Returns the list of devs matching the stack.
+    /// See stm_graphql/samples/gql-responses/devListForStack.gql.json for the full example.
+    async fn dev_list_for_stack<'db>(
         &self,
         context: &'db Ctx,
         stack: Vec<elastic::TechExperience>,
@@ -136,6 +136,31 @@ async fn dev_count_for_stack_test() {
             .unwrap()
             .is_match(&gql_data),
         "Unexpected devCountForStack query response"
+    );
+}
+
+#[tokio::test]
+async fn dev_list_for_stack_test() {
+    let config = super::Config::new();
+
+    let gql_request = super::GraphQLRequest::<super::RustScalarValue> {
+        query: r#"query { devListForStack (stack: [{tech: "rust"}], pkgs: ["serde"]) { 
+            login, name, company, blog, location, bio, createdAt, updatedAt, description 
+        }}"#
+        .to_string(),
+        operation_name: None,
+        variables: None,
+    };
+
+    let (gql_data, result) = super::execute_gql(&config, gql_request).await.unwrap();
+
+    std::fs::write("samples/gql-responses/devListForStack.gql.json", gql_data.clone())
+        .expect("Unable to write 'samples/gql-responses/devListForStack.gql.json' file");
+
+    assert!(result.is_ok(), "devListForStack query executed with errors");
+    assert!(
+        gql_data.starts_with(r#"{"data":{"devListForStack":[{"login":""#),
+        "Unexpected devListForStack query response"
     );
 }
 
