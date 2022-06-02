@@ -144,6 +144,5 @@ pub struct GitHubUser {
     pub description: Option<String>,
     #[serde(rename = "type")]
     pub user_type: Option<String>,
-    #[serde(skip_deserializing)]
     pub report: Option<stackmuncher_lib::report::Report>,
 }

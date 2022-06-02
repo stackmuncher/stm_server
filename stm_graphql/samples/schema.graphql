@@ -20,7 +20,7 @@ type Query {
   devCountForStack(stack: [TechExperience!]!, pkgs: [String!]!): Int!
   """
     Returns the list of devs matching the stack.
-    See stm_graphql/samples/es-responses/dev_list_stack.json for the full example.
+    See stm_graphql/samples/gql-responses/devListForStack.gql.json for the full example.
   """
   devListForStack(stack: [TechExperience!]!, pkgs: [String!]!): [GitHubUser!]!
   """

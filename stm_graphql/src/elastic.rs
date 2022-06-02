@@ -139,7 +139,7 @@ async fn matching_dev_count_ok_test() {
 /// * stack: a tuple of the keyword and the min number of lines for it, e.g. ("rust",1000)
 /// * timezone_offset: 0..23 where anything > 12 is the negative offset
 /// * timezone_hours: number of hours worked in the timezone
-pub(crate) async fn matching_dev_list(
+pub(crate) async fn dev_list_for_stack(
     es_url: &String,
     dev_idx: &String,
     stack: Vec<TechExperience>,
@@ -151,7 +151,7 @@ pub(crate) async fn matching_dev_list(
     sort_direction: EsSortDirection,
 ) -> Result<Vec<es_types::GitHubUser>, ()> {
     // sample query
-    // {"size":100,"track_scores":true,"query":{"bool":{"must":[{"match":{"report.tech.language.keyword":"rust"}},{"multi_match":{"query":"logger","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"clap","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}},{"multi_match":{"query":"serde","fields":["report.tech.pkgs_kw.k.keyword","report.tech.refs_kw.k.keyword"]}}]}},"sort":[{"hireable":{"order":"desc"}},{"report.timestamp":{"order":"desc"}}]}
+    // {"size":50,"from": 0,"track_scores":true,"query":{"bool":{"must":[{"nested":{"path":"report.tech","query":{"bool":{"must":[{"match":{"report.tech.language.keyword":"rust"}},{"range":{"report.tech.code_lines":{"gt":50000}}}]}}}},{"multi_match":{"query":"serde","fields":["report.keywords.keyword"]}}]}},"sort":[{"created_at":{"order":"desc"}}]}
 
     // generate combined MUST clauses
     let clauses = matching_dev_clauses(stack, pkgs, timezone_offset, timezone_hours)?;
@@ -193,16 +193,15 @@ pub(crate) async fn matching_dev_list(
     Ok(reports)
 }
 
-// not comprehensive
 #[tokio::test]
-async fn matching_dev_list_ok_test() {
+async fn dev_list_for_stack_ok_test() {
     crate::config::init_logging();
 
-    info!("matching_dev_list_ok_test");
+    info!("dev_list_for_stack_ok_test");
 
     let config = crate::config::Config::new();
 
-    let dev_list = matching_dev_list(
+    let dev_list = dev_list_for_stack(
         &config.es_url,
         &config.dev_idx,
         vec![TechExperience {
@@ -220,10 +219,10 @@ async fn matching_dev_list_ok_test() {
     .unwrap();
 
     std::fs::write(
-        "samples/es-responses/matching_dev_list.json",
+        "samples/es-responses/dev_list_for_stack.json",
         serde_json::to_string_pretty(&dev_list).unwrap(),
     )
-    .expect("Unable to write 'samples/es-responses/matching_dev_list.json' file");
+    .expect("Unable to write 'samples/es-responses/dev_list_for_stack.json' file");
 
     assert_eq!(dev_list.len(), MAX_DEV_LISTINGS_PER_SEARCH_RESULT as usize);
 }
