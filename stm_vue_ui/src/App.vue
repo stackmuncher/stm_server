@@ -37,22 +37,34 @@ provide(DefaultApolloClient, apolloClient);
 </script>
 
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 px-sm-3">
+  <nav
+    class="navbar navbar-expand-lg navbar-light bg-light mb-4 px-sm-3"
+    role="navigation"
+  >
     <div class="container-fluid">
       <a
         class="navbar-brand"
         title="Home"
         style="
-          background: left/auto 80% no-repeat
-            url(https://stackmuncher.com/about/logo/logo-color.svg);
+          background: left/auto 80% no-repeat;
+          background-image: url(https://stackmuncher.com/about/logo/logo-color.svg);
           padding-left: 55px;
         "
         href="/"
         >Stack Muncher</a
       >
-      <router-link to="/"> Home </router-link> |
-      <router-link to="/about"> About </router-link>
-      <LinkedInLogin />
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <router-link to="/" class="nav-link">Home</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/about" class="nav-link"> About </router-link>
+          </li>
+        </ul>
+
+        <LinkedInLogin />
+      </div>
     </div>
   </nav>
   <router-view />
@@ -60,20 +72,25 @@ provide(DefaultApolloClient, apolloClient);
 </template>
 
 <style>
-@import "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css";
+@import "https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css";
+
 body {
   font-size: 14px;
 }
+
 strong,
 th {
   font-weight: 600;
 }
+
 dt {
   font-weight: normal;
 }
+
 .nav-link {
   font-size: 16px;
 }
+
 .loc-badge {
   background-image: url("https://assets.stackmuncher.com/icons/lines_of_code.svg");
   background-clip: padding-box;
@@ -81,6 +98,7 @@ dt {
   background-repeat: no-repeat;
   padding-left: 1.2rem;
 }
+
 .libs-badge {
   background-image: url("https://assets.stackmuncher.com/icons/libraries.svg");
   background-clip: padding-box;
@@ -88,6 +106,7 @@ dt {
   background-repeat: no-repeat;
   padding-left: 1.2rem;
 }
+
 .calendar-badge {
   background-image: url("https://assets.stackmuncher.com/icons/calendar.svg");
   background-clip: padding-box;
@@ -95,6 +114,7 @@ dt {
   background-repeat: no-repeat;
   padding-left: 1.2rem;
 }
+
 .team-badge {
   background-image: url("https://assets.stackmuncher.com/icons/team.svg");
   background-clip: padding-box;
@@ -102,6 +122,7 @@ dt {
   background-repeat: no-repeat;
   padding-left: 1.7rem;
 }
+
 .commits-badge {
   background-image: url("https://assets.stackmuncher.com/icons/commits.svg");
   background-clip: padding-box;
@@ -109,7 +130,18 @@ dt {
   background-repeat: no-repeat;
   padding-left: 1rem;
 }
+
 .smaller-90 {
   font-size: 90%;
+}
+
+.svg-icon {
+  width: 2em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
+
+.clickable {
+  cursor: pointer;
 }
 </style>

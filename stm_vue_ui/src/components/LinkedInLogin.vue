@@ -5,11 +5,13 @@ const auth = injectAuth();
 </script>
 
 <template>
-  <button
-    v-if="auth && auth.authenticated"
-    :title="auth?.user?.name + ' / ' + auth?.user?.email"
-    @click="auth?.logout()"
-  >
-    Logout
-  </button>
+  <div class="d-flex">
+    <button
+      v-if="auth && auth.authenticated"
+      :title="auth?.user?.name + ' / ' + auth?.user?.email"
+      @click="auth?.logout()"
+    >
+      Logout
+    </button>
+  </div>
 </template>
