@@ -34,11 +34,57 @@ export const devCountForStack = gql`
   }
 `;
 
+/** Manually created and incomplete type for report/tech struct. */
+export interface Tech {
+  language: string;
+  files: number;
+  codeLines: number;
+  history?: {
+    months: number;
+    fromDateIso: string;
+    toDateIso: string;
+  };
+  refs?: {
+    k: string;
+    c: number;
+  }[];
+  pkgs?: {
+    k: string;
+    c: number;
+  }[];
+}
+
+/** Manually created and incomplete type for report/projects_included struct. */
+export interface IncludedProject {
+  projectName: string;
+}
+
+/** Manually created and incomplete type for dev struct. */
+export interface DevListForStack {
+  login?: string;
+  name?: string;
+  email?: string;
+  blog?: string;
+  location?: string;
+  ownerId: string;
+  report?: {
+    timestamp: string;
+    lastContributorCommitDateIso?: string;
+    firstContributorCommitDateIso?: string;
+    dateInit?: string;
+    dateHead?: string;
+
+    tech?: Tech[];
+    projectsIncluded?: IncludedProject[];
+  };
+}
+
 export const devListForStack = gql`
   query ($stack: [TechExperience!]!, $pkgs: [String!]!) {
     devListForStack(stack: $stack, pkgs: $pkgs) {
       login
       name
+      email
       company
       blog
       location
@@ -46,6 +92,8 @@ export const devListForStack = gql`
       createdAt
       updatedAt
       description
+      publicRepos
+      ownerId
       report {
         timestamp
         lastContributorCommitDateIso
@@ -75,6 +123,10 @@ export const devListForStack = gql`
             toDateIso
           }
           refs {
+            k
+            c
+          }
+          pkgs {
             k
             c
           }
