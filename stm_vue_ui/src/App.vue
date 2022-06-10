@@ -2,6 +2,7 @@
 import FooterBlock from "@/components/FooterBlock.vue";
 import LinkedInLogin from "@/components/LinkedInLogin.vue";
 import { provide } from "vue";
+import { RouterView, RouterLink } from "vue-router";
 import { AuthenticationProperties as auth0 } from "vue-auth0-plugin";
 import {
   ApolloClient,
