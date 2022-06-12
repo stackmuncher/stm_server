@@ -14,6 +14,7 @@
     "graphql": "^16.3.0",
     "graphql-tag": "^2.12.6",
     "pinia": "^2.0.11",
+    "throttle-debounce": "^5.0.0",
     "vue": "^3.2.31",
     "vue-auth0-plugin": "^2.6.0",
     "vue-router": "^4.0.12"
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",
     "@types/node": "^16.11.25",
+    "@types/throttle-debounce": "^5.0.0",
     "@vitejs/plugin-vue": "^2.2.2",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^10.0.0",

@@ -128,7 +128,7 @@ const getYearsParam = (t: string) => {
   }
 };
 
-const { result } = useQuery(devsPerLanguageQuery);
+const { result, loading } = useQuery(devsPerLanguageQuery);
 
 watch(result, (value) => {
   console.log("devsPerLanguageQuery result arrived");
@@ -140,6 +140,7 @@ watch(result, (value) => {
 </script>
 
 <template>
+  <h6 v-if="loading">Loading popular stacks ...</h6>
   <div v-if="result && result.devsPerLanguage" class="row g-3">
     <div
       v-for="bucket in result.devsPerLanguage.aggregations.agg.buckets"

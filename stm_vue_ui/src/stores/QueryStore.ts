@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import type { inpTechExperienceInterface } from "@/graphql/queries";
+import type { UseQueryOptions } from "@vue/apollo-composable";
 
 /** Amount of experience required for a particular technology. */
 export interface TechExperience {
@@ -22,6 +23,11 @@ export enum SearchTabNames {
   Shortlist,
   Message,
 }
+
+const defaultApolloOptions: UseQueryOptions = {
+  fetchPolicy: "cache-first",
+  notifyOnNetworkStatusChange: true,
+};
 
 /** A shared app store based on Pinia. */
 export const useQueryStore = defineStore({
@@ -68,5 +74,10 @@ export const useQueryStore = defineStore({
 
       return x;
     },
+
+    /** The default Apollo options should be specified in the provider during the setup, but
+     * I could not make it work. This is a quick workaround.
+     */
+    defaultApolloOptions: () => defaultApolloOptions,
   },
 });
