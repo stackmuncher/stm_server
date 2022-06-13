@@ -6,7 +6,11 @@ import DevCard from "./DevCard.vue";
 
 const store = useQueryStore();
 
-const { result, loading, error } = useQuery(devListForStack, store.stackVar);
+const { result, loading, error } = useQuery(
+  devListForStack,
+  store.stackVar,
+  store.defaultApolloOptions
+);
 </script>
 
 <template>
@@ -17,7 +21,7 @@ const { result, loading, error } = useQuery(devListForStack, store.stackVar);
 
   <h2
     class="pe-md-5 text-muted"
-    v-if="!result || result.devListForStack.length == 0"
+    v-if="!loading && (!result || result.devListForStack.length == 0)"
   >
     Could not find anyone with these exact skills
   </h2>
