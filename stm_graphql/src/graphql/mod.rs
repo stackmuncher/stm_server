@@ -39,7 +39,9 @@ pub(crate) async fn execute_gql(
     // execute the GQL query from `gql_request` using GQL resolvers
     let op = gql_request.operation_name.as_deref();
     let vars = &gql_request.variables();
-    info!("Query: {}", gql_request.query);
+
+    info!("GQL: {}", &gql_request.query[..gql_request.query.len().min(100)].replace("\n", " "));
+
     let res = juniper::execute(&gql_request.query, op, &root_node, vars, &context).await;
 
     // `result is to passed back to the caller as an indication if there were any errors in the execution

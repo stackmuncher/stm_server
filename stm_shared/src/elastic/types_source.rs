@@ -144,5 +144,7 @@ pub struct GitHubUser {
     pub description: Option<String>,
     #[serde(rename = "type")]
     pub user_type: Option<String>,
+    /// An internal STM ID for non-GH users.
+    pub owner_id: Option<String>,
     pub report: Option<stackmuncher_lib::report::Report>,
 }

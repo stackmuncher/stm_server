@@ -44,13 +44,16 @@ impl Query {
         Ok(dev_count)
     }
 
-    /// Returns the list of devs matching the stack.
+    /// Returns the list of devs matching the stack starting from `results_from`.
+    /// Negative `results_from` is set to 0.  
+    /// Only `MAX_DEV_LISTINGS_PER_SEARCH_RESULT` results are returned.
     /// See stm_graphql/samples/gql-responses/devListForStack.gql.json for the full example.
     async fn dev_list_for_stack<'db>(
         &self,
         context: &'db Ctx,
         stack: Vec<elastic::TechExperience>,
         pkgs: Vec<String>,
+        results_from: i32,
     ) -> FieldResult<Vec<es_types::GitHubUser>> {
         // get number of devs per technology
         let dev_list = match elastic::dev_list_for_stack(
@@ -60,7 +63,7 @@ impl Query {
             pkgs,
             0,
             0,
-            0,
+            results_from.max(0) as u32,
             elastic::EsSortType::RecentlyActive,
             elastic::EsSortDirection::Desc,
         )
@@ -144,36 +147,33 @@ async fn dev_list_for_stack_test() {
     let config = super::Config::new();
 
     let gql_request = super::GraphQLRequest::<super::RustScalarValue> {
-        query: r#"query { devListForStack (stack: [{tech: "rust"}], pkgs: ["serde"]) 
+        query: r#"query { devListForStack (stack: [{tech: "rust"}], pkgs: ["serde"], resultsFrom: 0) 
         { 
-            login, name, company, blog, location, bio, createdAt, updatedAt, description,
+            login, name, company, blog, location, bio, createdAt, updatedAt, description, publicRepos, ownerId,
             report {
                 timestamp, lastContributorCommitDateIso, firstContributorCommitDateIso, dateInit, dateHead,
-                listCounts {
-                    tech, contributorGitIds, perFileTech,fileTypes, reportsIncluded, projectsIncluded, gitIdsIncluded, contributors,treeFiles, recentProjectCommits, keywords
+                listCounts { tech, contributorGitIds, perFileTech,fileTypes, reportsIncluded, projectsIncluded, gitIdsIncluded, contributors,treeFiles, recentProjectCommits, keywords }
+                tech {
+                    language, files, codeLines,
+                    history { months, fromDateIso, toDateIso }
+                    refs {k, c}
                 }
-            tech {
-                language, files, codeLines,
-                history {
-                    months, fromDateIso, toDateIso
+                fileTypes {k, c}
+                projectsIncluded {
+                    projectName, githubUserName, githubRepoName, contributorFirstCommit, contributorLastCommit, loc, libs, locProject, libsProject, ppl, commitCount, commitCountProject,
+                    tech { language, loc, libs, locPercentage }
+                
                 }
-                refs {k, c}
-            }
-            fileTypes {k, c}
-            projectsIncluded {
-                projectName, githubUserName, githubRepoName, contributorFirstCommit, contributorLastCommit, loc, libs, locProject, libsProject, ppl, commitCount, commitCountProject,
-                tech { language, loc, libs, locPercentage }
-            
-            }
-            commitTimeHisto {
-                histogramRecentSum, histogramAllSum, histogramRecentStd, histogramAllStd, 
-                histogramRecent { h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
-                histogramAll { h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
-                timezoneOverlapRecent { h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
-                timezoneOverlapAll{ h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
-              }
+                commitTimeHisto {
+                    histogramRecentSum, histogramAllSum, histogramRecentStd, histogramAllStd, 
+                    histogramRecent { h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
+                    histogramAll { h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
+                    timezoneOverlapRecent { h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
+                    timezoneOverlapAll{ h00, h01, h02, h03, h04, h05, h06, h07, h08, h09, h10, h11, h12, h13, h14, h15, h16, h20, h21, h22, h23 }
+                }
             } 
-        }}"#
+        }
+    }"#
         .to_string(),
         operation_name: None,
         variables: None,
