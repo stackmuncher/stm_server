@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 
 // Corresponds to inpTechExperience input block
-export interface inpTechExperienceInterface {
+export interface inpTechExperience {
   tech: string;
   locBand: number;
 }
@@ -79,9 +79,15 @@ export interface DevListForStack {
   };
 }
 
+export interface devListForStackVars {
+  stack: inpTechExperience[];
+  pkgs: string[];
+  resultsFrom: number;
+}
+
 export const devListForStack = gql`
-  query ($stack: [TechExperience!]!, $pkgs: [String!]!) {
-    devListForStack(stack: $stack, pkgs: $pkgs) {
+  query ($stack: [TechExperience!]!, $pkgs: [String!]!, $resultsFrom: Int!) {
+    devListForStack(stack: $stack, pkgs: $pkgs, resultsFrom: $resultsFrom) {
       login
       name
       email

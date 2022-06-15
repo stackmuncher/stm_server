@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { inpTechExperienceInterface } from "@/graphql/queries";
+import type { inpTechExperience } from "@/graphql/queries";
 import type { UseQueryOptions } from "@vue/apollo-composable";
 
 /** Amount of experience required for a particular technology. */
@@ -29,6 +29,10 @@ const defaultApolloOptions: UseQueryOptions = {
   notifyOnNetworkStatusChange: true,
 };
 
+/** The number of profiles per search page.
+ * This value must synchronized with the server to correctly split the results into pages */
+export const PROFILES_PER_PAGE = 5;
+
 /** A shared app store based on Pinia. */
 export const useQueryStore = defineStore({
   id: "query",
@@ -48,8 +52,17 @@ export const useQueryStore = defineStore({
     /** A search string typed into the search box by the user. */
     searchFilter: "",
 
+    /** How many profiles match the current search filter. -1 for no data, 0 - none, >0 - profiles found  */
+    searchProfileCount: -1,
+
     /** Name of the currently active tab. Defaults to Search. */
     activeSearchTab: SearchTabNames.Search,
+
+    /** Zero-based, used to calculate query results offset for Profiles tab */
+    currentPageProfiles: 0,
+
+    /** Zero-based, used to calculate query results offset for Shortlist tab */
+    currentPageShortlist: 0,
   }),
 
   getters: {
@@ -58,10 +71,10 @@ export const useQueryStore = defineStore({
 
     /** GQL variables for useQuery: converts the current search criteria to GQL format */
     stackVar: (state) => {
-      const stack = new Array<inpTechExperienceInterface>();
+      const stack = new Array<inpTechExperience>();
 
       state.tech.forEach((v, k) => {
-        stack.push({ tech: k, locBand: v.loc } as inpTechExperienceInterface);
+        stack.push({ tech: k, locBand: v.loc } as inpTechExperience);
       });
 
       const x = {

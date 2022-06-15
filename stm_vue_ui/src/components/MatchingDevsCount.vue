@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { devCountForStack } from "@/graphql/queries";
 import { useQuery } from "@vue/apollo-composable";
-import { ref, watch } from "vue";
+import { watch } from "vue";
 import { useQueryStore } from "@/stores/QueryStore";
 import { numFmt } from "@/formatters";
 import { debounce } from "throttle-debounce";
 
 const store = useQueryStore();
 
-/** The number of matched profiles */
-const count = ref(0);
-
-/** Refetches GQL data via useQuery.
+/** Re-fetches GQL data via useQuery.
  * Needed because Apollo's built-in debounce and throttle are not working.
  */
 const debounceRefetch = debounce(2000, () => {
@@ -19,16 +16,7 @@ const debounceRefetch = debounce(2000, () => {
   refetch(store.stackVar);
 });
 
-/** Removes a pkg from the search */
-const removePkg = (t: string) => {
-  store.pkg.delete(t);
-};
-
-/** Removes a tech from the search */
-const removeTech = (t: string) => {
-  store.tech.delete(t);
-};
-
+// request server data
 const { result, loading, error, refetch } = useQuery(
   devCountForStack,
   store.stackVar,
@@ -39,21 +27,25 @@ const { result, loading, error, refetch } = useQuery(
 watch(result, (value) => {
   // console.log(value);
   if (value) {
-    count.value = value.devCountForStack;
+    store.searchProfileCount = value.devCountForStack;
   }
 });
 
 watch(store.tech, () => {
   // console.log(`watch for store.tech: ${value} `);
   // tell the template we are waiting for more input
-  count.value = -1;
+  store.searchProfileCount = -1;
+  // reset the current page on search filter change
+  store.currentPageProfiles = 0;
   debounceRefetch();
 });
 
 watch(store.pkg, () => {
   // console.log(`watch for store.pkg: ${value} `);
   // tell the template we are waiting for more input
-  count.value = -1;
+  store.searchProfileCount = -1;
+  // reset the current page on search filter change
+  store.currentPageProfiles = 0;
   debounceRefetch();
 });
 
@@ -63,6 +55,16 @@ watch(store.pkg, () => {
 //   console.log(tNew);
 //   console.log(tOld);
 // });
+
+/** Removes a pkg from the search */
+const removePkg = (t: string) => {
+  store.pkg.delete(t);
+};
+
+/** Removes a tech from the search */
+const removeTech = (t: string) => {
+  store.tech.delete(t);
+};
 </script>
 
 <template>
@@ -71,8 +73,10 @@ watch(store.pkg, () => {
     <span v-else> Matching profiles: </span>
 
     <span v-if="loading"> counting ...</span>
-    <span v-else-if="!loading && count < 0"> waiting ...</span>
-    <span v-else>{{ numFmt(count) }}</span>
+    <span v-else-if="!loading && store.searchProfileCount < 0">
+      waiting ...</span
+    >
+    <span v-else>{{ numFmt(store.searchProfileCount) }}</span>
   </h6>
   <ul class="text-muted list-inline">
     <li class="list-inline-item">Stack:</li>
