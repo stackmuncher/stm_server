@@ -19,10 +19,12 @@ type Query {
   """
   devCountForStack(stack: [TechExperience!]!, pkgs: [String!]!): Int!
   """
-    Returns the list of devs matching the stack.
+    Returns the list of devs matching the stack starting from `results_from`.
+    Negative `results_from` is set to 0.
+    Only `MAX_DEV_LISTINGS_PER_SEARCH_RESULT` results are returned.
     See stm_graphql/samples/gql-responses/devListForStack.gql.json for the full example.
   """
-  devListForStack(stack: [TechExperience!]!, pkgs: [String!]!): [GitHubUser!]!
+  devListForStack(stack: [TechExperience!]!, pkgs: [String!]!, resultsFrom: Int!): [GitHubUser!]!
   """
     Returns a list of keywords starting with what the user typed in so far.
     See stm_graphql/samples/es-responses/devs_per_language.json for the full example.
@@ -576,6 +578,8 @@ type GitHubUser {
   isVerified: Boolean
   description: String
   userType: String
+  "An internal STM ID for non-GH users."
+  ownerId: String
   report: Report
 }
 

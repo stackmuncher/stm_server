@@ -238,6 +238,7 @@ fn timezone_terms_regex() {
 
 /// Attempts to initialize logging at INFO level. It is specially useful for test
 /// functions as a shortcut for logging initializing. This Fn is safe to call multiple times.
+#[cfg(test)]
 pub(crate) fn init_logging() {
     let tsub = tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
