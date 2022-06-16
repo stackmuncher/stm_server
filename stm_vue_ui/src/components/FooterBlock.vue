@@ -1,3 +1,4 @@
+<script setup lang="ts"></script>
 <template>
   <nav class="navbar navbar-expand-lg navbar-light mx-0 mb-3 mt-5 border-top">
     <div class="container-fluid">

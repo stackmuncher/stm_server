@@ -18,7 +18,9 @@ const store = useQueryStore();
           <h1 class="mb-3">Software developer search</h1>
           <SearchTabs />
           <MatchingDevsCount v-if="store.techListLoaded" />
-          <KeywordSearch />
+          <KeywordSearch
+            v-if="store.activeSearchTab == SearchTabNames.Search"
+          />
           <DevsPerTech v-if="store.activeSearchTab == SearchTabNames.Search" />
           <MatchingDevsList
             v-if="store.activeSearchTab == SearchTabNames.Profiles"

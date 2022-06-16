@@ -1,3 +1,4 @@
+<script setup lang="ts"></script>
 <template>
   <h6 class="mt-5">About StackMuncher</h6>
   <p>
