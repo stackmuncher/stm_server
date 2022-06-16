@@ -27,7 +27,7 @@ const toggleTechExp = (t: string, v: boolean) => {
 
 // Sets expLoc for a particular tech (t) in expLoc or removes it if `any`. It should be computed()
 const setTechExp = (t: string, loc: string | null, years: string | null) => {
-  console.log(`Setting TechExp ${t} / loc:${loc}, years:${years}`);
+  // console.log(`Setting TechExp ${t} / loc:${loc}, years:${years}`);
 
   const techExp = tech.value.get(t);
 
@@ -131,8 +131,8 @@ const getYearsParam = (t: string) => {
 const { result, loading } = useQuery(devsPerLanguageQuery);
 
 watch(result, (value) => {
-  console.log("devsPerLanguageQuery result arrived");
-  console.log(value);
+  // console.log("devsPerLanguageQuery result arrived");
+  // console.log(value);
   if (value) {
     store.techListLoaded = true;
   }

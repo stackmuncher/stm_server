@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { inpTechExperience } from "@/graphql/queries";
+import type { inpTechExperience, DevListForStack } from "@/graphql/queries";
 import type { UseQueryOptions } from "@vue/apollo-composable";
 
 /** Amount of experience required for a particular technology. */
@@ -58,11 +58,14 @@ export const useQueryStore = defineStore({
     /** Name of the currently active tab. Defaults to Search. */
     activeSearchTab: SearchTabNames.Search,
 
-    /** Zero-based, used to calculate query results offset for Profiles tab */
+    /** Zero-based, used to calculate query results offset for Profiles tab. */
     currentPageProfiles: 0,
 
-    /** Zero-based, used to calculate query results offset for Shortlist tab */
+    /** Zero-based, used to calculate query results offset for Shortlist tab. */
     currentPageShortlist: 0,
+
+    /** A list references to cached dev records for shortlisted devs. */
+    shortlist: new Map<string, DevListForStack>(),
   }),
 
   getters: {

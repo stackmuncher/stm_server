@@ -16,17 +16,17 @@ const pageNumList = computed(() =>
 const currentPageProfiles = computed(() => store.currentPageProfiles + 1);
 
 const lastPage = computed(() => {
-  console.log(
-    `pages: ${Math.ceil(store.searchProfileCount / PROFILES_PER_PAGE)}`
-  );
-  console.log(`current: ${store.currentPageProfiles}`);
+  // console.log(
+  //   `pages: ${Math.ceil(store.searchProfileCount / PROFILES_PER_PAGE)}`
+  // );
+  // console.log(`current: ${store.currentPageProfiles}`);
 
   return Math.ceil(store.searchProfileCount / PROFILES_PER_PAGE);
 });
 
 /** Forces an update with data for the specified page. */
 const navigateToPage = (p: number) => {
-  console.log(`navigating to: ${p}`);
+  // console.log(`navigating to: ${p}`);
   store.currentPageProfiles = Math.max(0, p - 1);
 };
 </script>

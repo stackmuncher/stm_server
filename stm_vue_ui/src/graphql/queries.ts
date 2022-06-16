@@ -66,7 +66,7 @@ export interface DevListForStack {
   email?: string;
   blog?: string;
   location?: string;
-  ownerId: string;
+  ownerId?: string;
   report?: {
     timestamp: string;
     lastContributorCommitDateIso?: string;

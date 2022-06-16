@@ -5,6 +5,7 @@ import AboutStm from "@/components/explainers/AboutStm.vue";
 import MatchingDevsCount from "@/components/MatchingDevsCount.vue";
 import MatchingDevsList from "@/components/MatchingDevsList.vue";
 import SearchTabs from "@/components/SearchTabs.vue";
+import Shortlist from "@/components/Shortlist.vue";
 import { useQueryStore, SearchTabNames } from "@/stores/QueryStore";
 
 const store = useQueryStore();
@@ -25,6 +26,7 @@ const store = useQueryStore();
           <MatchingDevsList
             v-if="store.activeSearchTab == SearchTabNames.Profiles"
           />
+          <Shortlist v-if="store.activeSearchTab == SearchTabNames.Shortlist" />
           <AboutStm />
         </div>
       </div>

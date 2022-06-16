@@ -17,7 +17,7 @@ const useQueryVars = computed(() => {
 
   Object.assign(retValue, store.stackVar);
 
-  console.log(retValue);
+  // console.log(retValue);
 
   return retValue;
 });

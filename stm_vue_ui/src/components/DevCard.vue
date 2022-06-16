@@ -220,6 +220,24 @@ function pretty_num(v?: number) {
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+/** Adds or removes a dev from the shortlist */
+const toggleShortlistStatus = (newStatus: boolean) => {
+  // console.log(`toggle: ${newStatus}`);
+  // console.log(props.devDetails);
+  if (newStatus) {
+    store.shortlist.set(devId.value, props.devDetails);
+  } else {
+    store.shortlist.delete(devId.value);
+  }
+};
+
+/** Returns TRUE if the dev is present in store.shortlist. */
+const isShortlisted = computed(() => {
+  const has = store.shortlist.has(devId.value);
+  // console.log(`${devId.value}: ${has}`);
+  return has;
+});
 </script>
 
 <template>
@@ -231,6 +249,14 @@ function pretty_num(v?: number) {
         height="50"
       >
         <h5 class="card-title ma-1">
+          <input
+            type="checkbox"
+            :checked="isShortlisted"
+            :id="devId"
+            :value="devId"
+            @change="(event) => toggleShortlistStatus((event.target as HTMLInputElement).checked)"
+            class="me-2"
+          />
           <a :href="devId">
             {{ devName }}
           </a>
